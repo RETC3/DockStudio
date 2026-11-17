@@ -39,6 +39,11 @@ namespace ScreenLove.Options
             MicBox.IsChecked = _edit.RecordMicrophone;
             RecCursorBox.IsChecked = _edit.RecordCursor;
             WebcamBox.IsChecked = _edit.RecordWebcam;
+            FillDevices(OutputDeviceBox, MediaDevices.Outputs(), _edit.RecordOutputDeviceId);
+            FillDevices(MicDeviceBox, MediaDevices.Microphones(), _edit.RecordMicrophoneDeviceId);
+            FillDevices(WebcamDeviceBox, new List<MediaDevice> { new(null, MediaDevices.DefaultName) }, _edit.RecordWebcamDeviceId);
+            Loaded += async (_, _) =>
+                FillDevices(WebcamDeviceBox, await MediaDevices.WebcamsAsync(), _edit.RecordWebcamDeviceId);
             WatermarkBox.Text = _edit.WatermarkText;
             UpdatesBox.IsChecked = _edit.CheckForUpdates;
             StatsBox.IsChecked = _edit.SendUsageStats;
@@ -52,6 +57,17 @@ namespace ScreenLove.Options
                 if (!_saved) App.Current.RegisterHotkeys();
             };
         }
+
+        /// <summary>Elenco dei dispositivi con quello scelto selezionato; se è scollegato resta in elenco come tale.</summary>
+        private static void FillDevices(ComboBox box, List<MediaDevice> devices, string? selectedId)
+        {
+            if (!string.IsNullOrEmpty(selectedId) && devices.All(d => d.Id != selectedId))
+                devices.Add(new MediaDevice(selectedId, "Dispositivo scelto (ora non collegato)"));
+            box.ItemsSource = devices;
+            box.SelectedItem = devices.FirstOrDefault(d => d.Id == selectedId) ?? devices[0];
+        }
+
+        private static string? SelectedDeviceId(ComboBox box) => (box.SelectedItem as MediaDevice)?.Id;
 
         private void BuildHotkeyRows()
         {
@@ -188,6 +204,9 @@ namespace ScreenLove.Options
             _edit.RecordMicrophone = MicBox.IsChecked == true;
             _edit.RecordCursor = RecCursorBox.IsChecked == true;
             _edit.RecordWebcam = WebcamBox.IsChecked == true;
+            _edit.RecordOutputDeviceId = SelectedDeviceId(OutputDeviceBox);
+            _edit.RecordMicrophoneDeviceId = SelectedDeviceId(MicDeviceBox);
+            _edit.RecordWebcamDeviceId = SelectedDeviceId(WebcamDeviceBox);
             _edit.WatermarkText = WatermarkBox.Text;
             _edit.CheckForUpdates = UpdatesBox.IsChecked == true;
             _edit.LastUpdateCheck = App.Settings.LastUpdateCheck;

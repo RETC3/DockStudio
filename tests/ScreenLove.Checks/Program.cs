@@ -41,6 +41,7 @@ namespace ScreenLove.Checks
                 Section("Aggiornamenti: release vera su GitHub", () => RunOnDispatcher(CheckUpdaterOnlineAsync));
             var sample = SampleImage(900, 520);
             Section("Editor: maniglie delle annotazioni", CheckHandles);
+            Section("Dispositivi audio e webcam", () => RunOnDispatcher(CheckDevicesAsync));
             Section("Effetti immagine", () => CheckEffects(sample));
             Section("Generatore di documenti", CheckDocuments);
             Section("Memoria dopo le catture", () => RunOnDispatcher(CheckMemoryAsync));
@@ -134,6 +135,33 @@ namespace ScreenLove.Checks
             Check(outOne.r < 200 && outOne.r == outThree.r,
                 $"3 spotlight scuriscono il resto come uno solo (fuori: {outOne.r} con uno, {outThree.r} con tre)");
             Check(hole.r == 255, $"dentro ogni spotlight l'immagine resta chiara ({hole.r})");
+        }
+
+        private static async Task CheckDevicesAsync()
+        {
+            var outputs = MediaDevices.Outputs();
+            var mics = MediaDevices.Microphones();
+            var cams = await MediaDevices.WebcamsAsync();
+            Check(outputs[0].Id == null && mics[0].Id == null && cams[0].Id == null,
+                "ogni elenco parte da \"Predefinito di Windows\"");
+            Console.WriteLine($"          su questo PC: {outputs.Count - 1} uscite audio, {mics.Count - 1} microfoni, {cams.Count - 1} webcam");
+
+            var settings = new AppSettings { RecordOutputDeviceId = "uscita-x", RecordMicrophoneDeviceId = "mic-y", RecordWebcamDeviceId = "cam-z" };
+            var copy = settings.Clone();
+            Check(copy.RecordOutputDeviceId == "uscita-x" && copy.RecordMicrophoneDeviceId == "mic-y" && copy.RecordWebcamDeviceId == "cam-z",
+                "le scelte dei dispositivi vengono salvate nelle impostazioni");
+
+            if (outputs.Count > 1)
+            {
+                using var chosen = MediaDevices.OpenAudio(outputs[1].Id, NAudio.CoreAudioApi.DataFlow.Render, out bool missing1);
+                Check(!missing1 && chosen.ID == outputs[1].Id, $"uscita scelta aperta: {outputs[1].Name}");
+                using var fallback = MediaDevices.OpenAudio("{dispositivo-scollegato}", NAudio.CoreAudioApi.DataFlow.Render, out bool missing2);
+                Check(missing2 && fallback != null, "uscita scollegata: si usa quella predefinita e lo si segnala");
+            }
+            else
+            {
+                Console.WriteLine("          nessuna uscita audio attiva: apertura del dispositivo non verificata");
+            }
         }
 
         private static void Check(bool ok, string what)

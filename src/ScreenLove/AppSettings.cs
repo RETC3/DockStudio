@@ -27,6 +27,11 @@ namespace ScreenLove
         public bool RecordMicrophone { get; set; } = false;
         public bool RecordWebcam { get; set; } = false;
 
+        // Dispositivi scelti (null = predefinito di Windows; se quello scelto manca si usa il predefinito)
+        public string? RecordOutputDeviceId { get; set; }
+        public string? RecordMicrophoneDeviceId { get; set; }
+        public string? RecordWebcamDeviceId { get; set; }
+
         // Editor
         public string WatermarkText { get; set; } = "ScreenLove";
 

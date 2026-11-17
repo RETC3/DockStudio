@@ -72,6 +72,24 @@
                 <CheckBox x:Name="MicBox" Content="Registra il microfono"/>
                 <CheckBox x:Name="RecCursorBox" Content="Mostra il cursore nel video"/>
                 <CheckBox x:Name="WebcamBox" Content="Mostra la webcam (bolla nell'angolo della zona registrata)"/>
+                <Grid Margin="0,8,0,0">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="Auto"/>
+                        <ColumnDefinition Width="*"/>
+                    </Grid.ColumnDefinitions>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="Auto"/>
+                    </Grid.RowDefinitions>
+                    <TextBlock Style="{StaticResource Label}" Text="Audio di sistema da:" Margin="0,0,10,0" VerticalAlignment="Center"/>
+                    <ComboBox x:Name="OutputDeviceBox" Grid.Column="1" Margin="0,2" MaxWidth="420" HorizontalAlignment="Left" MinWidth="260"
+                              ToolTip="L'uscita audio da registrare (altoparlanti, cuffie…)"/>
+                    <TextBlock Grid.Row="1" Style="{StaticResource Label}" Text="Microfono:" Margin="0,0,10,0" VerticalAlignment="Center"/>
+                    <ComboBox x:Name="MicDeviceBox" Grid.Row="1" Grid.Column="1" Margin="0,2" MaxWidth="420" HorizontalAlignment="Left" MinWidth="260"/>
+                    <TextBlock Grid.Row="2" Style="{StaticResource Label}" Text="Webcam:" Margin="0,0,10,0" VerticalAlignment="Center"/>
+                    <ComboBox x:Name="WebcamDeviceBox" Grid.Row="2" Grid.Column="1" Margin="0,2" MaxWidth="420" HorizontalAlignment="Left" MinWidth="260"/>
+                </Grid>
 
                 <TextBlock Style="{StaticResource Section}" Text="Editor"/>
                 <TextBlock Style="{StaticResource Label}" Text="Testo del watermark"/>

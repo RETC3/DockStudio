@@ -60,13 +60,16 @@ namespace ScreenLove.Recording
             SourceInitialized += (_, _) => PlaceInCorner();
         }
 
-        /// <summary>Apre la webcam predefinita. Restituisce null (con il motivo) se non è disponibile.</summary>
-        public static async Task<(WebcamWindow? window, string? error)> OpenAsync(Int32Rect region)
+        /// <summary>
+        /// Apre la webcam scelta (<paramref name="deviceId"/>; se null o scollegata, la prima disponibile).
+        /// Restituisce null (con il motivo) se non è disponibile.
+        /// </summary>
+        public static async Task<(WebcamWindow? window, string? error)> OpenAsync(Int32Rect region, string? deviceId = null)
         {
             var window = new WebcamWindow(region);
             try
             {
-                await window.StartCameraAsync();
+                await window.StartCameraAsync(deviceId);
                 window.Show();
                 return (window, null);
             }
@@ -78,13 +81,14 @@ namespace ScreenLove.Recording
             }
         }
 
-        private async Task StartCameraAsync()
+        private async Task StartCameraAsync(string? deviceId)
         {
             var groups = await MediaFrameSourceGroup.FindAllAsync();
             var (group, info) = groups
                 .SelectMany(g => g.SourceInfos.Select(i => (g, i)))
                 .Where(x => x.i.SourceKind == MediaFrameSourceKind.Color)
-                .OrderBy(x => x.i.MediaStreamType == MediaStreamType.VideoPreview ? 0 : 1)
+                .OrderBy(x => x.g.Id == deviceId ? 0 : 1) // quella scelta nelle impostazioni, se c'è
+                .ThenBy(x => x.i.MediaStreamType == MediaStreamType.VideoPreview ? 0 : 1)
                 .FirstOrDefault();
             if (group == null)
                 throw new InvalidOperationException("nessuna webcam trovata");

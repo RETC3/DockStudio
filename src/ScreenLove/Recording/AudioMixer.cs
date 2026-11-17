@@ -31,7 +31,8 @@ namespace ScreenLove.Recording
         private volatile bool _stop;
         private volatile bool _paused;
 
-        public AudioMixer(bool systemAudio, bool microphone, BlockingCollection<AudioChunk> output)
+        public AudioMixer(bool systemAudio, bool microphone, BlockingCollection<AudioChunk> output,
+            string? outputDeviceId = null, string? microphoneDeviceId = null)
         {
             _output = output;
             _mixer = new MixingSampleProvider(WaveFormat.CreateIeeeFloatWaveFormat(SampleRate, 2)) { ReadFully = true };
@@ -39,12 +40,22 @@ namespace ScreenLove.Recording
 
             if (systemAudio)
             {
-                try { Add(new WasapiLoopbackCapture()); }
+                try
+                {
+                    var device = Services.MediaDevices.OpenAudio(outputDeviceId, DataFlow.Render, out bool missing);
+                    if (missing) warnings.Add("l'uscita audio scelta non è collegata: uso quella predefinita");
+                    Add(new WasapiLoopbackCapture(device));
+                }
                 catch (Exception ex) { warnings.Add("audio di sistema non disponibile (" + ex.Message + ")"); }
             }
             if (microphone)
             {
-                try { Add(new WasapiCapture(WasapiCapture.GetDefaultCaptureDevice())); }
+                try
+                {
+                    var device = Services.MediaDevices.OpenAudio(microphoneDeviceId, DataFlow.Capture, out bool missing);
+                    if (missing) warnings.Add("il microfono scelto non è collegato: uso quello predefinito");
+                    Add(new WasapiCapture(device));
+                }
                 catch (Exception ex) { warnings.Add("microfono non disponibile (" + ex.Message + ")"); }
             }
             Warning = warnings.Count > 0 ? string.Join("; ", warnings) : null;

@@ -64,7 +64,7 @@ namespace ScreenLove.Recording
 
                 if (_settings.RecordWebcam)
                 {
-                    var (webcam, error) = await WebcamWindow.OpenAsync(region);
+                    var (webcam, error) = await WebcamWindow.OpenAsync(region, _settings.RecordWebcamDeviceId);
                     _webcam = webcam;
                     if (error != null)
                         Message?.Invoke("Webcam non disponibile", "La registrazione continua senza webcam: " + error);
@@ -81,6 +81,8 @@ namespace ScreenLove.Recording
                     ShowCursor = _settings.RecordCursor,
                     SystemAudio = _settings.RecordSystemAudio,
                     Microphone = _settings.RecordMicrophone,
+                    OutputDeviceId = _settings.RecordOutputDeviceId,
+                    MicrophoneDeviceId = _settings.RecordMicrophoneDeviceId,
                 });
 
                 try

@@ -26,6 +26,8 @@ namespace ScreenLove.Recording
         public bool ShowCursor { get; init; } = true;
         public bool SystemAudio { get; init; }
         public bool Microphone { get; init; }
+        public string? OutputDeviceId { get; init; }
+        public string? MicrophoneDeviceId { get; init; }
     }
 
     internal sealed record VideoFrame(byte[] Buffer, int Length, TimeSpan Time);
@@ -83,7 +85,7 @@ namespace ScreenLove.Recording
             AudioStreamDescriptor? audioDesc = null;
             if (_o.SystemAudio || _o.Microphone)
             {
-                var mixer = new AudioMixer(_o.SystemAudio, _o.Microphone, _audio);
+                var mixer = new AudioMixer(_o.SystemAudio, _o.Microphone, _audio, _o.OutputDeviceId, _o.MicrophoneDeviceId);
                 Warning = mixer.Warning;
                 if (mixer.HasSources)
                 {
