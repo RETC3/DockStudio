@@ -138,6 +138,23 @@ namespace ScreenLove.Native
         [DllImport("user32.dll")]
         public static extern int SetWindowLong(IntPtr hWnd, int nIndex, int dwNewLong);
 
+        public const uint MONITOR_DEFAULTTONULL = 0;
+
+        [StructLayout(LayoutKind.Sequential)]
+        public struct MONITORINFO
+        {
+            public int cbSize;
+            public RECT rcMonitor;
+            public RECT rcWork;
+            public uint dwFlags;
+        }
+
+        [DllImport("user32.dll")]
+        public static extern IntPtr MonitorFromRect(ref RECT lprc, uint dwFlags);
+
+        [DllImport("user32.dll")]
+        public static extern bool GetMonitorInfo(IntPtr hMonitor, ref MONITORINFO lpmi);
+
         /// <summary>Risoluzione del timer di sistema a 1 ms (per una frequenza dei fotogrammi regolare).</summary>
         [DllImport("winmm.dll")]
         public static extern uint timeBeginPeriod(uint uPeriod);

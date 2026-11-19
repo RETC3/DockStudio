@@ -16,14 +16,25 @@ namespace ScreenLove.Video
         public static async Task<TimeSpan> GetDurationAsync(string path)
         {
             var file = await StorageFile.GetFileFromPathAsync(path);
-            return (await file.Properties.GetVideoPropertiesAsync()).Duration;
+            try
+            {
+                var duration = (await file.Properties.GetVideoPropertiesAsync()).Duration;
+                if (duration > TimeSpan.Zero)
+                    return duration;
+            }
+            catch (ArgumentException)
+            {
+                // Il sistema delle proprietà di Windows a volte non risponde (succede per esempio in Desktop remoto):
+                // si legge la durata aprendo il video.
+            }
+            return (await MediaClip.CreateFromFileAsync(file)).OriginalDuration;
         }
 
         /// <summary>Crea un nuovo video con la sola parte tra start ed end.</summary>
         public static async Task TrimAsync(string input, TimeSpan start, TimeSpan end, string output, Action<double>? progress = null)
         {
             var source = await StorageFile.GetFileFromPathAsync(input);
-            var duration = (await source.Properties.GetVideoPropertiesAsync()).Duration;
+            var duration = await GetDurationAsync(input);
             if (end <= start) throw new ArgumentException("La fine deve venire dopo l'inizio.");
 
             var destination = await CreateFileAsync(output);

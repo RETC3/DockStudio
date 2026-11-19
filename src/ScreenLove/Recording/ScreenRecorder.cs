@@ -26,16 +26,22 @@ namespace ScreenLove.Recording
         public bool ShowCursor { get; init; } = true;
         public bool SystemAudio { get; init; }
         public bool Microphone { get; init; }
+        /// <summary>Prova la cattura dalla scheda grafica (Windows.Graphics.Capture) prima del metodo classico GDI.</summary>
+        public bool AllowGpu { get; init; } = true;
     }
 
-    internal sealed record VideoFrame(byte[] Buffer, int Length, TimeSpan Time);
+    /// <summary>Un fotogramma: pixel in memoria (metodo classico) oppure superficie della scheda grafica.</summary>
+    internal sealed record VideoFrame(byte[]? Buffer, int Length, TimeSpan Time,
+        Windows.Graphics.DirectX.Direct3D11.IDirect3DSurface? Surface = null, Action? Release = null);
 
     internal sealed record AudioChunk(byte[] Buffer, TimeSpan Time, TimeSpan Duration);
 
     /// <summary>
     /// Registra una zona dello schermo in MP4 (H.264 + AAC).
-    /// I fotogrammi (GDI) e l'audio (NAudio) vengono passati a un MediaStreamSource
+    /// I fotogrammi e l'audio (NAudio) vengono passati a un MediaStreamSource
     /// che il MediaTranscoder di Windows codifica (con accelerazione hardware se disponibile).
+    /// I fotogrammi arrivano dalla scheda grafica (Windows.Graphics.Capture) e restano lì fino al codificatore;
+    /// se non è possibile (zona su più monitor, PC senza supporto) si copiano dallo schermo con GDI.
     /// Video e audio usano lo stesso orologio, che si ferma durante la pausa.
     /// </summary>
     public sealed class ScreenRecorder
@@ -49,6 +55,7 @@ namespace ScreenLove.Recording
         private readonly TimeSpan _frameDuration;
 
         private AudioMixer? _mixer;
+        private GpuScreenCapture? _gpu;
         private Thread? _videoThread;
         private Task? _transcode;
         private FileStream? _file;
@@ -72,6 +79,12 @@ namespace ScreenLove.Recording
 
         /// <summary>Avvisi non bloccanti (es. microfono non trovato).</summary>
         public string? Warning { get; private set; }
+
+        /// <summary>"gpu" (Windows.Graphics.Capture) o "gdi" (metodo classico).</summary>
+        public string CaptureMethod => _gpu != null ? "gpu" : "gdi";
+
+        /// <summary>Perché non si usa la scheda grafica, se si usa il metodo classico.</summary>
+        public string? GpuFallbackReason { get; private set; }
 
         public async Task StartAsync()
         {
@@ -111,6 +124,17 @@ namespace ScreenLove.Recording
             profile.Video.Bitrate = (uint)Math.Clamp((long)_width * _height * _o.Fps / 8, 2_000_000, 40_000_000);
             profile.Audio = audioDesc != null ? AudioEncodingProperties.CreateAac(AudioMixer.SampleRate, 2, 192_000) : null;
 
+            if (_o.AllowGpu)
+            {
+                string? reason = null;
+                _gpu = await Task.Run(() => GpuScreenCapture.TryStart(_o.Region, _width, _height, _o.ShowCursor, out reason));
+                GpuFallbackReason = reason;
+            }
+            else
+            {
+                GpuFallbackReason = "disattivata";
+            }
+
             _file = new FileStream(_o.OutputPath, FileMode.Create, FileAccess.ReadWrite, FileShare.Read);
 
             // La cattura parte prima della preparazione: il transcoder potrebbe chiedere subito un campione.
@@ -148,15 +172,19 @@ namespace ScreenLove.Recording
         /// <summary>Ferma la registrazione e completa il file MP4.</summary>
         public async Task StopAsync()
         {
+            System.Console.WriteLine("DEBUG stop: cattura " + DateTime.Now.ToString("ss.fff"));
             await StopCaptureAsync();
+            System.Console.WriteLine("DEBUG stop: attendo codifica " + DateTime.Now.ToString("ss.fff") + " coda=" + _video.Count);
             try
             {
                 if (_transcode != null)
                     await _transcode;
+                System.Console.WriteLine("DEBUG stop: codifica finita " + DateTime.Now.ToString("ss.fff"));
             }
             finally
             {
                 _file?.Dispose();
+                _gpu?.Dispose();
                 NativeMethods.timeEndPeriod(1);
             }
             if (_captureError != null)
@@ -174,7 +202,9 @@ namespace ScreenLove.Recording
             await Task.Run(() =>
             {
                 _videoThread?.Join();
+                System.Console.WriteLine("DEBUG stop: thread video chiuso");
                 _mixer?.Stop();
+                System.Console.WriteLine("DEBUG stop: audio chiuso");
             });
             _mixer?.Dispose();
         }
@@ -182,6 +212,73 @@ namespace ScreenLove.Recording
         // ---------- fotogrammi ----------
 
         private void VideoLoop()
+        {
+            if (_gpu != null)
+                GpuVideoLoop(_gpu);
+            else
+                GdiVideoLoop();
+        }
+
+        /// <summary>
+        /// Attende l'istante del prossimo fotogramma. Restituisce false se non è ancora il momento (il ciclo riprova).
+        /// Se il PC è in ritardo salta ai fotogrammi attuali invece di accumulare ritardo.
+        /// </summary>
+        private bool WaitForFrame(ref long index)
+        {
+            var due = TimeSpan.FromTicks(_frameDuration.Ticks * index);
+            var now = _clock.Elapsed;
+            if (now < due)
+            {
+                var wait = due - now;
+                if (wait.TotalMilliseconds >= 2) Thread.Sleep(wait - TimeSpan.FromMilliseconds(1));
+                else Thread.SpinWait(200);
+                return false;
+            }
+            long current = now.Ticks / _frameDuration.Ticks;
+            if (current > index) index = current;
+            return true;
+        }
+
+        /// <summary>
+        /// Fotogrammi dalla scheda grafica: Windows aggiorna l'ultima immagine quando lo schermo cambia, qui se ne
+        /// prende una copia a frequenza fissa. Nessun pixel passa dal processore.
+        /// </summary>
+        private void GpuVideoLoop(GpuScreenCapture gpu)
+        {
+            long index = 0;
+            try
+            {
+                while (!_stopping)
+                {
+                    if (_paused)
+                    {
+                        Thread.Sleep(10);
+                        continue;
+                    }
+                    if (!WaitForFrame(ref index))
+                        continue;
+
+                    var surface = gpu.TakeFrame(out var release);
+                    if (surface != null)
+                    {
+                        var frame = new VideoFrame(null, 0, TimeSpan.FromTicks(_frameDuration.Ticks * index), surface, release);
+                        if (!_video.TryAdd(frame))
+                            release(); // codificatore in ritardo: si scarta il fotogramma
+                    }
+                    index++;
+                }
+            }
+            catch (Exception ex)
+            {
+                _captureError = ex;
+            }
+            finally
+            {
+                _video.CompleteAdding();
+            }
+        }
+
+        private void GdiVideoLoop()
         {
             var r = _o.Region;
             long index = 0;
@@ -199,18 +296,8 @@ namespace ScreenLove.Recording
                         continue;
                     }
 
-                    var due = TimeSpan.FromTicks(_frameDuration.Ticks * index);
-                    var now = _clock.Elapsed;
-                    if (now < due)
-                    {
-                        var wait = due - now;
-                        if (wait.TotalMilliseconds >= 2) Thread.Sleep(wait - TimeSpan.FromMilliseconds(1));
-                        else Thread.SpinWait(200);
+                    if (!WaitForFrame(ref index))
                         continue;
-                    }
-                    // In ritardo (PC lento): si salta ai fotogrammi attuali invece di accumulare ritardo.
-                    long current = now.Ticks / _frameDuration.Ticks;
-                    if (current > index) index = current;
 
                     g.CopyFromScreen(r.X, r.Y, 0, 0, new D.Size(_width, _height), D.CopyPixelOperation.SourceCopy);
                     if (_o.ShowCursor)
@@ -264,9 +351,20 @@ namespace ScreenLove.Recording
                     {
                         if (_video.TryTake(out var f, Timeout.Infinite))
                         {
-                            var sample = MediaStreamSample.CreateFromBuffer(f.Buffer.AsBuffer(0, f.Length), f.Time);
+                            MediaStreamSample sample;
+                            if (f.Surface != null)
+                            {
+                                sample = MediaStreamSample.CreateFromDirect3D11Surface(f.Surface, f.Time);
+                                var release = f.Release;
+                                sample.Processed += (_, _) => release?.Invoke();
+                            }
+                            else
+                            {
+                                var buffer = f.Buffer!;
+                                sample = MediaStreamSample.CreateFromBuffer(buffer.AsBuffer(0, f.Length), f.Time);
+                                sample.Processed += (_, _) => _pool.Add(buffer);
+                            }
                             sample.Duration = _frameDuration;
-                            sample.Processed += (_, _) => _pool.Add(f.Buffer);
                             request.Sample = sample;
                         }
                         else

@@ -2,8 +2,9 @@
 
   <PropertyGroup>
     <OutputType>WinExe</OutputType>
-    <!-- Windows 10 2004+: serve per le API WinRT (OCR di Windows) -->
-    <TargetFramework>net8.0-windows10.0.19041.0</TargetFramework>
+    <!-- API WinRT fino a Windows 11 22H2 (per togliere il bordo giallo della cattura video),
+         ma l'app gira da Windows 10 2004 in poi: le API più nuove si usano solo se presenti -->
+    <TargetFramework>net8.0-windows10.0.22621.0</TargetFramework>
     <SupportedOSPlatformVersion>10.0.19041.0</SupportedOSPlatformVersion>
     <UseWPF>true</UseWPF>
     <UseWindowsForms>true</UseWindowsForms>
@@ -30,6 +31,7 @@
 
   <ItemGroup>
     <!-- Lettura di codici QR e a barre (Apache 2.0) -->
+    <PackageReference Include="Vortice.Direct3D11" Version="3.8.3" />
     <PackageReference Include="ZXing.Net" Version="0.16.9" />
     <!-- Cattura audio WASAPI (sistema in loopback + microfono), MIT -->
     <PackageReference Include="NAudio.Wasapi" Version="2.2.1" />

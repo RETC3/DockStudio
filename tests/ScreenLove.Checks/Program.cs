@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Globalization;
 using System.IO;
 using System.Linq;
@@ -488,6 +489,28 @@ namespace ScreenLove.Checks
             Check(imgs == 3 && text.Contains("àèìòù") && text.Contains("Titolo del passaggio 3"), $"HTML autonomo: {imgs} immagini incorporate, accenti corretti");
         }
 
+        /// <summary>Estrae il fotogramma all'istante indicato e controlla che contenga un'immagine (non tutto di un colore).</summary>
+        private static async Task<bool> HasPictureAsync(string path, TimeSpan at)
+        {
+            var file = await Windows.Storage.StorageFile.GetFileFromPathAsync(path);
+            var clip = await Windows.Media.Editing.MediaClip.CreateFromFileAsync(file);
+            var composition = new Windows.Media.Editing.MediaComposition();
+            composition.Clips.Add(clip);
+            var stream = await composition.GetThumbnailAsync(at, 0, 0, Windows.Media.Editing.VideoFramePrecision.NearestFrame);
+            var decoder = await Windows.Graphics.Imaging.BitmapDecoder.CreateAsync(stream);
+            var pixels = (await decoder.GetPixelDataAsync(Windows.Graphics.Imaging.BitmapPixelFormat.Bgra8, Windows.Graphics.Imaging.BitmapAlphaMode.Ignore,
+                new Windows.Graphics.Imaging.BitmapTransform(), Windows.Graphics.Imaging.ExifOrientationMode.IgnoreExifOrientation,
+                Windows.Graphics.Imaging.ColorManagementMode.DoNotColorManage)).DetachPixelData();
+            int min = 255, max = 0;
+            for (int i = 0; i + 2 < pixels.Length; i += 4)
+            {
+                int l = (pixels[i] + pixels[i + 1] + pixels[i + 2]) / 3;
+                if (l < min) min = l;
+                if (l > max) max = l;
+            }
+            return max - min > 8;
+        }
+
         private static async Task CheckVideoAsync()
         {
             // 1) registrazione di 3 s di una zona dello schermo (senza audio)
@@ -495,10 +518,29 @@ namespace ScreenLove.Checks
             var recorder = new ScreenRecorder(new RecordingOptions { Region = new Int32Rect(0, 0, 640, 360), OutputPath = rec, Fps = 30, SystemAudio = true });
             await recorder.StartAsync();
             Console.WriteLine($"          audio nella registrazione: {recorder.HasAudio}{(recorder.Warning != null ? " · " + recorder.Warning : "")}");
+            Console.WriteLine($"          cattura: {recorder.CaptureMethod}{(recorder.GpuFallbackReason != null ? " · " + recorder.GpuFallbackReason : "")}");
+            var cpu0 = Process.GetCurrentProcess().TotalProcessorTime;
             await Task.Delay(3000);
+            var cpuGpu = Process.GetCurrentProcess().TotalProcessorTime - cpu0;
+            Console.WriteLine("DEBUG prima di StopAsync " + DateTime.Now.ToString("HH:mm:ss.fff"));
             await recorder.StopAsync();
+            Console.WriteLine("DEBUG dopo StopAsync " + DateTime.Now.ToString("HH:mm:ss.fff"));
             var d0 = await VideoEditing.GetDurationAsync(rec);
-            Check(Math.Abs(d0.TotalSeconds - 3) < 0.4, $"Registrazione: {d0.TotalSeconds:F2} s (attesi ~3)");
+            Check(Math.Abs(d0.TotalSeconds - 3) < 0.4, $"Registrazione ({recorder.CaptureMethod}): {d0.TotalSeconds:F2} s (attesi ~3)");
+            Check(await HasPictureAsync(rec, TimeSpan.FromSeconds(1.5)), "Registrazione: il fotogramma a metà video non è vuoto");
+
+            // 1b) stessa registrazione con il metodo classico (GDI), usato quando la scheda grafica non basta
+            string recGdi = Path.Combine(_dir, "registrazione-gdi.mp4");
+            var gdi = new ScreenRecorder(new RecordingOptions { Region = new Int32Rect(0, 0, 640, 360), OutputPath = recGdi, Fps = 30, AllowGpu = false });
+            await gdi.StartAsync();
+            cpu0 = Process.GetCurrentProcess().TotalProcessorTime;
+            await Task.Delay(3000);
+            var cpuGdi = Process.GetCurrentProcess().TotalProcessorTime - cpu0;
+            await gdi.StopAsync();
+            var dg = await VideoEditing.GetDurationAsync(recGdi);
+            Check(gdi.CaptureMethod == "gdi" && Math.Abs(dg.TotalSeconds - 3) < 0.4, $"Registrazione con il metodo classico: {dg.TotalSeconds:F2} s");
+            Check(await HasPictureAsync(recGdi, TimeSpan.FromSeconds(1.5)), "Metodo classico: il fotogramma a metà video non è vuoto");
+            Console.WriteLine($"          processore in 3 s: {recorder.CaptureMethod} {cpuGpu.TotalMilliseconds:F0} ms · gdi {cpuGdi.TotalMilliseconds:F0} ms");
 
             // 2) taglio da 0,5 s a 2,0 s
             string cut = Path.Combine(_dir, "tagliato.mp4");
