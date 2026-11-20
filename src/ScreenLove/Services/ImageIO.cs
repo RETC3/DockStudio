@@ -1,54 +1,18 @@
 using System.IO;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
+using DockStudio.Imaging;
 
 namespace ScreenLove.Services
 {
+    /// <summary>
+    /// Apertura e salvataggio delle immagini di ScreenLove: il lavoro lo fa il modulo condiviso
+    /// DockStudio.Imaging; qui si converte da e verso le immagini WPF (BGRA32 a 96 DPI).
+    /// </summary>
     public static class ImageIO
     {
         /// <summary>Salva in base all'estensione (png, jpg/jpeg, bmp). Predefinito: PNG.</summary>
-        public static void Save(BitmapSource image, string path)
-        {
-            BitmapEncoder encoder;
-            switch (Path.GetExtension(path).ToLowerInvariant())
-            {
-                case ".jpg":
-                case ".jpeg":
-                    encoder = new JpegBitmapEncoder { QualityLevel = 92 };
-                    image = OnWhite(image); // JPEG non ha trasparenza: niente sfondo nero
-                    break;
-                case ".bmp":
-                    encoder = new BmpBitmapEncoder();
-                    image = OnWhite(image);
-                    break;
-                default:
-                    encoder = new PngBitmapEncoder();
-                    break;
-            }
-
-            encoder.Frames.Add(BitmapFrame.Create(image));
-            string tmp = path + ".tmp";
-            using (var fs = File.Create(tmp))
-                encoder.Save(fs);
-            File.Move(tmp, path, overwrite: true);
-        }
-
-        /// <summary>Appoggia l'immagine su sfondo bianco (per i formati senza canale alfa).</summary>
-        public static BitmapSource OnWhite(BitmapSource image)
-        {
-            int w = image.PixelWidth, h = image.PixelHeight;
-            var visual = new DrawingVisual();
-            using (var dc = visual.RenderOpen())
-            {
-                dc.DrawRectangle(Brushes.White, null, new System.Windows.Rect(0, 0, w, h));
-                dc.DrawImage(image, new System.Windows.Rect(0, 0, w, h));
-            }
-            var rtb = new RenderTargetBitmap(w, h, 96, 96, PixelFormats.Pbgra32);
-            rtb.Render(visual);
-            var bgr = new FormatConvertedBitmap(rtb, PixelFormats.Bgr32, null, 0);
-            bgr.Freeze();
-            return bgr;
-        }
+        public static void Save(BitmapSource image, string path) => SkiaBridge.Save(image, path);
 
         /// <summary>
         /// Carica un'immagine senza bloccare il file e la normalizza in BGRA32 a 96 DPI,
@@ -56,10 +20,8 @@ namespace ScreenLove.Services
         /// </summary>
         public static BitmapSource LoadNormalized(string path)
         {
-            var bytes = File.ReadAllBytes(path);
-            using var ms = new MemoryStream(bytes);
-            var frame = BitmapFrame.Create(ms, BitmapCreateOptions.PreservePixelFormat, BitmapCacheOption.OnLoad);
-            return Normalize(frame);
+            using var image = ImageFiles.Load(path);
+            return SkiaBridge.ToWpf(image);
         }
 
         public static BitmapSource Normalize(BitmapSource source)

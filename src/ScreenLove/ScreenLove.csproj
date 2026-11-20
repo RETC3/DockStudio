@@ -32,6 +32,7 @@
     <!-- Nucleo comune delle app DockStudio -->
     <ProjectReference Include="..\DockStudio.Core\DockStudio.Core.csproj" />
     <ProjectReference Include="..\DockStudio.Core.Windows\DockStudio.Core.Windows.csproj" />
+    <ProjectReference Include="..\DockStudio.Imaging\DockStudio.Imaging.csproj" />
   </ItemGroup>
 
   <ItemGroup>

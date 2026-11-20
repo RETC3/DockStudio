@@ -576,6 +576,7 @@ namespace ScreenLove.Checks
                 for (int y = marked.PixelHeight - 24; y < marked.PixelHeight; y++)
                     if (!Pixel(marked, x, y).Equals(Pixel(shadowed, x, y))) outside++;
             Check(outside == 0, $"Watermark dopo l'ombra: niente testo nel margine dell'ombra ({outside} punti fuori)");
+            ImageIO.Save(marked, Path.Combine(_dir, "watermark.png")); // da guardare a occhio
 
             string jpg = Path.Combine(_dir, "effetto.jpg");
             ImageIO.Save(round, jpg);
@@ -585,6 +586,37 @@ namespace ScreenLove.Checks
             string png = Path.Combine(_dir, "effetto.png");
             ImageIO.Save(ImageEffects.AddShadow(ImageEffects.RoundCorners(img, 10)), png);
             Check(Pixel(ImageIO.LoadNormalized(png), 0, 0).a == 0, "PNG: la trasparenza viene conservata");
+
+            string bmp = Path.Combine(_dir, "effetto.bmp");
+            ImageIO.Save(round, bmp);
+            var bmpBack = ImageIO.LoadNormalized(bmp);
+            var bmpCorner = Pixel(bmpBack, 0, 0);
+            var bmpMid = Pixel(bmpBack, 70, 130);
+            Check(bmpBack.PixelWidth == w && bmpBack.PixelHeight == h && bmpCorner.r == 255 && bmpCorner.a == 255
+                  && bmpMid.Equals(Pixel(img, 70, 130)), "BMP: si salva e si riapre uguale, trasparenza su bianco");
+
+            // Passaggio WPF → Skia → WPF: i pixel non cambiano (opachi e semitrasparenti).
+            var mixed = new byte[64 * 4];
+            for (int i = 0; i < 64; i++)
+            {
+                byte a = (byte)(i < 16 ? 255 : i * 4);
+                mixed[i * 4] = (byte)(i * 3); mixed[i * 4 + 1] = (byte)(255 - i); mixed[i * 4 + 2] = (byte)(i * 2); mixed[i * 4 + 3] = a;
+                if (a == 0) { mixed[i * 4] = mixed[i * 4 + 1] = mixed[i * 4 + 2] = 0; }
+            }
+            var strip = BitmapSource.Create(64, 1, 96, 96, PixelFormats.Bgra32, null, mixed, 64 * 4);
+            using (var sk = SkiaBridge.ToSkia(strip))
+            {
+                var again = new byte[64 * 4];
+                SkiaBridge.ToWpf(sk).CopyPixels(again, 64 * 4, 0);
+                int opaqueDiff = 0, maxDiff = 0;
+                for (int i = 0; i < 64 * 4; i++)
+                {
+                    int d = Math.Abs(again[i] - mixed[i]);
+                    if (i / 4 < 16 && d > 0) opaqueDiff++;
+                    maxDiff = Math.Max(maxDiff, d);
+                }
+                Check(opaqueDiff == 0 && maxDiff <= 2, $"WPF ↔ Skia: pixel opachi identici, semitrasparenti quasi (scarto massimo {maxDiff})");
+            }
         }
 
         private static void CheckDocuments()

@@ -1,0 +1,19 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!-- Modulo immagini condiviso delle app DockStudio (Windows e macOS): effetti, apertura e salvataggio
+       delle immagini, disegnati con SkiaSharp, lo stesso motore grafico di Avalonia. -->
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>disable</ImplicitUsings>
+    <LangVersion>latest</LangVersion>
+    <DebugType>embedded</DebugType>
+    <RootNamespace>DockStudio.Imaging</RootNamespace>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <!-- Grafica 2D multipiattaforma (MIT). Stessa versione usata da Avalonia 11. -->
+    <PackageReference Include="SkiaSharp" Version="2.88.9" />
+  </ItemGroup>
+
+</Project>
