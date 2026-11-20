@@ -92,5 +92,9 @@ namespace DockStudio.Imaging
             }
             return SKTypeface.FromFamilyName(null, weight, SKFontStyleWidth.Normal, SKFontStyleSlant.Upright) ?? SKTypeface.Default;
         }
+
+        /// <summary>Carattere per scrivere testo antialias con posizionamento subpixel.</summary>
+        public static SKFont Create(SKTypeface typeface, float size) =>
+            new(typeface, size) { Subpixel = true, Edging = SKFontEdging.Antialias };
     }
 }

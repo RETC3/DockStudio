@@ -4,7 +4,7 @@
        Non fa parte di nessuna app e non va distribuito. La chiave privata non sta mai nel repository. -->
   <PropertyGroup>
     <OutputType>Exe</OutputType>
-    <TargetFramework>net8.0</TargetFramework>
+    <TargetFramework>net10.0</TargetFramework>
     <Nullable>enable</Nullable>
     <ImplicitUsings>disable</ImplicitUsings>
     <AssemblyName>dslicense</AssemblyName>

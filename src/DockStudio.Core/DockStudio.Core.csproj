@@ -4,7 +4,7 @@
        Contiene i servizi uguali in ogni app (aggiornamenti, statistiche, impostazioni), configurati
        con l'identità dell'app (AppIdentity). -->
   <PropertyGroup>
-    <TargetFramework>net8.0</TargetFramework>
+    <TargetFramework>net10.0</TargetFramework>
     <Nullable>enable</Nullable>
     <ImplicitUsings>disable</ImplicitUsings>
     <LangVersion>latest</LangVersion>

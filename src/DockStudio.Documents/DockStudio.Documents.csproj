@@ -3,7 +3,7 @@
   <!-- Generatore di documenti condiviso (Windows e macOS): manuali e guide in PDF, Word e HTML
        da una serie di immagini con titolo e commento. -->
   <PropertyGroup>
-    <TargetFramework>net8.0</TargetFramework>
+    <TargetFramework>net10.0</TargetFramework>
     <Nullable>enable</Nullable>
     <ImplicitUsings>disable</ImplicitUsings>
     <LangVersion>latest</LangVersion>
@@ -14,7 +14,7 @@
   <ItemGroup>
     <!-- PDF (MIT) e Word .docx (MIT) -->
     <PackageReference Include="PDFsharp" Version="6.1.1" />
-    <PackageReference Include="DocumentFormat.OpenXml" Version="3.1.0" />
+    <PackageReference Include="DocumentFormat.OpenXml" Version="3.5.1" />
   </ItemGroup>
 
   <ItemGroup>

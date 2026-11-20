@@ -1,0 +1,31 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!-- Interfaccia comune delle app DockStudio (Windows e macOS), su Avalonia: tema chiaro e scuro con il
+       colore di ogni app e le finestre uguali in tutte le app (informazioni, aggiornamento, licenza). -->
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>disable</ImplicitUsings>
+    <LangVersion>latest</LangVersion>
+    <DebugType>embedded</DebugType>
+    <RootNamespace>DockStudio.UI</RootNamespace>
+    <AvaloniaUseCompiledBindingsByDefault>true</AvaloniaUseCompiledBindingsByDefault>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <!-- Interfaccia multipiattaforma (MIT) -->
+    <PackageReference Include="Avalonia" Version="12.1.5" />
+    <PackageReference Include="Avalonia.Themes.Fluent" Version="12.1.5" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\DockStudio.Core\DockStudio.Core.csproj" />
+    <ProjectReference Include="..\DockStudio.Imaging\DockStudio.Imaging.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- Testi dell'interfaccia comune, uno per lingua: risorse DockStudio.UI.Lang.<lingua>.json -->
+    <EmbeddedResource Include="Lang\*.json" LogicalName="DockStudio.UI.Lang.%(Filename).json" />
+  </ItemGroup>
+
+</Project>

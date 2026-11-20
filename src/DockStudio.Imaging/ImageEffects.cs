@@ -94,14 +94,13 @@ namespace DockStudio.Imaging
             float size = (float)Math.Clamp(Math.Min(content.Width, content.Height) / 16.0, 12, 64);
 
             using var typeface = Fonts.Ui(SKFontStyleWeight.SemiBold);
-            using var fill = new SKPaint { Typeface = typeface, TextSize = size, IsAntialias = true, Color = SKColors.White };
-            float textWidth = fill.MeasureText(text);
-            var metrics = fill.FontMetrics;
-            float lineHeight = fill.FontSpacing;
+            using var font = Fonts.Create(typeface, size);
+            float textWidth = font.MeasureText(text);
+            float lineHeight = font.Spacing;
             float margin = size * 0.6f;
             float left = Math.Max(content.Left + margin, content.Right - textWidth - margin);
             float top = Math.Max(content.Top, content.Bottom - lineHeight - margin * 0.8f);
-            using var glyphs = fill.GetTextPath(text, left, top - metrics.Ascent);
+            using var glyphs = font.GetTextPath(text, new SKPoint(left, top - font.Metrics.Ascent));
 
             return Pixels.Render(w, h, canvas =>
             {

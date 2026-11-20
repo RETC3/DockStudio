@@ -851,7 +851,7 @@ namespace ScreenLove.Checks
                 foreach (var e in errors.Take(3)) Console.WriteLine("          " + e.Description);
                 int images = wd.MainDocumentPart!.ImageParts.Count();
                 Check(errors.Count == 0, $"Word: documento conforme allo standard Open XML ({errors.Count} errori)");
-                Check(images == 3 && wd.MainDocumentPart.Document.Body!.InnerText.Contains("Titolo del passaggio 2"), $"Word: {images} immagini e testi presenti");
+                Check(images == 3 && wd.MainDocumentPart.Document!.Body!.InnerText.Contains("Titolo del passaggio 2"), $"Word: {images} immagini e testi presenti");
             }
 
             string html = Path.Combine(_dir, "guida.html");

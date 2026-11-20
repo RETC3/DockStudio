@@ -1,0 +1,42 @@
+{
+  // Shared DockStudio interface texts in English. Keys must match it.json (the base language).
+  "common.close": "Close",
+  "common.later": "Later",
+
+  "about.title": "About {0}",
+  "about.version": "Version {0}",
+  "about.portable": "Version {0} (portable)",
+  "about.license": "License",
+  "about.suite": "DockStudio apps on this computer",
+  "about.suiteEmpty": "No other DockStudio apps installed.",
+  "about.website": "Website",
+  "about.manageLicense": "License…",
+  "about.suiteName": "Part of DockStudio, the suite of apps that work without internet.",
+
+  "update.title": "{0} update",
+  "update.available": "{0} {1} is available",
+  "update.current": "Current version: {0}.",
+  "update.notes": "What's new",
+  "update.install": "Install and restart",
+  "update.openPage": "Open page",
+  "update.downloading": "Downloading… {0:P0}",
+  "update.launching": "Starting the installer…",
+  "update.portable": "You are using the portable version: download the new version from the page.",
+  "update.noInstaller": "This version has no automatic installer: download it from the page.",
+  "update.failed": "Update failed: {0}",
+
+  "license.title": "{0} license",
+  "license.licensee": "Licensee",
+  "license.code": "Code",
+  "license.seats": "Seats",
+  "license.expires": "Expires",
+  "license.noExpiry": "Never",
+  "license.apps": "Included apps",
+  "license.allApps": "All DockStudio apps",
+  "license.freeInfo": "Without a license file the app runs as the free version.",
+  "license.insert": "Add license…",
+  "license.pickerTitle": "Choose the license file",
+  "license.fileType": "DockStudio license",
+  "license.installed": "License installed.",
+  "license.rejected": "This file is not a valid license."
+}

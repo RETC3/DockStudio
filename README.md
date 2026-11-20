@@ -1,6 +1,6 @@
 # ScreenLove ♥
 
-Strumento di cattura dello schermo per Windows (C# · .NET 8 · WPF), ispirato alle funzionalità di Screenpresso
+Strumento di cattura dello schermo per Windows (C# · .NET 10 · WPF), ispirato alle funzionalità di Screenpresso
 ma scritto da zero. Analisi del prodotto di riferimento: [docs/ANALISI-SCREENPRESSO.md](docs/ANALISI-SCREENPRESSO.md).
 
 ## Funzioni (v0.1)
@@ -75,8 +75,8 @@ dotnet build ScreenLove.sln
 dotnet run --project src/ScreenLove
 ```
 
-L'eseguibile di sviluppo è in `src/ScreenLove/bin/Debug/net8.0-windows10.0.19041.0/ScreenLove.exe` e richiede il
-.NET 8 Desktop Runtime.
+L'eseguibile di sviluppo è in `src/ScreenLove/bin/Debug/net10.0-windows10.0.19041.0/ScreenLove.exe` e richiede il
+.NET 10 Desktop Runtime.
 
 ### Eseguibile autonomo (da distribuire)
 
@@ -162,6 +162,13 @@ registrazione, taglio e unione video (anche con audio, tramite clip sintetiche).
 video, che registra 3 secondi dell'angolo in alto a sinistra dello schermo. Codice di uscita = numero di errori.
 Con `--online` si controlla anche l'ultima release vera su GitHub (lettura e download dell'installer).
 
+Controlli dell'interfaccia comune DockStudio (Avalonia), senza schermo: ogni finestra viene disegnata in italiano e in
+inglese, chiara e scura, e salvata come PNG nella cartella indicata.
+
+```bash
+dotnet run --project tests/DockStudio.UI.Checks -- <cartella>
+```
+
 Diagnostica della cattura a scorrimento: con la variabile d'ambiente `SCREENLOVE_SCROLL_DEBUG`
 impostata a una cartella, ogni fotogramma e l'esito di ogni confronto vengono salvati lì.
 
@@ -184,6 +191,22 @@ impostata a una cartella, ogni fotogramma e l'esito di ogni confronto vengono sa
 | `web/` | sito su Cloudflare Pages: pagina, download (Pages Functions + R2) |
 | `.github/workflows/` | release automatica da tag, pubblicazione del sito |
 | `tests/ScreenLove.Checks` | controlli automatici |
+| `tests/DockStudio.UI.Checks` | controlli dell'interfaccia comune senza schermo (Avalonia headless) |
+
+### Nucleo DockStudio
+
+Parti comuni a tutte le app della suite, usate da ScreenLove:
+
+| Progetto | Contenuto |
+|---|---|
+| `src/DockStudio.Core` | identità dell'app, aggiornamenti, statistiche anonime, impostazioni, licenza, registro delle app, lingue |
+| `src/DockStudio.Core.Windows` | solo Windows: avvio di una sola copia, installer Inno Setup |
+| `src/DockStudio.Imaging` | immagini con SkiaSharp: effetti, file, cucitura dello scorrimento, annotazioni e documento dell'editor |
+| `src/DockStudio.Documents` | generatore di documenti PDF / Word / HTML |
+| `src/DockStudio.UI` | interfaccia comune su Avalonia: tema chiaro e scuro, finestre informazioni, aggiornamento e licenza |
+| `tools/DockStudio.LicenseTool` | strumento `dslicense` per creare le chiavi ed emettere le licenze (la chiave privata resta fuori dal repository) |
+
+La compilazione non invia statistiche ad Avalonia: `Directory.Build.targets` sostituisce il passaggio con uno vuoto.
 
 ## Prossimi passi (roadmap)
 

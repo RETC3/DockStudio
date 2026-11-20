@@ -17,7 +17,7 @@ $project = "$root\src\ScreenLove\ScreenLove.csproj"
 # dotnet dal PATH, altrimenti l'installazione per utente
 $dotnet = (Get-Command dotnet -ErrorAction SilentlyContinue).Source
 if (-not $dotnet) { $dotnet = "$env:LOCALAPPDATA\Microsoft\dotnet\dotnet.exe" }
-if (-not (Test-Path $dotnet)) { throw "SDK .NET 8 non trovato: installalo da https://dotnet.microsoft.com/download/dotnet/8.0" }
+if (-not (Test-Path $dotnet)) { throw "SDK .NET 10 non trovato: installalo da https://dotnet.microsoft.com/download/dotnet/10.0" }
 
 if (-not $Version) {
     $Version = ([xml](Get-Content $project)).Project.PropertyGroup.Version | Where-Object { $_ } | Select-Object -First 1

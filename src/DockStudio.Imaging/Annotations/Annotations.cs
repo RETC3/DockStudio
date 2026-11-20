@@ -289,9 +289,6 @@ namespace DockStudio.Imaging.Annotations
         public string Text { get; set; } = "";
         public float FontSize { get; set; } = 24;
 
-        private SKPaint TextPaint(SKTypeface typeface) =>
-            new() { Typeface = typeface, TextSize = FontSize, IsAntialias = true, SubpixelText = true };
-
         private string[] Lines => Text.Replace("\r\n", "\n").Split('\n');
 
         public override SKRect Bounds
@@ -299,10 +296,10 @@ namespace DockStudio.Imaging.Annotations
             get
             {
                 using var typeface = Fonts.Ui(SKFontStyleWeight.SemiBold);
-                using var paint = TextPaint(typeface);
+                using var font = Fonts.Create(typeface, FontSize);
                 float width = 0;
-                foreach (var line in Lines) width = Math.Max(width, paint.MeasureText(line));
-                return SKRect.Create(Position.X, Position.Y, Math.Max(width, 4), paint.FontSpacing * Lines.Length);
+                foreach (var line in Lines) width = Math.Max(width, font.MeasureText(line));
+                return SKRect.Create(Position.X, Position.Y, Math.Max(width, 4), font.Spacing * Lines.Length);
             }
         }
 
@@ -313,14 +310,14 @@ namespace DockStudio.Imaging.Annotations
         public override void Render(SKCanvas canvas, AnnotatedImage image)
         {
             using var typeface = Fonts.Ui(SKFontStyleWeight.SemiBold);
-            using var paint = TextPaint(typeface);
+            using var font = Fonts.Create(typeface, FontSize);
             using var glyphs = new SKPath();
-            float baseline = Position.Y - paint.FontMetrics.Ascent;
+            float baseline = Position.Y - font.Metrics.Ascent;
             foreach (var line in Lines)
             {
-                using var linePath = paint.GetTextPath(line, Position.X, baseline);
+                using var linePath = font.GetTextPath(line, new SKPoint(Position.X, baseline));
                 glyphs.AddPath(linePath);
-                baseline += paint.FontSpacing;
+                baseline += font.Spacing;
             }
 
             // contorno di contrasto per leggere il testo su qualunque sfondo
@@ -354,18 +351,12 @@ namespace DockStudio.Imaging.Annotations
                 canvas.DrawCircle(Center, Radius, ring);
 
             using var typeface = Fonts.Ui(SKFontStyleWeight.Bold);
-            using var paint = new SKPaint
-            {
-                Typeface = typeface,
-                TextSize = Radius * 1.15f,
-                IsAntialias = true,
-                SubpixelText = true,
-                Color = Luminance(Color) > 0.7 ? SKColors.Black : SKColors.White,
-            };
+            using var font = Fonts.Create(typeface, Radius * 1.15f);
+            using var paint = new SKPaint { IsAntialias = true, Color = Luminance(Color) > 0.7 ? SKColors.Black : SKColors.White };
             string text = Number.ToString(System.Globalization.CultureInfo.InvariantCulture);
-            float width = paint.MeasureText(text);
-            float top = Center.Y - paint.FontSpacing / 2;
-            canvas.DrawText(text, Center.X - width / 2, top - paint.FontMetrics.Ascent, paint);
+            float width = font.MeasureText(text);
+            float top = Center.Y - font.Spacing / 2;
+            canvas.DrawText(text, Center.X - width / 2, top - font.Metrics.Ascent, SKTextAlign.Left, font, paint);
         }
 
         public override bool HitTest(SKPoint p) => (p - Center).Length <= Radius + 3;

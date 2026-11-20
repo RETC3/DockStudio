@@ -1,0 +1,81 @@
+<!-- Tema comune delle app DockStudio: Fluent di Avalonia, chiaro e scuro, con colori e stili condivisi.
+     Il colore di accento lo sceglie ogni app (DockTheme.Apply). -->
+<Styles xmlns="https://github.com/avaloniaui"
+        x:Class="DockStudio.UI.DockTheme"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+
+  <FluentTheme />
+
+  <Styles.Resources>
+    <ResourceDictionary>
+      <ResourceDictionary.ThemeDictionaries>
+        <ResourceDictionary x:Key="Light">
+          <SolidColorBrush x:Key="DockSurface" Color="#FFFFFF" />
+          <SolidColorBrush x:Key="DockBackground" Color="#F6F7F9" />
+          <SolidColorBrush x:Key="DockText" Color="#1D1F24" />
+          <SolidColorBrush x:Key="DockMuted" Color="#6B6F78" />
+          <SolidColorBrush x:Key="DockLine" Color="#E7E8EC" />
+          <SolidColorBrush x:Key="DockError" Color="#C62828" />
+          <SolidColorBrush x:Key="DockSuccess" Color="#2E7D32" />
+        </ResourceDictionary>
+        <ResourceDictionary x:Key="Dark">
+          <SolidColorBrush x:Key="DockSurface" Color="#24262B" />
+          <SolidColorBrush x:Key="DockBackground" Color="#1B1C20" />
+          <SolidColorBrush x:Key="DockText" Color="#ECEDEF" />
+          <SolidColorBrush x:Key="DockMuted" Color="#A3A7AF" />
+          <SolidColorBrush x:Key="DockLine" Color="#34363C" />
+          <SolidColorBrush x:Key="DockError" Color="#EF9A9A" />
+          <SolidColorBrush x:Key="DockSuccess" Color="#A5D6A7" />
+        </ResourceDictionary>
+      </ResourceDictionary.ThemeDictionaries>
+    </ResourceDictionary>
+  </Styles.Resources>
+
+  <Style Selector="Window.dock">
+    <Setter Property="Background" Value="{DynamicResource DockBackground}" />
+    <Setter Property="Foreground" Value="{DynamicResource DockText}" />
+    <Setter Property="FontSize" Value="14" />
+  </Style>
+
+  <Style Selector="Border.card">
+    <Setter Property="Background" Value="{DynamicResource DockSurface}" />
+    <Setter Property="BorderBrush" Value="{DynamicResource DockLine}" />
+    <Setter Property="BorderThickness" Value="1" />
+    <Setter Property="CornerRadius" Value="10" />
+    <Setter Property="Padding" Value="18" />
+  </Style>
+
+  <Style Selector="TextBlock.title">
+    <Setter Property="FontSize" Value="22" />
+    <Setter Property="FontWeight" Value="SemiBold" />
+  </Style>
+
+  <Style Selector="TextBlock.heading">
+    <Setter Property="FontSize" Value="15" />
+    <Setter Property="FontWeight" Value="SemiBold" />
+  </Style>
+
+  <Style Selector="TextBlock.muted">
+    <Setter Property="Foreground" Value="{DynamicResource DockMuted}" />
+  </Style>
+
+  <Style Selector="TextBlock.error">
+    <Setter Property="Foreground" Value="{DynamicResource DockError}" />
+  </Style>
+
+  <Style Selector="TextBlock.success">
+    <Setter Property="Foreground" Value="{DynamicResource DockSuccess}" />
+  </Style>
+
+  <Style Selector="TextBlock.brand">
+    <Setter Property="Foreground" Value="{DynamicResource SystemAccentColor}" />
+    <Setter Property="FontSize" Value="26" />
+    <Setter Property="FontWeight" Value="Bold" />
+  </Style>
+
+  <Style Selector="Button">
+    <Setter Property="CornerRadius" Value="6" />
+    <Setter Property="Padding" Value="14,7" />
+  </Style>
+
+</Styles>

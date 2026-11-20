@@ -1,0 +1,5 @@
+<Project>
+  <!-- Avalonia.BuildServices invia statistiche anonime a ogni compilazione: qui il passaggio viene sostituito
+       con uno vuoto, così non parte nulla né in locale né sui server di GitHub. -->
+  <Target Name="AvaloniaStats" />
+</Project>
