@@ -123,8 +123,17 @@ namespace ScreenLove.Editor
             }
         }
 
-        /// <summary>Immagine finale: base + annotazioni, alla risoluzione originale.</summary>
-        public BitmapSource Flatten()
+        /// <summary>
+        /// Immagine finale: base + annotazioni, alla risoluzione originale. La disegna il modulo immagini
+        /// condiviso (Skia), lo stesso che userà l'editor su Mac.
+        /// </summary>
+        public BitmapSource Flatten() => AnnotationModel.Flatten(this);
+
+        /// <summary>
+        /// Lo stesso disegno fatto con WPF, come appare a schermo nell'editor. Serve solo ai controlli per
+        /// confrontarlo con <see cref="Flatten"/>; sparisce con il passaggio ad Avalonia.
+        /// </summary>
+        public BitmapSource FlattenWithWpf()
         {
             var visual = new DrawingVisual();
             using (var dc = visual.RenderOpen())

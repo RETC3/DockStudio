@@ -18,6 +18,7 @@ using UpdateInfo = DockStudio.Core.Updates.UpdateInfo;
 using DockStudio.Core.Licensing;
 using DockStudio.Core.Localization;
 using DockStudio.Core.Suite;
+using M = DockStudio.Imaging.Annotations;
 using ScreenLove.Services;
 using ScreenLove.Video;
 
@@ -48,6 +49,8 @@ namespace ScreenLove.Checks
                 Section("Aggiornamenti: release vera su GitHub", () => RunOnDispatcher(CheckUpdaterOnlineAsync));
             var sample = SampleImage(900, 520);
             Section("Editor: maniglie delle annotazioni", CheckHandles);
+            Section("Annotazioni nel modulo immagini (Skia)", CheckModelAnnotations);
+            Section("Annotazioni: disegno Skia uguale a quello a schermo (WPF)", () => CheckAnnotationRendering(sample));
             Section("Effetti immagine", () => CheckEffects(sample));
             Section("Cattura a scorrimento: cucitura", CheckStitching);
             Section("Generatore di documenti", CheckDocuments);
@@ -519,6 +522,132 @@ namespace ScreenLove.Checks
             finally
             {
                 try { Directory.Delete(folder, true); } catch { }
+            }
+        }
+
+        /// <summary>Le stesse prove delle maniglie, sul modello del modulo immagini (quello che userà Avalonia).</summary>
+        private static void CheckModelAnnotations()
+        {
+            static SkiaSharp.SKRect R(float x, float y, float w, float h) => SkiaSharp.SKRect.Create(x, y, w, h);
+            static SkiaSharp.SKPoint P(float x, float y) => new(x, y);
+
+            var box = new M.RectangleAnnotation { Rect = R(10, 10, 100, 50) };
+            Check(box.Handles.Length == 8, "rettangolo: 8 maniglie");
+            box.DragHandle(4, P(150, 90), false, box.Clone());
+            Check(box.Rect == R(10, 10, 140, 80), $"angolo: ridimensiona tenendo fermo l'angolo opposto ({box.Rect})");
+            box = new M.RectangleAnnotation { Rect = R(10, 10, 100, 50) };
+            box.DragHandle(3, P(0, 30), false, box.Clone());
+            Check(box.Rect == R(0, 10, 10, 50), $"lato oltre l'opposto: la forma si ribalta senza rompersi ({box.Rect})");
+            box = new M.RectangleAnnotation { Rect = R(0, 0, 100, 50) };
+            box.DragHandle(4, P(300, 60), true, box.Clone());
+            Check(Math.Abs(box.Rect.Width / box.Rect.Height - 2) < 0.001, $"Maiusc sull'angolo: proporzioni mantenute ({box.Rect})");
+
+            var arrow = new M.ArrowAnnotation { Start = P(0, 0), End = P(100, 0) };
+            arrow.DragHandle(1, P(50, 80), false, arrow.Clone());
+            Check(arrow.Start == P(0, 0) && arrow.End == P(50, 80), "freccia: la punta si sposta, la coda resta");
+            arrow.DragHandle(0, P(10, 82), true, arrow.Clone());
+            Check(Math.Abs(arrow.Start.Y - 80) < 0.01, $"freccia con Maiusc: direzione a 45° ({arrow.Start})");
+            var line = new M.ArrowAnnotation { Start = P(0, 0), End = P(100, 0), Thickness = 4 };
+            Check(line.HitTest(P(50, 3)) && !line.HitTest(P(50, 40)), "freccia: si seleziona cliccando sulla linea");
+
+            var drawn = new M.EllipseAnnotation();
+            drawn.Drag(P(50, 50), P(10, 30), constrain: false);
+            Check(drawn.Rect == R(10, 30, 40, 20), $"disegno all'indietro: rettangolo corretto ({drawn.Rect})");
+            drawn.Drag(P(0, 0), P(30, 10), constrain: true);
+            Check(drawn.Rect == R(0, 0, 30, 30), "Maiusc mentre si disegna: quadrato");
+            var frame = new M.RectangleAnnotation { Rect = R(0, 0, 100, 100), Thickness = 4 };
+            Check(frame.HitTest(P(1, 50)) && !frame.HitTest(P(50, 50)), "rettangolo: si seleziona dal bordo, non dal centro");
+
+            var text = new M.TextAnnotation { Text = "Prova", FontSize = 24, Position = P(10, 10) };
+            var one = text.Bounds;
+            text.Text = "Prova\nsu due righe";
+            Check(one.Width > 30 && one.Height > 24 && text.Bounds.Height > one.Height * 1.9,
+                $"testo: misure ({one.Width:0}×{one.Height:0}) e testo su più righe");
+
+            // Documento: ritaglio, spotlight, pixelatura.
+            using var white = DockStudio.Imaging.Pixels.Render(120, 40, c => c.Clear(SkiaSharp.SKColors.White));
+            using var doc = new M.AnnotatedImage(white.Copy());
+            using (var cut = doc.Crop(new SkiaSharp.SKRectI(-10, -10, 30, 20)))
+                Check(cut.Width == 30 && cut.Height == 20, "ritaglio: la zona fuori dall'immagine viene tagliata");
+            doc.Items.Add(new M.SpotlightAnnotation { Rect = R(5, 5, 20, 20) });
+            doc.Items.Add(new M.SpotlightAnnotation { Rect = R(40, 5, 20, 20) });
+            using (var flat = doc.Flatten())
+            {
+                var outside = flat.GetPixel(110, 35);
+                var hole = flat.GetPixel(50, 15);
+                Check(outside.Red < 200 && hole.Red == 255, $"2 spotlight: un'unica ombra ({outside.Red}), dentro resta chiaro ({hole.Red})");
+            }
+
+            using var striped = DockStudio.Imaging.Pixels.Render(40, 40, c =>
+            {
+                c.Clear(SkiaSharp.SKColors.White);
+                using var black = new SkiaSharp.SKPaint { Color = SkiaSharp.SKColors.Black };
+                for (int x = 0; x < 40; x += 2) c.DrawRect(x, 0, 1, 40, black);
+            });
+            using var stripes = new M.AnnotatedImage(striped.Copy());
+            using (var px = stripes.Pixelate(new SkiaSharp.SKRectI(0, 0, 40, 40), 10, out var placed))
+            {
+                var a = px!.GetPixel(0, 0);
+                var b = px.GetPixel(1, 0);
+                Check(placed.Width == 40 && a == b && a.Red > 100 && a.Red < 155, $"pixelatura: a blocchi, colore medio ({a.Red})");
+            }
+        }
+
+        /// <summary>
+        /// Lo stesso documento con tutti i tipi di annotazione, disegnato da WPF (come a schermo nell'editor) e da
+        /// Skia (come viene salvato): le differenze devono restare sui bordi sfumati, mai su intere forme.
+        /// </summary>
+        private static void CheckAnnotationRendering(BitmapSource sample)
+        {
+            var doc = new EditorDocument(sample);
+            var red = Color.FromRgb(0xE5, 0x39, 0x35);
+            var blue = Color.FromRgb(0x1E, 0x88, 0xE5);
+            doc.Items.Add(new BlurAnnotation { Rect = new Rect(380, 150, 260, 50), Thickness = 4 });
+            doc.Items.Add(new HighlightAnnotation { Rect = new Rect(60, 320, 300, 40), Color = Color.FromRgb(0xFF, 0xEB, 0x3B) });
+            doc.Items.Add(new SpotlightAnnotation { Rect = new Rect(40, 100, 300, 200) });
+            doc.Items.Add(new RectangleAnnotation { Rect = new Rect(50, 110, 280, 180), Color = red, Thickness = 4 });
+            doc.Items.Add(new EllipseAnnotation { Rect = new Rect(600, 300, 180, 120), Color = blue, Thickness = 6 });
+            doc.Items.Add(new ArrowAnnotation { Start = new Point(700, 120), End = new Point(520, 260), Color = red, Thickness = 5 });
+            doc.Items.Add(new TextAnnotation { Position = new Point(420, 420), Text = "Clicca qui", FontSize = 32, Color = red });
+            doc.Items.Add(new StepAnnotation { Center = new Point(90, 440), Number = 3, Color = blue, Thickness = 4 });
+            doc.Items.Add(new StepAnnotation { Center = new Point(160, 440), Number = 12, Color = Color.FromRgb(0xFF, 0xEB, 0x3B), Thickness = 4 });
+
+            var wpf = ImageIO.Normalize(doc.FlattenWithWpf());
+            var skia = ImageIO.Normalize(doc.Flatten());
+            int w = wpf.PixelWidth, h = wpf.PixelHeight, stride = w * 4;
+            var a = new byte[stride * h];
+            var b = new byte[stride * h];
+            wpf.CopyPixels(a, stride, 0);
+            skia.CopyPixels(b, stride, 0);
+
+            int strong = 0, any = 0;
+            var diff = new byte[stride * h];
+            for (int i = 0; i < a.Length; i += 4)
+            {
+                int d = Math.Max(Math.Abs(a[i] - b[i]), Math.Max(Math.Abs(a[i + 1] - b[i + 1]), Math.Abs(a[i + 2] - b[i + 2])));
+                if (d > 8) any++;
+                if (d > 96) strong++;
+                byte v = (byte)Math.Min(255, d * 3);
+                diff[i] = diff[i + 1] = (byte)(255 - v);
+                diff[i + 2] = 255;
+                diff[i + 3] = 255;
+            }
+            ImageIO.Save(wpf, Path.Combine(_dir, "annotazioni-wpf.png"));
+            ImageIO.Save(skia, Path.Combine(_dir, "annotazioni-skia.png"));
+            ImageIO.Save(BitmapSource.Create(w, h, 96, 96, PixelFormats.Bgra32, null, diff, stride), Path.Combine(_dir, "annotazioni-differenze.png"));
+
+            double total = (double)w * h;
+            Check(skia.PixelWidth == w && skia.PixelHeight == h, "stessa dimensione");
+            Check(any / total < 0.03, $"pixel diversi (oltre 8/255): {any / total:P2}, solo bordi sfumati");
+            Check(strong / total < 0.004, $"pixel molto diversi (oltre 96/255): {strong / total:P2}");
+
+            // Zone piene: identiche (o quasi) nei due disegni.
+            foreach (var (x, y, what) in new[] { (200, 200, "dentro lo spotlight"), (800, 60, "ombra dello spotlight"), (100, 340, "evidenziatore"), (80, 450, "centro del passaggio") })
+            {
+                var pa = Pixel(wpf, x, y);
+                var pb = Pixel(skia, x, y);
+                int d = Math.Max(Math.Abs(pa.r - pb.r), Math.Max(Math.Abs(pa.g - pb.g), Math.Abs(pa.b - pb.b)));
+                Check(d <= 3, $"{what}: stesso colore (scarto {d})");
             }
         }
 
