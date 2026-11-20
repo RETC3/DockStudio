@@ -112,7 +112,9 @@ ${FOOTER}
 `;
 }
 
-const icona = (a, cls = 'app-icon') => `<span class="${cls}" style="--c:${a.colore}">${esc(a.icona)}</span>`;
+const icona = (a, cls = 'app-icon') => (a.logo
+  ? `<span class="${cls} has-logo"><img src="${a.logo}" alt="" width="64" height="64"></span>`
+  : `<span class="${cls}" style="--c:${a.colore}">${esc(a.icona)}</span>`);
 const tagStato = (a) => { const [c, t] = STATO_APP[a.stato]; return `<span class="tag ${c}">${t}</span>`; };
 const briciole = (...voci) => `<nav class="crumbs mono" aria-label="Percorso">${voci
   .map(([href, nome]) => (href ? `<a href="${href}">${esc(nome)}</a>` : `<span aria-current="page">${esc(nome)}</span>`))
@@ -209,10 +211,12 @@ function paginaApp(a, i) {
     </div>
   </section>` : '';
 
+  const cop = a.copertina;
   const corpo = `
-  <section class="phero" style="--c:${a.colore}">
+  <section class="phero${cop ? ' has-cover' : ''}" style="--c:${a.colore}">
     <div class="wrap">
       ${briciole(['/', 'DockStudio'], ['/#app', 'App'], [null, a.nome])}
+      ${cop ? '<div class="phero-grid"><div>' : ''}
       <div class="phero-id">${icona(a, 'app-icon xl')}<span class="mono">${a.num} · ${esc(a.categoria)}</span></div>
       <h1>${esc(a.nome)}</h1>
       <p class="lead">${testo(a.lead)}</p>
@@ -220,6 +224,9 @@ function paginaApp(a, i) {
       <div class="cta left">
         ${azioni}
       </div>
+      ${cop ? `</div>
+      <figure class="cover"><img src="${cop.src}" alt="${esc(cop.alt)}" width="${cop.larghezza}" height="${cop.altezza}"></figure>
+      </div>` : ''}
     </div>
   </section>
 ${sezFunzioni}

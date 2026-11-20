@@ -4,6 +4,8 @@
 // novita: solo per le app in sviluppo o già uscite. { versioni, inArrivo } come in web/lib/novita.js:
 //         la sotto-pagina /<app>/novita/ compare da sola quando c'è.
 // funzioni: per le app non ancora uscite sono quelle previste e possono cambiare.
+// logo:      icona dell'app (SVG in site/public/apps/<app>/), al posto della lettera colorata.
+// copertina: immagine grande accanto al titolo nella pagina dell'app.
 //
 // Nei testi si possono usare **grassetto** e `tasti`.
 
@@ -16,6 +18,9 @@ export const apps = [
     num: '01',
     colore: '#FF3D7F',
     icona: 'S',
+    logo: '/apps/screenlove/logo.svg',
+    copertina: { src: '/apps/screenlove/copertina.png', larghezza: 1200, altezza: 630,
+      alt: "ScreenLove: catture che si spiegano da sole. L'editor con un riquadro numerato e una freccia su una pagina catturata." },
     categoria: 'Catture dello schermo',
     breve: 'Catture di finestre, zone e pagine intere, editor con frecce e passaggi, video con audio e webcam, testo dalle immagini e documenti PDF e Word.',
     lead: "Catturi una finestra, una zona o una pagina intera, la sistemi nell'editor e la condividi in un PDF o in un documento Word. Registra anche video con audio e webcam.",
