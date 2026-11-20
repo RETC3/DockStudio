@@ -1,0 +1,16 @@
+{
+  // Testi del nucleo DockStudio in italiano (lingua base). Ogni chiave deve esistere anche in en.json.
+  "updates.noSource": "Nessuna fonte per gli aggiornamenti.",
+  "updates.noReleases": "Non ci sono ancora versioni pubblicate di {0}.",
+  "updates.tooManyRequests": "Troppe richieste al server degli aggiornamenti: riprova tra un'ora.",
+  "updates.noInstaller": "Questa versione non contiene l'installer.",
+  "updates.untrustedUrl": "Indirizzo dell'installer non riconosciuto: aggiornamento annullato.",
+  "updates.incomplete": "Download incompleto ({0:N0} di {1:N0} byte).",
+  "updates.hashMismatch": "Il file scaricato non corrisponde a quello pubblicato (impronta SHA-256 diversa).",
+
+  "license.free": "Versione gratuita",
+  "license.business": "Licenza Business di {0}",
+  "license.expired": "Licenza Business di {0} scaduta il {1:d}",
+  "license.invalid": "File di licenza non valido",
+  "license.otherApp": "La licenza di {0} non comprende questa app"
+}

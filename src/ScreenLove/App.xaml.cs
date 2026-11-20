@@ -37,6 +37,10 @@ namespace ScreenLove
 
         protected override void OnStartup(StartupEventArgs e)
         {
+            // L'interfaccia di ScreenLove è solo in italiano: anche i testi del nucleo restano in italiano
+            // finché le finestre non saranno tradotte (con il passaggio ad Avalonia).
+            DockStudio.Core.Localization.Languages.Set(DockStudio.Core.Localization.Languages.Base);
+
             _instance = SingleInstance.TryAcquire(Updater.Identity);
             if (_instance == null)
             {

@@ -64,6 +64,16 @@ namespace DockStudio.Core.Licensing
     public sealed record LicenseCheck(LicenseStatus Status, LicenseInfo? Info, string? Path)
     {
         public Edition Edition => Status == LicenseStatus.Valid && Info != null ? Info.Edition : Edition.Free;
+
+        /// <summary>Descrizione breve per le informazioni dell'app, nella lingua in uso.</summary>
+        public string Description => Status switch
+        {
+            LicenseStatus.Valid => DockStudio.Core.Localization.CoreText.Strings.Format("license.business", Info!.Licensee),
+            LicenseStatus.Expired => DockStudio.Core.Localization.CoreText.Strings.Format("license.expired", Info!.Licensee, Info.Expires),
+            LicenseStatus.Invalid => DockStudio.Core.Localization.CoreText.Strings["license.invalid"],
+            LicenseStatus.OtherApp => DockStudio.Core.Localization.CoreText.Strings.Format("license.otherApp", Info!.Licensee),
+            _ => DockStudio.Core.Localization.CoreText.Strings["license.free"],
+        };
     }
 
     /// <summary>

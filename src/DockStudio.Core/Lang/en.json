@@ -1,0 +1,16 @@
+{
+  // DockStudio core texts in English. Keys must match it.json (the base language).
+  "updates.noSource": "No source for updates.",
+  "updates.noReleases": "No versions of {0} have been published yet.",
+  "updates.tooManyRequests": "Too many requests to the update server: try again in an hour.",
+  "updates.noInstaller": "This version does not include the installer.",
+  "updates.untrustedUrl": "Unrecognized installer address: update cancelled.",
+  "updates.incomplete": "Incomplete download ({0:N0} of {1:N0} bytes).",
+  "updates.hashMismatch": "The downloaded file does not match the published one (different SHA-256 fingerprint).",
+
+  "license.free": "Free version",
+  "license.business": "Business license for {0}",
+  "license.expired": "Business license for {0} expired on {1:d}",
+  "license.invalid": "Invalid license file",
+  "license.otherApp": "The license for {0} does not include this app"
+}

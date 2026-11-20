@@ -13,4 +13,9 @@
     <RootNamespace>DockStudio.Core</RootNamespace>
   </PropertyGroup>
 
+  <ItemGroup>
+    <!-- Testi del nucleo, uno per lingua: risorse DockStudio.Core.Lang.<lingua>.json -->
+    <EmbeddedResource Include="Lang\*.json" LogicalName="DockStudio.Core.Lang.%(Filename).json" />
+  </ItemGroup>
+
 </Project>

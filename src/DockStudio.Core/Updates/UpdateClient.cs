@@ -9,6 +9,7 @@ using System.Text.Json;
 using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
+using DockStudio.Core.Localization;
 
 namespace DockStudio.Core.Updates
 {
@@ -98,7 +99,7 @@ namespace DockStudio.Core.Updates
                     last = ex; // si prova la fonte successiva
                 }
             }
-            throw last ?? new InvalidOperationException("Nessuna fonte per gli aggiornamenti.");
+            throw last ?? new InvalidOperationException(CoreText.Strings["updates.noSource"]);
         }
 
         private async Task<string> ReadFeedAsync(string url, CancellationToken ct)
@@ -110,9 +111,9 @@ namespace DockStudio.Core.Updates
             using var http = CreateClient(TimeSpan.FromSeconds(15));
             using var resp = await http.GetAsync(feed, ct);
             if (resp.StatusCode == HttpStatusCode.NotFound)
-                throw new InvalidOperationException($"Non ci sono ancora versioni pubblicate di {_app.Name}.");
+                throw new InvalidOperationException(CoreText.Strings.Format("updates.noReleases", _app.Name));
             if ((int)resp.StatusCode == 403 || (int)resp.StatusCode == 429)
-                throw new InvalidOperationException("Troppe richieste al server degli aggiornamenti: riprova tra un'ora.");
+                throw new InvalidOperationException(CoreText.Strings["updates.tooManyRequests"]);
             resp.EnsureSuccessStatusCode();
             return await resp.Content.ReadAsStringAsync(ct);
         }
@@ -170,9 +171,9 @@ namespace DockStudio.Core.Updates
         public async Task<string> DownloadSetupAsync(UpdateInfo update, IProgress<double>? progress, CancellationToken ct = default)
         {
             if (update.SetupUrl == null || update.SetupName == null)
-                throw new InvalidOperationException("Questa versione non contiene l'installer.");
+                throw new InvalidOperationException(CoreText.Strings["updates.noInstaller"]);
             if (!IsTrustedDownload(update.SetupUrl))
-                throw new InvalidOperationException("Indirizzo dell'installer non riconosciuto: aggiornamento annullato.");
+                throw new InvalidOperationException(CoreText.Strings["updates.untrustedUrl"]);
 
             var source = new Uri(update.SetupUrl);
             var folder = Path.Combine(Path.GetTempPath(), _app.Name + "-aggiornamento");
@@ -220,9 +221,9 @@ namespace DockStudio.Core.Updates
                         sha.TransformFinalBlock(Array.Empty<byte>(), 0, 0);
 
                         if (update.SetupSize > 0 && done != update.SetupSize)
-                            throw new IOException($"Download incompleto ({done:N0} di {update.SetupSize:N0} byte).");
+                            throw new IOException(CoreText.Strings.Format("updates.incomplete", done, update.SetupSize));
                         if (update.SetupSha256 != null && Convert.ToHexString(sha.Hash!).ToLowerInvariant() != update.SetupSha256)
-                            throw new IOException("Il file scaricato non corrisponde a quello pubblicato (impronta SHA-256 diversa).");
+                            throw new IOException(CoreText.Strings["updates.hashMismatch"]);
                     }
                     finally
                     {

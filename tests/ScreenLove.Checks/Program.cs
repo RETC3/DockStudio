@@ -16,6 +16,7 @@ using ScreenLove.Editor;
 using ScreenLove.Recording;
 using UpdateInfo = DockStudio.Core.Updates.UpdateInfo;
 using DockStudio.Core.Licensing;
+using DockStudio.Core.Localization;
 using DockStudio.Core.Suite;
 using ScreenLove.Services;
 using ScreenLove.Video;
@@ -41,6 +42,7 @@ namespace ScreenLove.Checks
             Section("Aggiornamenti", CheckUpdater);
             Section("Statistiche anonime", CheckUsageStats);
             Section("Suite: licenza", CheckLicense);
+            Section("Lingue", CheckLanguages);
             Section("Suite: registro delle app", CheckSuiteRegistry);
             if (args.Contains("--online"))
                 Section("Aggiornamenti: release vera su GitHub", () => RunOnDispatcher(CheckUpdaterOnlineAsync));
@@ -439,6 +441,45 @@ namespace ScreenLove.Checks
 
             Check(LicenseKeys.PublicKeyPem.StartsWith("-----BEGIN PUBLIC KEY-----")
                   && LicenseFile.Verify(text, LicenseKeys.PublicKeyPem) == null, "chiave pubblica vera presente (e diversa da quella di prova)");
+        }
+
+        private static void CheckLanguages()
+        {
+            var core = CoreText.Strings;
+            var problems = core.Problems();
+            Check(problems.Count == 0, "testi del nucleo: italiano e inglese hanno le stesse chiavi e gli stessi segnaposto"
+                                       + (problems.Count > 0 ? " — " + string.Join("; ", problems) : ""));
+            Check(core.Catalog("it").Count >= 10, $"testi del nucleo in italiano ({core.Catalog("it").Count})");
+
+            Check(Languages.Detect(new CultureInfo("it-IT")) == "it" && Languages.Detect(new CultureInfo("it-CH")) == "it", "sistema in italiano: italiano");
+            Check(Languages.Detect(new CultureInfo("en-GB")) == "en" && Languages.Detect(new CultureInfo("de-DE")) == "en", "altre lingue di sistema: inglese");
+
+            var before = Languages.Current;
+            try
+            {
+                Languages.Set("en");
+                Check(core.Format("updates.noReleases", "ScreenLove") == "No versions of ScreenLove have been published yet.", "testo in inglese con segnaposto");
+                Check(core.Format("updates.incomplete", 1234567L, 2000000L) == "Incomplete download (1,234,567 of 2,000,000 bytes).", "numeri nel formato inglese");
+                Languages.Set("it");
+                Check(core.Format("updates.incomplete", 1234567L, 2000000L) == "Download incompleto (1.234.567 di 2.000.000 byte).", "numeri nel formato italiano");
+                Languages.Set("xx");
+                Check(Languages.Supported.ContainsKey(Languages.Current), "lingua sconosciuta: si usa quella di sistema");
+
+                var test = new DockStudio.Core.Localization.Localizer(new Dictionary<string, Dictionary<string, string>>
+                {
+                    ["it"] = new() { ["a"] = "Ciao {0}", ["b"] = "Solo italiano", ["c"] = "{0} e {1}" },
+                    ["en"] = new() { ["a"] = "Hello {0}", ["c"] = "{0} only", ["z"] = "extra" },
+                });
+                Check(test.Get("b", "en") == "Solo italiano", "traduzione mancante: si mostra l'italiano");
+                Check(test.Get("nessuna", "en") == "nessuna", "testo inesistente: si mostra la chiave, senza errori");
+                var p = test.Problems();
+                Check(p.Any(x => x.Contains("manca \"b\"")) && p.Any(x => x.Contains("\"z\"")) && p.Any(x => x.Contains("segnaposto diversi in \"c\"")),
+                    "il controllo trova chiavi mancanti, chiavi in più e segnaposto diversi");
+            }
+            finally
+            {
+                Languages.Set(before);
+            }
         }
 
         private static void CheckSuiteRegistry()
