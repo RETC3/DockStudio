@@ -16,7 +16,7 @@ namespace ScreenLove.Services
         public static string EnsureInstallId(AppSettings settings) => Core.EnsureInstallId(settings);
 
         public static string BuildPing(string id, Version version, string arch, bool installed, int minutes = 0) =>
-            Core.BuildPing(id, version, arch, installed, minutes);
+            Core.BuildPing(Updater.Identity.StatsName, id, version, arch, installed, minutes);
 
         public static bool AddUsageMinute(AppSettings settings) => Core.AddUsageMinute(settings);
 

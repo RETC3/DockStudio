@@ -22,11 +22,12 @@ export async function onRequestPost({ request, env }) {
   }
 
   const ping = parsePing(body);
-  if (!ping) return reply(400);
+  // da screenlove.it arrivano solo i ping di ScreenLove (le altre app li mandano a getdockstudio.it)
+  if (!ping || (ping.app && ping.app !== 'screenlove')) return reply(400);
   if (!env.STATS) return reply(204); // statistiche non configurate: l'app non deve accorgersene
 
   try {
-    await savePing(env.STATS, ping);
+    await savePing(env.STATS, ping, 'screenlove');
   } catch (err) {
     console.error('statistiche: ping non salvato', err);
     return reply(503);

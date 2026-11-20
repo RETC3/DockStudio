@@ -71,7 +71,7 @@ function count(request, env, name, waitUntil) {
   const range = request.headers.get('Range');
   if (range && !/^bytes=0-/.test(range)) return;
   const source = /^ScreenLove/i.test(request.headers.get('User-Agent') || '') ? 'app' : 'web';
-  waitUntil(countDownload(env.STATS, name, source));
+  waitUntil(countDownload(env.STATS, name, source, 'screenlove'));
 }
 
 function notFound() {

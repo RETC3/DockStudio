@@ -13,15 +13,26 @@ namespace DockStudio.Core
     /// <param name="GitHubRepo">Repository pubblico delle release ("proprietario/nome"), o null se non c'è.</param>
     /// <param name="SetupAssetPattern">Espressione regolare del nome dell'installer tra i file della release.</param>
     /// <param name="EnvPrefix">Prefisso delle variabili d'ambiente di prova (es. "SCREENLOVE" → SCREENLOVE_UPDATE_FEED).</param>
+    /// <param name="StatsUrl">
+    /// Dove mandare statistiche e segnalazioni degli errori (senza barra finale). Null = il sito dell'app;
+    /// le nuove app usano <see cref="SuiteStatsUrl"/>, il sito di DockStudio che raccoglie i dati di tutte.
+    /// </param>
     public sealed record AppIdentity(
         string Name,
         string SiteUrl,
         string? PagesUrl,
         string? GitHubRepo,
         string SetupAssetPattern,
-        string EnvPrefix)
+        string EnvPrefix,
+        string? StatsUrl = null)
     {
+        /// <summary>Il sito della suite, che raccoglie statistiche ed errori di tutte le app (pagina /statistiche).</summary>
+        public const string SuiteStatsUrl = "https://getdockstudio.it";
+
         public string UserAgent => Name + "-Updater";
+
+        /// <summary>Nome dell'app nelle statistiche: il nome in minuscolo (es. "screenlove", "dockpdf").</summary>
+        public string StatsName => Name.ToLowerInvariant();
 
         /// <summary>Cartella dei dati dell'utente (impostazioni): %APPDATA%\Nome su Windows, ~/.config/Nome su macOS e Linux.</summary>
         public string DataFolder => Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), Name);

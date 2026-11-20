@@ -4,3 +4,15 @@
 name = "dockstudio"
 pages_build_output_dir = "dist"
 compatibility_date = "2026-10-01"
+
+# Pagine riservate /statistiche: Cloudflare Access, la stessa applicazione di screenlove.it/statistiche
+# (con in più getdockstudio.it/statistiche tra gli indirizzi protetti). Vedi docs/CLOUDFLARE.md.
+[vars]
+ACCESS_TEAM_DOMAIN = "frosty-sun-e1a2.cloudflareaccess.com"
+ACCESS_AUD = "100e1cfd440c562d4cdb5e638331def3e3b6fea7e040a278823775f39f1e1810"
+
+# Statistiche anonime di tutte le app: lo stesso database D1 di screenlove.it (web/lib/stats.js).
+[[d1_databases]]
+binding = "STATS"
+database_name = "screenlove-stats"
+database_id = "2b567977-bfec-4dfe-bd54-60f28e39f4c5"

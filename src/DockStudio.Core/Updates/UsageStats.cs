@@ -51,7 +51,7 @@ namespace DockStudio.Core.Updates
         public UsageStats(UpdateClient updates) => _updates = updates;
 
         /// <summary>Dove si invia il ping: il sito dell'app, oppure PREFISSO_STATS_URL per le prove.</summary>
-        public string PingUrl => _updates.App.Env("STATS_URL") ?? _updates.App.SiteUrl + "/api/ping";
+        public string PingUrl => _updates.App.Env("STATS_URL") ?? (_updates.App.StatsUrl ?? _updates.App.SiteUrl) + "/api/ping";
 
         public static bool IsValidId(string? id) => id != null && IdFormat.IsMatch(id);
 
@@ -86,10 +86,12 @@ namespace DockStudio.Core.Updates
             _ => "x64",
         };
 
-        /// <summary>Il contenuto inviato al sito: esattamente questi cinque campi.</summary>
-        public static string BuildPing(string id, Version version, string arch, bool installed, int minutes) =>
+        /// <summary>Il contenuto inviato al sito: esattamente questi sei campi.</summary>
+        /// <param name="app">Nome dell'app nelle statistiche (<see cref="AppIdentity.StatsName"/>).</param>
+        public static string BuildPing(string app, string id, Version version, string arch, bool installed, int minutes) =>
             JsonSerializer.Serialize(new
             {
+                app,
                 id,
                 version = $"{version.Major}.{version.Minor}.{Math.Max(0, version.Build)}",
                 arch,
@@ -113,7 +115,7 @@ namespace DockStudio.Core.Updates
             try
             {
                 int minutes = settings.UsageMinutes;
-                var body = BuildPing(EnsureInstallId(settings), _updates.CurrentVersion, Architecture, installed, minutes);
+                var body = BuildPing(_updates.App.StatsName, EnsureInstallId(settings), _updates.CurrentVersion, Architecture, installed, minutes);
                 using var http = new HttpClient { Timeout = TimeSpan.FromSeconds(10) };
                 http.DefaultRequestHeaders.UserAgent.ParseAdd(_updates.App.UserAgent);
                 using var content = new StringContent(body, Encoding.UTF8, "application/json");

@@ -334,11 +334,12 @@ namespace ScreenLove.Checks
             using (var doc = System.Text.Json.JsonDocument.Parse(UsageStats.BuildPing(id, new Version(0, 6, 0), "arm64", installed: false, minutes: 42)))
             {
                 var names = doc.RootElement.EnumerateObject().Select(p => p.Name).OrderBy(n => n).ToArray();
-                Check(string.Join(",", names) == "arch,id,kind,minutes,version", "il ping contiene solo id, versione, architettura, tipo e minuti");
+                Check(string.Join(",", names) == "app,arch,id,kind,minutes,version", "il ping contiene solo app, id, versione, architettura, tipo e minuti");
                 Check(doc.RootElement.GetProperty("version").GetString() == "0.6.0"
                       && doc.RootElement.GetProperty("kind").GetString() == "portable"
                       && doc.RootElement.GetProperty("arch").GetString() == "arm64"
-                      && doc.RootElement.GetProperty("minutes").GetInt32() == 42, "valori del ping corretti");
+                      && doc.RootElement.GetProperty("minutes").GetInt32() == 42
+                      && doc.RootElement.GetProperty("app").GetString() == "screenlove", "valori del ping corretti");
             }
 
             // tempo di utilizzo: si conta solo con le statistiche scelte, fino a un tetto
@@ -394,11 +395,11 @@ namespace ScreenLove.Checks
                   && clean.Contains("at ScreenLove.App.Save(String path)") && clean.Contains("<percorso>"),
                 "punti del codice ripuliti: niente percorsi, file sorgente e numeri di riga");
 
-            var json = DockStudio.Core.Updates.ErrorReports.BuildReport(sample, new Version(0, 6, 0), "x64", "windows 10.0.19045", fatal: true);
+            var json = DockStudio.Core.Updates.ErrorReports.BuildReport("screenlove", sample, new Version(0, 6, 0), "x64", "windows 10.0.19045", fatal: true);
             using (var doc = System.Text.Json.JsonDocument.Parse(json))
             {
                 var names = doc.RootElement.EnumerateObject().Select(p => p.Name).OrderBy(n => n).ToArray();
-                Check(string.Join(",", names) == "arch,fatal,os,stack,type,version", "la segnalazione contiene solo versione, architettura, sistema, tipo, punti del codice e chiusura");
+                Check(string.Join(",", names) == "app,arch,fatal,os,stack,type,version", "la segnalazione contiene solo app, versione, architettura, sistema, tipo, punti del codice e chiusura");
                 Check(doc.RootElement.GetProperty("type").GetString() == "System.InvalidOperationException ← System.IO.IOException"
                       && doc.RootElement.GetProperty("fatal").GetBoolean(), "tipo dell'errore e degli errori interni");
                 Check(!json.Contains("mario") && !json.Contains("segreto") && !json.Contains("Salvataggio"),

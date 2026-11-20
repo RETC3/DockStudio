@@ -66,26 +66,34 @@ I valori restano cifrati su GitHub e nessuno li può rileggere, nemmeno tu.
 - **I file su R2** arrivano con la prossima release (`git tag -a v0.1.1 -m "Novità…"` e push del tag).
   Fino ad allora i download del sito passano dalla release su GitHub.
 
-## Statistiche anonime
+## Statistiche anonime (tutte le app)
 
-Due numeri, senza dati personali (vedi anche la pagina https://screenlove.it/privacy):
+Solo numeri anonimi, e dalle app solo quello che l'utente ha scelto (vedi https://screenlove.it/privacy):
 - **download:** `web/functions/download/[[path]].js` conta ogni file scaricato per intero, per giorno, file e
   provenienza (sito o aggiornamento dell'app);
-- **installazioni attive:** l'app, insieme al controllo automatico degli aggiornamenti (al massimo una volta
-  al giorno), invia a `POST /api/ping` un codice casuale, la versione, l'architettura e se è installata o
-  portatile (`src/ScreenLove/Services/UsageStats.cs`). Si disattiva in Impostazioni → Aggiornamenti.
+- **installazioni attive e tempo di utilizzo:** l'app, insieme al controllo automatico degli aggiornamenti
+  (al massimo una volta al giorno), invia a `POST /api/ping` il nome dell'app, un codice casuale, la versione,
+  l'architettura, se è installata o portatile e i minuti di utilizzo (`DockStudio.Core/Updates/UsageStats.cs`);
+- **errori:** `POST /api/errore` con tipo e punti del codice ripuliti (`DockStudio.Core/Updates/ErrorReports.cs`).
 
-I dati stanno nel database **D1** `screenlove-stats` (giurisdizione UE, collegato come `STATS` in
-`web/wrangler.toml`). Le tabelle le crea il sito alla prima richiesta (`web/lib/stats.js`); i ping più
-vecchi di 400 giorni vengono cancellati.
+ScreenLove manda tutto a **screenlove.it** (le versioni installate lo fanno da sempre); le nuove app a
+**getdockstudio.it** (`AppIdentity.StatsUrl = AppIdentity.SuiteStatsUrl`), che accetta solo le app di
+`site/data/apps.mjs`. I due siti scrivono nello **stesso database D1** `screenlove-stats` (giurisdizione UE,
+collegato come `STATS` in `web/wrangler.toml` e `site/wrangler.toml`). Ogni riga ha la colonna `app`; le
+tabelle e la colonna le crea il sito alla prima richiesta (`web/lib/stats.js`; le righe nate prima della
+colonna sono di ScreenLove). Ping e minuti si cancellano dopo 400 giorni, gli errori dopo 180.
 
-La pagina **https://screenlove.it/statistiche** mostra i numeri. È protetta da **Cloudflare Access**
-(Zero Trust, piano gratuito): applicazione self-hosted per `screenlove.it/statistiche`, con un criterio che
-ammette solo il tuo indirizzo email. Metodo di accesso: **One-time PIN** (Integrations → Identity providers), cioè un codice via email; il team è `frosty-sun-e1a2`. La funzione controlla anche la firma del
-token di Access: in `web/wrangler.toml` vanno `ACCESS_TEAM_DOMAIN` (es. `nome.cloudflareaccess.com`) e
-`ACCESS_AUD` (Application Audience tag dell'applicazione). Senza questi valori la pagina risponde 403.
+Le pagine **https://getdockstudio.it/statistiche** (riepilogo di tutte le app) e
+**/statistiche/&lt;app&gt;** (dettaglio) mostrano i numeri; https://screenlove.it/statistiche rimanda a
+quella di ScreenLove. Sono protette da **Cloudflare Access** (Zero Trust, piano gratuito): un'unica
+applicazione self-hosted con gli indirizzi `screenlove.it/statistiche` e `getdockstudio.it/statistiche`,
+con un criterio che ammette solo il tuo indirizzo email. Metodo di accesso: **One-time PIN**
+(Integrations → Identity providers), cioè un codice via email; il team è `frosty-sun-e1a2`. Le funzioni
+controllano anche la firma del token di Access (`web/lib/access.js`): in entrambi i `wrangler.toml` vanno
+`ACCESS_TEAM_DOMAIN` e `ACCESS_AUD` (Application Audience tag dell'applicazione). Senza questi valori, o senza
+Access davanti, le pagine rispondono 403.
 
-In locale la pagina è aperta: `web/.dev.vars` con `STATS_DEV_OPEN = "1"` (file non versionato).
+In locale le pagine sono aperte: `.dev.vars` con `STATS_DEV_OPEN = "1"` (file non versionato).
 
 ## Google Search Console
 

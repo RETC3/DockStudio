@@ -31,7 +31,7 @@ namespace DockStudio.Core.Updates
         public ErrorReports(UpdateClient updates) => _updates = updates;
 
         /// <summary>Dove si invia la segnalazione: il sito dell'app, oppure PREFISSO_ERRORS_URL per le prove.</summary>
-        public string ReportUrl => _updates.App.Env("ERRORS_URL") ?? _updates.App.SiteUrl + "/api/errore";
+        public string ReportUrl => _updates.App.Env("ERRORS_URL") ?? (_updates.App.StatsUrl ?? _updates.App.SiteUrl) + "/api/errore";
 
         /// <summary>True se si possono inviare segnalazioni: scelta fatta e opzione attiva.</summary>
         public static bool Allowed(IUsageStatsSettings settings) => settings.PrivacyChoiceMade && settings.SendErrorReports;
@@ -89,11 +89,13 @@ namespace DockStudio.Core.Updates
             }
         }
 
-        /// <summary>Il contenuto inviato al sito: esattamente questi sei campi.</summary>
+        /// <summary>Il contenuto inviato al sito: esattamente questi sette campi.</summary>
+        /// <param name="app">Nome dell'app nelle statistiche (<see cref="AppIdentity.StatsName"/>).</param>
         /// <param name="fatal">True se l'app si è chiusa per questo errore.</param>
-        public static string BuildReport(Exception ex, Version version, string arch, string os, bool fatal = false) =>
+        public static string BuildReport(string app, Exception ex, Version version, string arch, string os, bool fatal = false) =>
             JsonSerializer.Serialize(new
             {
+                app,
                 version = $"{version.Major}.{version.Minor}.{Math.Max(0, version.Build)}",
                 arch,
                 os,
@@ -123,7 +125,7 @@ namespace DockStudio.Core.Updates
                     if (_sent.Count >= MaxPerSession || !_sent.Add(key)) return false;
                 }
 
-                var body = BuildReport(ex, _updates.CurrentVersion, UsageStats.Architecture, OperatingSystem, fatal);
+                var body = BuildReport(_updates.App.StatsName, ex, _updates.CurrentVersion, UsageStats.Architecture, OperatingSystem, fatal);
                 using var http = new HttpClient { Timeout = timeout ?? TimeSpan.FromSeconds(10) };
                 http.DefaultRequestHeaders.UserAgent.ParseAdd(_updates.App.UserAgent);
                 using var content = new StringContent(body, Encoding.UTF8, "application/json");

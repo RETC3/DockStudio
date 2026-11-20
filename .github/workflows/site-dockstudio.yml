@@ -1,5 +1,6 @@
 # Pubblica il sito della suite DockStudio (Cloudflare Pages, progetto "dockstudio").
-# Parte da solo quando cambia la cartella site/ o le novità di ScreenLove (web/lib/novita.js), che compaiono anche qui. Servono i secret CLOUDFLARE_API_TOKEN e CLOUDFLARE_ACCOUNT_ID:
+# Parte da solo quando cambia la cartella site/, le novità di ScreenLove (web/lib/novita.js, che compaiono anche qui)
+# o il codice delle statistiche condiviso con screenlove.it (web/lib/stats.js, web/lib/access.js). Servono i secret CLOUDFLARE_API_TOKEN e CLOUDFLARE_ACCOUNT_ID:
 # senza, il workflow si limita a un avviso.
 name: Sito DockStudio
 
@@ -9,6 +10,8 @@ on:
     paths:
       - 'site/**'
       - 'web/lib/novita.js'
+      - 'web/lib/stats.js'
+      - 'web/lib/access.js'
       - '.github/workflows/site-dockstudio.yml'
   workflow_dispatch:
 

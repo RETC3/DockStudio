@@ -22,11 +22,12 @@ export async function onRequestPost({ request, env }) {
   }
 
   const report = parseError(body);
-  if (!report) return reply(400);
+  // da screenlove.it arrivano solo gli errori di ScreenLove (le altre app li mandano a getdockstudio.it)
+  if (!report || (report.app && report.app !== 'screenlove')) return reply(400);
   if (!env.STATS) return reply(204); // statistiche non configurate: l'app non deve accorgersene
 
   try {
-    await saveError(env.STATS, report);
+    await saveError(env.STATS, report, 'screenlove');
   } catch (err) {
     console.error('statistiche: errore non salvato', err);
     return reply(503);
