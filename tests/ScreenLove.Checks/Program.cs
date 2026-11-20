@@ -15,6 +15,8 @@ using ScreenLove.Documents;
 using ScreenLove.Editor;
 using ScreenLove.Recording;
 using UpdateInfo = DockStudio.Core.Updates.UpdateInfo;
+using DockStudio.Core.Licensing;
+using DockStudio.Core.Suite;
 using ScreenLove.Services;
 using ScreenLove.Video;
 
@@ -38,6 +40,8 @@ namespace ScreenLove.Checks
             Section("Impostazioni", CheckSettings);
             Section("Aggiornamenti", CheckUpdater);
             Section("Statistiche anonime", CheckUsageStats);
+            Section("Suite: licenza", CheckLicense);
+            Section("Suite: registro delle app", CheckSuiteRegistry);
             if (args.Contains("--online"))
                 Section("Aggiornamenti: release vera su GitHub", () => RunOnDispatcher(CheckUpdaterOnlineAsync));
             var sample = SampleImage(900, 520);
@@ -379,6 +383,100 @@ namespace ScreenLove.Checks
             {
                 Environment.SetEnvironmentVariable("SCREENLOVE_STATS_URL", null);
                 try { listener.Stop(); } catch { }
+            }
+        }
+
+        private static void CheckLicense()
+        {
+            var (priv, pub) = LicenseFile.CreateKeyPair();
+            var today = new DateTime(2027, 6, 1);
+            var mgr = new LicenseManager("ScreenLove", pub, () => today);
+            var info = new LicenseInfo
+            {
+                Id = LicenseFile.NewId(), Licensee = "Prova Srl", Seats = 5,
+                Issued = new DateTime(2027, 1, 1), Expires = new DateTime(2027, 12, 31),
+            };
+            var text = LicenseFile.Sign(info, priv);
+
+            var ok = mgr.Evaluate(text);
+            Check(ok.Status == LicenseStatus.Valid && ok.Edition == Edition.Business && ok.Info!.Licensee == "Prova Srl" && ok.Info.Seats == 5,
+                $"licenza firmata valida ({ok.Info?.Id})");
+            Check(System.Text.RegularExpressions.Regex.IsMatch(info.Id, "^DS(-[A-HJ-NP-Z2-9]{4}){3}$"), "codice della licenza leggibile");
+
+            // Cambiare l'intestatario dentro il file rompe la firma.
+            var tampered = text.Replace(text.Split('"')[5], Convert.ToBase64String(System.Text.Encoding.UTF8.GetBytes(
+                System.Text.Encoding.UTF8.GetString(Convert.FromBase64String(text.Split('"')[5])).Replace("\"seats\":5", "\"seats\":500"))));
+            Check(tampered != text && mgr.Evaluate(tampered).Status == LicenseStatus.Invalid, "licenza modificata a mano: rifiutata");
+
+            var (otherPriv, _) = LicenseFile.CreateKeyPair();
+            Check(mgr.Evaluate(LicenseFile.Sign(info, otherPriv)).Status == LicenseStatus.Invalid, "licenza firmata con un'altra chiave: rifiutata");
+            Check(mgr.Evaluate("non è una licenza").Status == LicenseStatus.Invalid, "file rovinato: rifiutato senza errori");
+
+            var late = new LicenseManager("ScreenLove", pub, () => new DateTime(2028, 1, 1)).Evaluate(text);
+            Check(late.Status == LicenseStatus.Expired && late.Edition == Edition.Free, "licenza scaduta: si torna alla versione gratuita");
+            Check(new LicenseManager("ScreenLove", pub, () => new DateTime(2027, 12, 31)).Evaluate(text).Status == LicenseStatus.Valid,
+                "l'ultimo giorno la licenza vale ancora");
+            Check(mgr.Evaluate(LicenseFile.Sign(info with { Expires = null }, priv)).Status == LicenseStatus.Valid, "licenza senza scadenza valida");
+            Check(mgr.Evaluate(LicenseFile.Sign(info with { Apps = new[] { "DockPDF" } }, priv)).Status == LicenseStatus.OtherApp,
+                "licenza per un'altra app: non vale per ScreenLove");
+            Check(mgr.Evaluate(LicenseFile.Sign(info with { Apps = new[] { "dockpdf", "screenlove" } }, priv)).Status == LicenseStatus.Valid,
+                "licenza per più app, ScreenLove compresa");
+
+            // Installazione nella cartella della suite (cartella di prova).
+            var folder = Path.Combine(Path.GetTempPath(), "dockstudio-checks-" + Guid.NewGuid().ToString("N"));
+            Environment.SetEnvironmentVariable("DOCKSTUDIO_SUITE_FOLDER", folder);
+            try
+            {
+                Check(mgr.Check().Status == LicenseStatus.None && mgr.Check().Edition == Edition.Free, "senza file: versione gratuita");
+                Check(mgr.Install("falsa").Status == LicenseStatus.Invalid && !Directory.Exists(folder), "licenza non valida: non viene installata");
+                Check(mgr.Install(text).Status == LicenseStatus.Valid && mgr.Check().Status == LicenseStatus.Valid, "licenza installata e ritrovata");
+            }
+            finally
+            {
+                Environment.SetEnvironmentVariable("DOCKSTUDIO_SUITE_FOLDER", null);
+                try { Directory.Delete(folder, true); } catch { }
+            }
+
+            Check(LicenseKeys.PublicKeyPem.StartsWith("-----BEGIN PUBLIC KEY-----")
+                  && LicenseFile.Verify(text, LicenseKeys.PublicKeyPem) == null, "chiave pubblica vera presente (e diversa da quella di prova)");
+        }
+
+        private static void CheckSuiteRegistry()
+        {
+            var folder = Path.Combine(Path.GetTempPath(), "dockstudio-checks-" + Guid.NewGuid().ToString("N"));
+            try
+            {
+                var exe = Path.Combine(folder, "ScreenLove.exe");
+                var other = Path.Combine(folder, "DockPDF.exe");
+                Directory.CreateDirectory(folder);
+                File.WriteAllText(exe, "");
+                File.WriteAllText(other, "");
+                var reg = new SuiteRegistry(folder);
+
+                Check(reg.Installed().Count == 0, "registro vuoto all'inizio");
+                Check(reg.Register("ScreenLove", new Version(0, 5, 0), exe) && reg.Register("DockPDF", new Version(1, 0, 0), other), "due app iscritte");
+                reg.Register("ScreenLove", new Version(0, 6, 0), exe);
+                var apps = reg.Installed();
+                Check(apps.Count == 2 && reg.Find("screenlove")?.Version == "0.6.0", "nuova iscrizione: la voce si aggiorna, non si duplica");
+                Check(reg.Find("ScreenLove")!.Platform == "windows", "piattaforma registrata");
+
+                File.Delete(other);
+                Check(reg.Installed().Count == 1 && reg.Find("DockPDF") == null, "app il cui eseguibile non c'è più: ignorata");
+                Check(reg.Unregister("ScreenLove") && reg.Installed().Count == 0, "disiscrizione");
+
+                File.WriteAllText(reg.FilePath, "{ rovinato");
+                Check(reg.Installed().Count == 0 && reg.Register("ScreenLove", new Version(0, 5, 0), exe) && reg.Installed().Count == 1,
+                    "registro rovinato: si riparte senza errori");
+
+                // Più app che si iscrivono insieme non si cancellano a vicenda.
+                var names = Enumerable.Range(0, 8).Select(i => "App" + i).ToArray();
+                foreach (var n in names) File.WriteAllText(Path.Combine(folder, n + ".exe"), "");
+                System.Threading.Tasks.Parallel.ForEach(names, n => new SuiteRegistry(folder).Register(n, new Version(1, 0, 0), Path.Combine(folder, n + ".exe")));
+                Check(reg.Installed().Count == 9, $"8 iscrizioni contemporanee: nessuna persa ({reg.Installed().Count - 1}/8)");
+            }
+            finally
+            {
+                try { Directory.Delete(folder, true); } catch { }
             }
         }
 

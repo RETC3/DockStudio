@@ -1,0 +1,17 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!-- Strumento per chi vende: crea la coppia di chiavi ed emette i file di licenza firmati.
+       Non fa parte di nessuna app e non va distribuito. La chiave privata non sta mai nel repository. -->
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net8.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>disable</ImplicitUsings>
+    <AssemblyName>dslicense</AssemblyName>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\src\DockStudio.Core\DockStudio.Core.csproj" />
+  </ItemGroup>
+
+</Project>

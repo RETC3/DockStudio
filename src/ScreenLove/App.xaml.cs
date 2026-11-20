@@ -56,6 +56,7 @@ namespace ScreenLove
             };
 
             Settings = AppSettings.Load();
+            Suite.Register();
             Store = new CaptureStore(Settings.CapturesFolder);
             Store.Load();
             Capture = new CaptureController(Settings, Store);
