@@ -38,7 +38,7 @@ function chart(days, label, unit = '') {
     return `<rect x="${x.toFixed(1)}" y="${y.toFixed(1)}" width="${bw.toFixed(1)}" height="${bh.toFixed(1)}" rx="2"><title>${esc(shortDate(d.day))}: ${num(d.n)}${unit}</title></rect>`;
   }).join('');
   return `<figure class="st-chart">
-      <figcaption>${esc(label)} <span>· massimo ${num(max)}${unit} al giorno</span></figcaption>
+      <figcaption>${esc(label)} <span>· ${days.some(d => d.n) ? `massimo ${num(max)}${unit} al giorno` : 'nessun dato'}</span></figcaption>
       <svg viewBox="0 0 ${w} ${h}" preserveAspectRatio="none" role="img" aria-label="${esc(label)}">${bars}</svg>
       <div class="st-axis"><span>${esc(shortDate(days[0].day))}</span><span>oggi</span></div>
     </figure>`;
