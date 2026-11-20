@@ -2,6 +2,7 @@ using System;
 using System.Diagnostics;
 using System.Threading;
 using System.Windows;
+using DockStudio.Core.Updates;
 using ScreenLove.Services;
 
 namespace ScreenLove.Options

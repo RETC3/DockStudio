@@ -8,6 +8,8 @@ using Microsoft.Win32;
 using ScreenLove.Capture;
 using ScreenLove.Editor;
 using ScreenLove.Native;
+using UpdateInfo = DockStudio.Core.Updates.UpdateInfo;
+using DockStudio.Core.Windows;
 using ScreenLove.Services;
 using ScreenLove.Workspace;
 using WF = System.Windows.Forms;
@@ -35,12 +37,12 @@ namespace ScreenLove
 
         protected override void OnStartup(StartupEventArgs e)
         {
-            _instance = SingleInstance.TryAcquire();
+            _instance = SingleInstance.TryAcquire(Updater.Identity);
             if (_instance == null)
             {
                 // ScreenLove è già attivo: aprendo l'exe (es. dall'icona sul desktop) si apre il suo workspace.
                 // Con --tray (avvio con Windows) non serve mostrare nulla.
-                if (!e.Args.Contains("--tray") && !SingleInstance.RequestShow())
+                if (!e.Args.Contains("--tray") && !SingleInstance.RequestShow(Updater.Identity))
                     MessageBox.Show("ScreenLove è già in esecuzione: trovi l'icona nell'area di notifica.", "ScreenLove");
                 Shutdown();
                 return;

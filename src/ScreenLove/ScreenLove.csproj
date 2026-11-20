@@ -29,6 +29,12 @@
   </ItemGroup>
 
   <ItemGroup>
+    <!-- Nucleo comune delle app DockStudio -->
+    <ProjectReference Include="..\DockStudio.Core\DockStudio.Core.csproj" />
+    <ProjectReference Include="..\DockStudio.Core.Windows\DockStudio.Core.Windows.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
     <!-- Lettura di codici QR e a barre (Apache 2.0) -->
     <PackageReference Include="ZXing.Net" Version="0.16.9" />
     <!-- Cattura audio WASAPI (sistema in loopback + microfono), MIT -->

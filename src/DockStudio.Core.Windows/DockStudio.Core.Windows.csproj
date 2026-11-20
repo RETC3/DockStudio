@@ -1,0 +1,19 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!-- Parte del nucleo che esiste solo su Windows: avvio di una sola copia, installer Inno Setup.
+       Su macOS ci sarà DockStudio.Core.Mac con le stesse funzioni. -->
+  <PropertyGroup>
+    <TargetFramework>net8.0-windows</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>disable</ImplicitUsings>
+    <LangVersion>latest</LangVersion>
+    <!-- Simboli di debug dentro la dll: nella pubblicazione non restano file .pdb sciolti -->
+    <DebugType>embedded</DebugType>
+    <RootNamespace>DockStudio.Core.Windows</RootNamespace>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\DockStudio.Core\DockStudio.Core.csproj" />
+  </ItemGroup>
+
+</Project>

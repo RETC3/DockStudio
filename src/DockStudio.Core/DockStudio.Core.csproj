@@ -1,0 +1,16 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!-- Nucleo comune delle app DockStudio: nessuna dipendenza da Windows, gira anche su macOS.
+       Contiene i servizi uguali in ogni app (aggiornamenti, statistiche, impostazioni), configurati
+       con l'identità dell'app (AppIdentity). -->
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>disable</ImplicitUsings>
+    <LangVersion>latest</LangVersion>
+    <!-- Simboli di debug dentro la dll: nella pubblicazione non restano file .pdb sciolti -->
+    <DebugType>embedded</DebugType>
+    <RootNamespace>DockStudio.Core</RootNamespace>
+  </PropertyGroup>
+
+</Project>

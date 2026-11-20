@@ -14,6 +14,7 @@ using ScreenLove;
 using ScreenLove.Documents;
 using ScreenLove.Editor;
 using ScreenLove.Recording;
+using UpdateInfo = DockStudio.Core.Updates.UpdateInfo;
 using ScreenLove.Services;
 using ScreenLove.Video;
 
