@@ -116,7 +116,7 @@ o dalle Impostazioni ("Cerca ora") si aprono le novità con il pulsante **Aggior
 4. riapre l'app.
 
 La versione portatile (exe senza installer) apre invece la pagina della release.
-- Si scaricano solo file dal sito di ScreenLove o dalle release di questo repository.
+- Si scaricano solo file dal sito di ScreenLove o dalle release del repository pubblico `RETC3/ScreenLove`.
 - `ScreenLove.exe --check-updates` controlla subito e mostra sempre l'esito.
 - Per provare senza GitHub: `SCREENLOVE_UPDATE_FEED` = percorso di un file JSON nel formato di `/releases/latest`.
 
@@ -148,6 +148,9 @@ Il workflow `.github/workflows/release.yml` fa tutto da solo:
 
 Le copie installate la trovano al controllo successivo. Dalla scheda Actions si può anche solo compilare
 (senza pubblicare) con "Run workflow".
+
+Il codice è nel repository privato `RETC3/DockStudio`, ma le release escono nel repository pubblico
+`RETC3/ScreenLove`: serve il secret `SCREENLOVE_RELEASES_TOKEN`, vedi [docs/RELEASE.md](docs/RELEASE.md).
 
 L'icona dell'eseguibile (`src/ScreenLove/app.ico`) si rigenera con `scripts\make-icon.ps1`.
 

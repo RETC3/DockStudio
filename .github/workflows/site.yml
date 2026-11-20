@@ -96,7 +96,8 @@ jobs:
             name=$(echo "$asset" | jq -r '.name')
             sha=$(echo "$asset" | jq -r '.sha256 // empty')
             if echo "$existing" | grep -qx "$name"; then echo "$name: già su R2"; continue; fi
-            curl -fsSL -o "/tmp/$name" "https://github.com/${{ github.repository }}/releases/download/$tag/$name"
+            # le release escono nel repository pubblico RETC3/ScreenLove (il codice è nel repository privato)
+            curl -fsSL -o "/tmp/$name" "https://github.com/RETC3/ScreenLove/releases/download/$tag/$name"
             if [ -n "$sha" ] && [ "$(sha256sum "/tmp/$name" | cut -d' ' -f1)" != "$sha" ]; then
               echo "::error::$name: impronta SHA-256 diversa da latest.json"; exit 1
             fi

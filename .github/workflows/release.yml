@@ -4,6 +4,11 @@
 # Compila l'eseguibile autonomo (x64 e ARM64), crea l'installer con Inno Setup, esegue i controlli
 # automatici (senza la parte video, che richiede uno schermo), carica i file su Cloudflare R2,
 # pubblica la release su GitHub e aggiorna il sito https://screenlove.it.
+#
+# Il codice sta nel repository privato RETC3/DockStudio, ma le release escono nel repository pubblico
+# RETC3/ScreenLove: lì le leggono il sito (latest.json), il ripiego dei download e le app già installate.
+# Serve il secret SCREENLOVE_RELEASES_TOKEN: un token "fine-grained" di GitHub con accesso al solo
+# repository RETC3/ScreenLove e permesso Contents in lettura e scrittura (vedi docs/RELEASE.md).
 # L'app installata trova la nuova versione da sola e propone l'aggiornamento.
 name: Release
 
@@ -28,9 +33,22 @@ jobs:
       CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
       CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
       BUCKET: screenlove-downloads
+      RELEASES_REPO: RETC3/ScreenLove
       # niente statistiche di compilazione di Avalonia (vedi anche Directory.Build.targets)
       AVALONIA_TELEMETRY_OPTOUT: '1'
     steps:
+      - name: Token per le release pubbliche
+        if: github.event_name == 'push'
+        shell: pwsh
+        env:
+          RELEASES_TOKEN: ${{ secrets.SCREENLOVE_RELEASES_TOKEN }}
+        run: |
+          # Controllo prima di compilare: senza il token la release non potrebbe uscire nel repository pubblico,
+          # e i file caricati su R2 resterebbero senza release né latest.json.
+          if (-not $env:RELEASES_TOKEN) {
+            throw "Manca il secret SCREENLOVE_RELEASES_TOKEN (vedi docs/RELEASE.md): release non pubblicata."
+          }
+
       - uses: actions/checkout@v5
 
       - uses: actions/setup-dotnet@v5
@@ -97,11 +115,11 @@ jobs:
             if ($LASTEXITCODE -ne 0) { throw "Caricamento di $f su R2 non riuscito" }
           }
 
-      - name: Release su GitHub
+      - name: Release su GitHub (repository pubblico RETC3/ScreenLove)
         if: github.event_name == 'push'
         shell: pwsh
         env:
-          GH_TOKEN: ${{ github.token }}
+          GH_TOKEN: ${{ secrets.SCREENLOVE_RELEASES_TOKEN }}
         run: |
           $v = '${{ steps.version.outputs.version }}'
           # Novità: la voce della versione in web/lib/novita.js (pagina /novita del sito); se manca, il
@@ -118,7 +136,7 @@ jobs:
           } else {
             $notes = @('--generate-notes')
           }
-          gh release create "v$v" `
+          gh release create "v$v" --repo $env:RELEASES_REPO `
             "dist/ScreenLove-Setup-$v.exe" `
             "dist/ScreenLove-$v-win-x64.zip" `
             "dist/ScreenLove-$v-win-arm64.zip" `
