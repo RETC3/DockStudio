@@ -49,6 +49,7 @@ namespace ScreenLove.Checks
             var sample = SampleImage(900, 520);
             Section("Editor: maniglie delle annotazioni", CheckHandles);
             Section("Effetti immagine", () => CheckEffects(sample));
+            Section("Cattura a scorrimento: cucitura", CheckStitching);
             Section("Generatore di documenti", CheckDocuments);
             Section("Memoria dopo le catture", () => RunOnDispatcher(CheckMemoryAsync));
             bool skipVideo = args.Contains("--no-video");
@@ -617,6 +618,75 @@ namespace ScreenLove.Checks
                 }
                 Check(opaqueDiff == 0 && maxDiff <= 2, $"WPF ↔ Skia: pixel opachi identici, semitrasparenti quasi (scarto massimo {maxDiff})");
             }
+        }
+
+        /// <summary>
+        /// Pagina finta con intestazione e piè di pagina fissi, "scorsa" a scatti come in un browser:
+        /// la cucitura deve ricomporla identica.
+        /// </summary>
+        private static void CheckStitching()
+        {
+            const int w = 320, header = 40, footer = 20, view = 400, body = 1500, step = 150;
+            uint Color(int y, int x, int salt)
+            {
+                uint h = (uint)((y / 3) * 73856093 ^ (x / 16) * 19349663 ^ salt * 83492791);
+                h ^= h >> 13; h *= 0x5bd1e995; h ^= h >> 15;
+                return 0xFF000000 | (h & 0x00FFFFFF);
+            }
+            uint[] Rows(int count, int salt, int from = 0)
+            {
+                var px = new uint[count * w];
+                for (int y = 0; y < count; y++)
+                    for (int x = 0; x < w; x++)
+                        px[y * w + x] = Color(from + y, x, salt);
+                return px;
+            }
+            var head = Rows(header, 1);
+            var foot = Rows(footer, 2);
+            var page = Rows(body, 3);
+            int bodyView = view - header - footer;
+
+            DockStudio.Imaging.Scrolling.ScrollFrame Frame(int offset)
+            {
+                var px = new uint[view * w];
+                Array.Copy(head, 0, px, 0, head.Length);
+                Array.Copy(page, offset * w, px, header * w, bodyView * w);
+                Array.Copy(foot, 0, px, (view - footer) * w, foot.Length);
+                var bytes = new byte[px.Length * 4];
+                Buffer.BlockCopy(px, 0, bytes, 0, bytes.Length);
+                return new DockStudio.Imaging.Scrolling.ScrollFrame(bytes, w, view);
+            }
+
+            var stitcher = new DockStudio.Imaging.Scrolling.ScrollStitcher();
+            var prev = Frame(0);
+            stitcher.AddFirst(prev);
+            int offsetNow = 0, frames = 1;
+            bool aligned = true;
+            while (offsetNow < body - bodyView)
+            {
+                int next = Math.Min(offsetNow + step, body - bodyView);
+                var cur = Frame(next);
+                var match = DockStudio.Imaging.Scrolling.ScrollStitcher.FindOffset(prev, cur, step);
+                if (match == null || match.Value.Offset != next - offsetNow) { aligned = false; break; }
+                stitcher.Append(cur, match.Value);
+                prev = cur;
+                offsetNow = next;
+                frames++;
+            }
+            Check(aligned, $"spostamento trovato a ogni scatto ({frames} fotogrammi, anche l'ultimo più corto)");
+
+            var result = stitcher.Build();
+            var expected = new uint[(header + body + footer) * w];
+            Array.Copy(head, expected, head.Length);
+            Array.Copy(page, 0, expected, header * w, page.Length);
+            Array.Copy(foot, 0, expected, (header + body) * w, foot.Length);
+            var got = new uint[result.Pixels.Length / 4];
+            Buffer.BlockCopy(result.Pixels, 0, got, 0, result.Pixels.Length);
+            Check(result.Width == w && result.Height == header + body + footer && got.AsSpan().SequenceEqual(expected),
+                $"pagina ricomposta identica: {result.Width}×{result.Height}, intestazione e piè di pagina una volta sola");
+
+            var still = DockStudio.Imaging.Scrolling.ScrollStitcher.FindOffset(Frame(300), Frame(300), step);
+            Check(still?.Offset == 0, "contenuto fermo: spostamento zero (fine della pagina)");
         }
 
         private static void CheckDocuments()

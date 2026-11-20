@@ -1,12 +1,13 @@
 using System;
 using System.Collections.Generic;
 using System.Runtime.InteropServices;
-using System.Windows.Media;
-using System.Windows.Media.Imaging;
 
-namespace ScreenLove.Capture
+namespace DockStudio.Imaging.Scrolling
 {
-    /// <summary>Un fotogramma catturato con l'impronta (hash) di ogni riga.</summary>
+    /// <summary>
+    /// Un fotogramma catturato (pixel BGRA, 4 byte per pixel, righe consecutive) con l'impronta (hash) di
+    /// ogni riga. Non dipende da come è stato catturato: lo stesso codice serve su Windows e su macOS.
+    /// </summary>
     public sealed class ScrollFrame
     {
         public ScrollFrame(byte[] pixels, int width, int height)
@@ -95,6 +96,9 @@ namespace ScreenLove.Capture
             return true;
         }
     }
+
+    /// <summary>Immagine cucita: pixel BGRA (come quelli dei fotogrammi), larghezza e altezza.</summary>
+    public sealed record StitchedImage(byte[] Pixels, int Width, int Height);
 
     /// <summary>Risultato del confronto tra due fotogrammi consecutivi.</summary>
     public readonly record struct ScrollMatch(int Offset, int Header, int Footer);
@@ -231,13 +235,13 @@ namespace ScreenLove.Capture
             _chunks.Add(chunk);
         }
 
-        public BitmapSource Build()
+        public StitchedImage Build()
         {
             if (_last == null) throw new InvalidOperationException("Nessun fotogramma.");
             if (_pending != null)
             {
                 // un solo fotogramma: niente da cucire
-                return Create(_pending.Pixels, _pending.Width, _pending.Height);
+                return new StitchedImage(_pending.Pixels, _pending.Width, _pending.Height);
             }
 
             AddRows(_last, _last.Height - _footer, _last.Height);
@@ -254,14 +258,7 @@ namespace ScreenLove.Capture
             _chunks.Add(all);
             _pending = null;
             _footer = 0; // il piè di pagina è già incluso: Build() è ripetibile
-            return Create(all, Width, height);
-        }
-
-        private static BitmapSource Create(byte[] pixels, int w, int h)
-        {
-            var bmp = BitmapSource.Create(w, h, 96, 96, PixelFormats.Bgra32, null, pixels, w * 4);
-            bmp.Freeze();
-            return bmp;
+            return new StitchedImage(all, Width, height);
         }
     }
 }

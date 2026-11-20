@@ -5,6 +5,7 @@ using System.Windows.Controls;
 using System.Windows.Interop;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
+using DockStudio.Imaging.Scrolling;
 using ScreenLove.Native;
 using ScreenLove.Services;
 
@@ -77,7 +78,10 @@ namespace ScreenLove.Capture
                     expected = (int)Math.Round(pxPerNotch * notches);
                 }
 
-                return new ScrollingResult(stitcher.Build(), stitcher.Frames, reason);
+                var stitched = stitcher.Build();
+                var image = BitmapSource.Create(stitched.Width, stitched.Height, 96, 96, PixelFormats.Bgra32, null, stitched.Pixels, stitched.Width * 4);
+                image.Freeze();
+                return new ScrollingResult(image, stitcher.Frames, reason);
             }
             finally
             {
