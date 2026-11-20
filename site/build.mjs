@@ -2,7 +2,8 @@
 // dai dati di site/data/apps.mjs (le novità di ScreenLove vengono da web/lib/novita.js).
 //   node site/build.mjs
 // Nessuna dipendenza: basta Node 22 o successivo.
-import { cpSync, mkdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
+import { createHash } from 'node:crypto';
+import { cpSync, mkdirSync, readdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { apps, suite } from './data/apps.mjs';
@@ -113,7 +114,7 @@ ${FOOTER}
 }
 
 const icona = (a, cls = 'app-icon') => (a.logo
-  ? `<span class="${cls} has-logo"><img src="${a.logo}" alt="" width="64" height="64"></span>`
+  ? `<span class="${cls} has-logo"><img src="${a.logo}" alt="" style="width:100%;height:100%"></span>`
   : `<span class="${cls}" style="--c:${a.colore}">${esc(a.icona)}</span>`);
 const tagStato = (a) => { const [c, t] = STATO_APP[a.stato]; return `<span class="tag ${c}">${t}</span>`; };
 const briciole = (...voci) => `<nav class="crumbs mono" aria-label="Percorso">${voci
@@ -385,5 +386,21 @@ ${pagine.map((p) => `  <url><loc>${SITE}${p}</loc></url>`).join('\n')}
 </urlset>
 `);
 scrivi('robots.txt', `User-agent: *\nAllow: /\n\nSitemap: ${SITE}/sitemap.xml\n`);
+
+// CSS e JS con la versione nell'indirizzo: Cloudflare li fa tenere in cache al browser per ore, e senza
+// versione una pagina nuova potrebbe arrivare con il foglio di stile vecchio.
+const impronta = (f) => createHash('sha256').update(readFileSync(join(DIST, f))).digest('hex').slice(0, 10);
+const asset = { "/style.css": impronta("style.css"), "/site.js": impronta("site.js") };
+(function versiona(dir) {
+  for (const e of readdirSync(dir, { withFileTypes: true })) {
+    const p = join(dir, e.name);
+    if (e.isDirectory()) versiona(p);
+    else if (e.name.endsWith('.html')) {
+      let html = readFileSync(p, 'utf8');
+      for (const [url, v] of Object.entries(asset)) html = html.replaceAll(`"${url}"`, `"${url}?v=${v}"`);
+      writeFileSync(p, html);
+    }
+  }
+})(DIST);
 
 console.log(`Sito generato in ${DIST}: ${pagine.length} pagine.`);
