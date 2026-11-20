@@ -43,4 +43,10 @@
     <PackageReference Include="NAudio.Wasapi" Version="2.2.1" />
   </ItemGroup>
 
+  <!-- SkiaSharp 3 aggiunge alla pubblicazione i simboli di debug della sua libreria nativa (oltre 80 MB):
+       non servono a chi usa l'app e non devono finire accanto all'exe. -->
+  <Target Name="RemoveNativeSymbols" AfterTargets="Publish">
+    <Delete Files="$(PublishDir)libSkiaSharp.pdb" />
+  </Target>
+
 </Project>
