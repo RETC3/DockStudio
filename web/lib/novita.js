@@ -11,6 +11,17 @@
 
 export const versioni = [
   {
+    versione: '0.6.0',
+    data: '2026-11-21',
+    titolo: 'Scegli tu cosa condividere',
+    voci: [
+      ['nuovo', "**Aiutaci a migliorare ScreenLove**: all'installazione, o al primo avvio dopo l'aggiornamento, scegli se inviare **statistiche d'uso anonime** e **segnalazioni degli errori**. Le caselle partono vuote: senza la tua scelta non si invia nulla. Le tue catture e i tuoi file restano sempre sul computer."],
+      ['nuovo', "Segnalazioni degli errori, se le scegli: quando qualcosa va storto arriva solo il tipo di errore e il punto del codice, senza nomi di file né dati personali, così possiamo correggerlo."],
+      ['migliorato', "Statistiche anonime solo se le scegli: fino alla 0.5.0 erano attive finché non si spegnevano. Ora comprendono anche il tempo di utilizzo. Si cambiano in **Impostazioni → Aggiornamenti**."],
+      ['migliorato', "Motore rinnovato: ScreenLove passa a .NET 10 e salva le immagini modificate con il nuovo motore grafico che useranno tutte le app DockStudio, anche su Mac."],
+    ],
+  },
+  {
     versione: '0.5.0',
     data: '2026-11-19',
     titolo: 'Copia e salva al volo',
@@ -68,7 +79,6 @@ export const versioni = [
 ];
 
 export const inArrivo = [
-  { stato: 'sviluppo', titolo: 'Scegli tu cosa condividere', testo: "All'installazione (o al primo avvio) scegli se inviare **statistiche d'uso anonime**, con il tempo di utilizzo, e **segnalazioni degli errori**. Le caselle partono vuote: senza la tua scelta non si invia nulla. Le tue catture e i tuoi file restano sempre sul computer." },
   { stato: 'programma', titolo: 'ScreenLove per Mac', testo: "Arriva anche su macOS: catture, editor e registrazione video sul Mac, con le stesse funzioni della versione Windows." },
   { stato: 'programma', titolo: 'Niente più avviso di Windows', testo: "Installer con firma digitale: al primo avvio SmartScreen non mostrerà più \"App non riconosciuta\"." },
   { stato: 'programma', titolo: 'Scegli microfono, audio e webcam', testo: 'Nelle impostazioni si sceglie quale microfono, quale uscita audio e quale webcam usare. Di base restano quelli predefiniti di Windows.' },
