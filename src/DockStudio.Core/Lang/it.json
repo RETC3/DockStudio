@@ -12,5 +12,7 @@
   "license.business": "Licenza Business di {0}",
   "license.expired": "Licenza Business di {0} scaduta il {1:d}",
   "license.invalid": "File di licenza non valido",
-  "license.otherApp": "La licenza di {0} non comprende questa app"
+  "license.otherApp": "La licenza di {0} non comprende questa app",
+
+  "documents.step": "Passo {0}"
 }

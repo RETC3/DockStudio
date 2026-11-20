@@ -11,7 +11,7 @@ using System.Windows.Media.Imaging;
 using DocumentFormat.OpenXml.Packaging;
 using DocumentFormat.OpenXml.Validation;
 using ScreenLove;
-using ScreenLove.Documents;
+using DockStudio.Documents;
 using ScreenLove.Editor;
 using ScreenLove.Recording;
 using UpdateInfo = DockStudio.Core.Updates.UpdateInfo;
@@ -859,6 +859,22 @@ namespace ScreenLove.Checks
             string text = File.ReadAllText(html);
             int imgs = text.Split("data:image/png;base64,").Length - 1;
             Check(imgs == 3 && text.Contains("àèìòù") && text.Contains("Titolo del passaggio 3"), $"HTML autonomo: {imgs} immagini incorporate, accenti corretti");
+            Check(text.Contains("lang=\"it\"") && text.Contains("--accent:#FF3D7F"), "HTML: lingua italiana e colore dei numeri");
+
+            var untitled = new DocumentModel { Date = new DateTime(2026, 11, 20) };
+            var step = new DocumentStep();
+            var before = Languages.Current;
+            try
+            {
+                Languages.Set("it");
+                Check(untitled.StepHeading(0, step) == "Passo 1" && untitled.DateText == "20/11/2026", "passaggio senza titolo e data in italiano");
+                Languages.Set("en");
+                Check(untitled.StepHeading(1, step) == "Step 2" && untitled.DateText == "11/20/2026", "passaggio senza titolo e data in inglese");
+            }
+            finally
+            {
+                Languages.Set(before);
+            }
         }
 
         private static async Task CheckVideoAsync()

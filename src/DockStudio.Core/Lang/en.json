@@ -12,5 +12,7 @@
   "license.business": "Business license for {0}",
   "license.expired": "Business license for {0} expired on {1:d}",
   "license.invalid": "Invalid license file",
-  "license.otherApp": "The license for {0} does not include this app"
+  "license.otherApp": "The license for {0} does not include this app",
+
+  "documents.step": "Step {0}"
 }

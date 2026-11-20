@@ -8,6 +8,7 @@ using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Threading.Tasks;
 using System.Windows;
+using DockStudio.Documents;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using Microsoft.Win32;
@@ -107,7 +108,7 @@ namespace ScreenLove.Documents
             };
             if (dlg.ShowDialog(this) != true) return;
 
-            var model = new DocumentModel { Title = TitleBox.Text.Trim(), NumberSteps = NumberBox.IsChecked == true };
+            var model = new DocumentModel { Creator = "ScreenLove", Title = TitleBox.Text.Trim(), NumberSteps = NumberBox.IsChecked == true };
             model.Steps.AddRange(_steps.Select(s => s.Step));
 
             CreateButton.IsEnabled = false;

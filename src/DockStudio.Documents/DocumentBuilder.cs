@@ -4,19 +4,21 @@ using System.IO;
 using System.Linq;
 using System.Net;
 using System.Text;
-using System.Windows.Media.Imaging;
+using System.Globalization;
+using DockStudio.Core.Localization;
+using DockStudio.Imaging;
 using DocumentFormat.OpenXml;
 using DocumentFormat.OpenXml.Packaging;
 using PdfSharp.Drawing;
 using PdfSharp.Fonts;
 using PdfSharp.Pdf;
-using ScreenLove.Services;
+using SkiaSharp;
 using A = DocumentFormat.OpenXml.Drawing;
 using DW = DocumentFormat.OpenXml.Drawing.Wordprocessing;
 using PIC = DocumentFormat.OpenXml.Drawing.Pictures;
 using W = DocumentFormat.OpenXml.Wordprocessing;
 
-namespace ScreenLove.Documents
+namespace DockStudio.Documents
 {
     public sealed class DocumentStep
     {
@@ -31,38 +33,61 @@ namespace ScreenLove.Documents
         public bool NumberSteps { get; set; } = true;
         public List<DocumentStep> Steps { get; } = new();
 
+        /// <summary>App che ha creato il documento (proprietà "Autore applicazione" del PDF).</summary>
+        public string Creator { get; set; } = "DockStudio";
+
+        /// <summary>Data mostrata sotto il titolo.</summary>
+        public DateTime Date { get; set; } = DateTime.Now;
+
+        /// <summary>Colore dei numeri dei passaggi (HTML), come esadecimale RRGGBB.</summary>
+        public string AccentColor { get; set; } = "FF3D7F";
+
+        /// <summary>La data nel formato della lingua in uso (es. 20/11/2026).</summary>
+        public string DateText => Date.ToString("d", Languages.Culture);
+
         public string StepHeading(int index, DocumentStep s)
         {
             string title = s.Title.Trim();
             if (!NumberSteps) return title;
-            return string.IsNullOrEmpty(title) ? $"Passo {index + 1}" : $"{index + 1}. {title}";
+            return string.IsNullOrEmpty(title) ? CoreText.Strings.Format("documents.step", index + 1) : $"{index + 1}. {title}";
         }
     }
 
-    /// <summary>Fornisce a PDFsharp i font Segoe UI installati in Windows (incorporati nel PDF).</summary>
-    internal sealed class WindowsFontResolver : IFontResolver
+    /// <summary>
+    /// Fornisce a PDFsharp i caratteri di sistema da incorporare nel PDF: Segoe UI su Windows, Arial su macOS
+    /// (sempre presente), con Arial o DejaVu come ripiego.
+    /// </summary>
+    internal sealed class SystemFontResolver : IFontResolver
     {
         private static bool _installed;
 
         public static void Install()
         {
             if (_installed) return;
-            GlobalFontSettings.FontResolver = new WindowsFontResolver();
+            GlobalFontSettings.FontResolver = new SystemFontResolver();
             _installed = true;
         }
 
-        public FontResolverInfo? ResolveTypeface(string familyName, bool isBold, bool isItalic)
-        {
-            // Tutti i testi usano Segoe UI: normale o grassetto.
-            return new FontResolverInfo(isBold ? "segoeuib" : "segoeui");
-        }
+        public FontResolverInfo? ResolveTypeface(string familyName, bool isBold, bool isItalic) =>
+            // Tutti i testi usano lo stesso carattere: normale o grassetto.
+            new(isBold ? "bold" : "regular");
 
         public byte[]? GetFont(string faceName)
         {
-            string fonts = Environment.GetFolderPath(Environment.SpecialFolder.Fonts);
-            string path = Path.Combine(fonts, faceName + ".ttf");
-            if (!File.Exists(path)) path = Path.Combine(fonts, "arial.ttf"); // ripiego
-            return File.ReadAllBytes(path);
+            bool bold = faceName == "bold";
+            string windows = Environment.GetFolderPath(Environment.SpecialFolder.Fonts);
+            var candidates = new List<string>();
+            if (!string.IsNullOrEmpty(windows))
+            {
+                candidates.Add(Path.Combine(windows, bold ? "segoeuib.ttf" : "segoeui.ttf"));
+                candidates.Add(Path.Combine(windows, bold ? "arialbd.ttf" : "arial.ttf"));
+            }
+            candidates.Add(bold ? "/System/Library/Fonts/Supplemental/Arial Bold.ttf" : "/System/Library/Fonts/Supplemental/Arial.ttf");
+            candidates.Add(bold ? "/Library/Fonts/Arial Bold.ttf" : "/Library/Fonts/Arial.ttf");
+            candidates.Add(bold ? "/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf" : "/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf");
+            foreach (var path in candidates)
+                if (File.Exists(path)) return File.ReadAllBytes(path);
+            throw new FileNotFoundException("Nessun carattere disponibile per creare il PDF.");
         }
     }
 
@@ -82,14 +107,12 @@ namespace ScreenLove.Documents
         /// <summary>L'immagine come PNG (le catture possono essere anche JPG o BMP).</summary>
         private static byte[] PngBytes(string imagePath, out int width, out int height)
         {
-            var img = ImageIO.LoadNormalized(imagePath);
-            width = img.PixelWidth;
-            height = img.PixelHeight;
-            var enc = new PngBitmapEncoder();
-            enc.Frames.Add(BitmapFrame.Create(img));
-            using var ms = new MemoryStream();
-            enc.Save(ms);
-            return ms.ToArray();
+            using var img = ImageFiles.Load(imagePath);
+            width = img.Width;
+            height = img.Height;
+            using var data = img.Encode(SKEncodedImageFormat.Png, 100)
+                ?? throw new IOException($"Immagine non convertibile: {Path.GetFileName(imagePath)}");
+            return data.ToArray();
         }
 
         // ---------------------------------------------------------------- HTML
@@ -100,10 +123,10 @@ namespace ScreenLove.Documents
             static string E(string s) => s.Replace("&", "&amp;").Replace("<", "&lt;").Replace(">", "&gt;").Replace("\"", "&quot;");
             var sb = new StringBuilder();
             sb.Append($@"<!doctype html>
-<html lang=""it""><head><meta charset=""utf-8""><meta name=""viewport"" content=""width=device-width, initial-scale=1"">
+<html lang=""{Languages.Current}""><head><meta charset=""utf-8""><meta name=""viewport"" content=""width=device-width, initial-scale=1"">
 <title>{E(model.Title)}</title>
 <style>
-  :root {{ --accent:#FF3D7F; --fg:#1d1f24; --muted:#6b6f78; --line:#e7e8ec; }}
+  :root {{ --accent:#{E(model.AccentColor)}; --fg:#1d1f24; --muted:#6b6f78; --line:#e7e8ec; }}
   body {{ margin:0; font:16px/1.55 'Segoe UI',system-ui,sans-serif; color:var(--fg); background:#f6f7f9; }}
   main {{ max-width:980px; margin:0 auto; padding:40px 24px 64px; }}
   h1 {{ font-size:30px; margin:0 0 4px; }}
@@ -115,7 +138,7 @@ namespace ScreenLove.Documents
   img {{ max-width:100%; height:auto; border-radius:6px; box-shadow:0 2px 12px rgba(0,0,0,.12); }}
   p {{ margin:14px 0 0; white-space:pre-wrap; }}
 </style></head><body><main>
-<h1>{E(model.Title)}</h1><div class=""date"">{DateTime.Now:dd/MM/yyyy}</div>
+<h1>{E(model.Title)}</h1><div class=""date"">{E(model.DateText)}</div>
 ");
             for (int i = 0; i < model.Steps.Count; i++)
             {
@@ -140,11 +163,11 @@ namespace ScreenLove.Documents
 
         private static void BuildPdf(DocumentModel model, string path)
         {
-            WindowsFontResolver.Install();
+            SystemFontResolver.Install();
 
             var doc = new PdfDocument();
             doc.Info.Title = model.Title;
-            doc.Info.Creator = "ScreenLove";
+            doc.Info.Creator = model.Creator;
 
             const double margin = 48; // punti (1/72")
             var titleFont = new XFont("Segoe UI", 22, XFontStyleEx.Bold);
@@ -172,7 +195,7 @@ namespace ScreenLove.Documents
             NewPage();
             gfx.DrawString(model.Title, titleFont, XBrushes.Black, new XRect(margin, y, contentW, 30), XStringFormats.TopLeft);
             y += 32;
-            gfx.DrawString(DateTime.Now.ToString("dd/MM/yyyy"), dateFont, muted, new XRect(margin, y, contentW, 14), XStringFormats.TopLeft);
+            gfx.DrawString(model.DateText, dateFont, muted, new XRect(margin, y, contentW, 14), XStringFormats.TopLeft);
             y += 30;
 
             for (int i = 0; i < model.Steps.Count; i++)
@@ -264,7 +287,7 @@ namespace ScreenLove.Documents
             var body = main.Document.Body!;
 
             body.Append(TextParagraph(model.Title, 40, bold: true, color: "1D1F24"));
-            body.Append(TextParagraph(DateTime.Now.ToString("dd/MM/yyyy"), 20, color: "6B6F78", spaceAfter: 360));
+            body.Append(TextParagraph(model.DateText, 20, color: "6B6F78", spaceAfter: 360));
 
             const long maxWidthEmu = 6_000_000;   // ~16,5 cm: larghezza utile su A4 con margini standard
             const long maxHeightEmu = 5_200_000;  // ~14,5 cm
