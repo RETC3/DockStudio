@@ -47,6 +47,7 @@ namespace DockStudio.UI.Checks
                 foreach (var variant in new[] { "chiaro", "scuro" })
                     Section($"Finestre ({language}, {variant})", () => CheckWindows(language, variant));
             Section("Finestra della licenza: inserimento", CheckLicenseInstall);
+            Section("Finestra della privacy: scelta", CheckPrivacyChoice);
 
             Console.WriteLine();
             Console.WriteLine(_failures == 0 ? "Tutti i controlli superati." : $"{_failures} controlli NON superati.");
@@ -114,6 +115,7 @@ namespace DockStudio.UI.Checks
                 ("aggiornamento", new UpdateWindow(Branding, client, SampleUpdate(), _ => { })),
                 ("aggiornamento-portatile", new UpdateWindow(Branding, client, SampleUpdate(), null)),
                 ("licenza", WithLicense(new LicenseWindow(Branding, licenses), business)),
+                ("privacy", new PrivacyWindow(Branding)),
             };
 
             foreach (var (name, window) in windows)
@@ -145,6 +147,32 @@ namespace DockStudio.UI.Checks
             Check(expected.All(words.Contains), $"testi nella lingua giusta ({string.Join(", ", expected)})");
             Check(words.Contains("DockPDF 1.0.0") && !words.Contains("ScreenLove 0.6.0"), "elenco delle app: le altre app, non quella in uso");
             about.Close();
+        }
+
+        private static void CheckPrivacyChoice()
+        {
+            Languages.Set("it");
+            var window = new PrivacyWindow(Branding);
+            (bool, bool)? chosen = null;
+            window.Chosen += (u, e) => chosen = (u, e);
+            window.Show();
+            Dispatcher.UIThread.RunJobs();
+            var boxes = window.GetVisualDescendants().OfType<CheckBox>().ToList();
+            Check(boxes.Count == 2 && boxes.All(b => b.IsChecked == false), "due caselle, entrambe vuote all'apertura");
+            window.Close();
+            Check(chosen == (false, false), "chiusa senza confermare: nessuna delle due");
+
+            window = new PrivacyWindow(Branding);
+            chosen = null;
+            window.Chosen += (u, e) => chosen = (u, e);
+            window.Show();
+            Dispatcher.UIThread.RunJobs();
+            boxes = window.GetVisualDescendants().OfType<CheckBox>().ToList();
+            boxes[1].IsChecked = true;
+            var confirm = window.GetVisualDescendants().OfType<Button>().First(b => (b.Content as string) == "Conferma");
+            confirm.RaiseEvent(new Avalonia.Interactivity.RoutedEventArgs(Button.ClickEvent));
+            Dispatcher.UIThread.RunJobs();
+            Check(chosen == (false, true), "confermata con solo gli errori: statistiche no, errori sì");
         }
 
         private static LicenseWindow WithLicense(LicenseWindow window, LicenseCheck check)

@@ -68,6 +68,7 @@ export const versioni = [
 ];
 
 export const inArrivo = [
+  { stato: 'sviluppo', titolo: 'Scegli tu cosa condividere', testo: "All'installazione (o al primo avvio) scegli se inviare **statistiche d'uso anonime**, con il tempo di utilizzo, e **segnalazioni degli errori**. Le caselle partono vuote: senza la tua scelta non si invia nulla. Le tue catture e i tuoi file restano sempre sul computer." },
   { stato: 'programma', titolo: 'ScreenLove per Mac', testo: "Arriva anche su macOS: catture, editor e registrazione video sul Mac, con le stesse funzioni della versione Windows." },
   { stato: 'programma', titolo: 'Niente più avviso di Windows', testo: "Installer con firma digitale: al primo avvio SmartScreen non mostrerà più \"App non riconosciuta\"." },
   { stato: 'programma', titolo: 'Scegli microfono, audio e webcam', testo: 'Nelle impostazioni si sceglie quale microfono, quale uscita audio e quale webcam usare. Di base restano quelli predefiniti di Windows.' },

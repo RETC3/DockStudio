@@ -49,6 +49,17 @@ italian.AutoStart=Avvia ScreenLove con Windows (icona nell'area di notifica)
 english.AutoStart=Start ScreenLove with Windows (notification area icon)
 italian.StillRunning=ScreenLove è in esecuzione.%n%nChiudilo (icona nell'area di notifica → Esci) e riprova.
 english.StillRunning=ScreenLove is running.%n%nClose it (notification area icon → Exit) and try again.
+; pagina "Aiutaci a migliorare": stesso testo della finestra dell'app (src/DockStudio.Core/Lang)
+italian.PrivacyTitle=Aiutaci a migliorare ScreenLove
+english.PrivacyTitle=Help us improve ScreenLove
+italian.PrivacySubtitle=Scegli tu cosa condividere. Puoi cambiare idea in qualsiasi momento dalle Impostazioni.
+english.PrivacySubtitle=You choose what to share. You can change your mind at any time in Settings.
+italian.PrivacyIntro=Puoi scegliere di inviarci alcune informazioni anonime. Servono solo a capire quante persone usano l'app, quanto la usano e quali errori correggere: non a seguire quello che fai.%n%nLe tue catture, i tuoi file e quello che fai in ScreenLove restano sul tuo computer e non vengono mai inviati. Il sito conta i download in forma anonima, senza indirizzo IP.
+english.PrivacyIntro=You can choose to send us some anonymous information. It is only used to understand how many people use the app, how much they use it and which bugs to fix: never to follow what you do.%n%nYour captures, your files and what you do in ScreenLove stay on your computer and are never sent. The website counts downloads anonymously, without IP addresses.
+italian.PrivacyUsage=Statistiche d'uso anonime: un codice casuale, la versione dell'app e il tempo di utilizzo
+english.PrivacyUsage=Anonymous usage statistics: a random code, the app version and the time of use
+italian.PrivacyErrors=Segnalazioni degli errori: cosa si è rotto e in quale versione, senza nomi di file né dati personali
+english.PrivacyErrors=Error reports: what broke and in which version, with no file names or personal data
 
 [Tasks]
 Name: "desktopicon"; Description: "{cm:CreateDesktopIcon}"; GroupDescription: "{cm:AdditionalIcons}"; Flags: unchecked
@@ -75,6 +86,10 @@ Filename: "{app}\{#AppExe}"; Flags: nowait; Check: IsUpdate
 [Code]
 const
   AppMutexName = 'ScreenLove.SingleInstance';
+  PrivacyKey = 'Software\ScreenLove\Privacy';
+
+var
+  PrivacyPage: TInputOptionWizardPage;
 
 function IsUpdate(): Boolean;
 begin
@@ -97,6 +112,34 @@ begin
     end;
   end;
   Result := True;
+end;
+
+// Pagina "Aiutaci a migliorare": due caselle vuote, dopo la scelta delle attività aggiuntive.
+// La scelta va nel registro (HKCU\Software\ScreenLove\Privacy) e l'app la legge al primo avvio
+// (DockStudio.Core.Windows.InstallerPrivacyChoice). Negli aggiornamenti e nelle installazioni silenziose
+// la pagina non c'è: se serve, chiede l'app.
+procedure InitializeWizard();
+begin
+  PrivacyPage := CreateInputOptionPage(wpSelectTasks, CustomMessage('PrivacyTitle'), CustomMessage('PrivacySubtitle'),
+    CustomMessage('PrivacyIntro'), False, False);
+  PrivacyPage.Add(CustomMessage('PrivacyUsage'));
+  PrivacyPage.Add(CustomMessage('PrivacyErrors'));
+  PrivacyPage.Values[0] := False;
+  PrivacyPage.Values[1] := False;
+end;
+
+function ShouldSkipPage(PageID: Integer): Boolean;
+begin
+  Result := (PrivacyPage <> nil) and (PageID = PrivacyPage.ID) and IsUpdate();
+end;
+
+procedure CurStepChanged(CurStep: TSetupStep);
+begin
+  if (CurStep = ssPostInstall) and not IsUpdate() and not WizardSilent() then
+  begin
+    RegWriteDWordValue(HKEY_CURRENT_USER, PrivacyKey, 'UsageStats', Ord(PrivacyPage.Values[0]));
+    RegWriteDWordValue(HKEY_CURRENT_USER, PrivacyKey, 'ErrorReports', Ord(PrivacyPage.Values[1]));
+  end;
 end;
 
 function InitializeUninstall(): Boolean;
@@ -130,5 +173,9 @@ procedure CurUninstallStepChanged(CurUninstallStep: TUninstallStep);
 begin
   // "Avvia con Windows" può essere stato attivato anche dall'app: lo si toglie comunque.
   if CurUninstallStep = usPostUninstall then
+  begin
     RegDeleteValue(HKEY_CURRENT_USER, 'Software\Microsoft\Windows\CurrentVersion\Run', 'ScreenLove');
+    RegDeleteKeyIncludingSubkeys(HKEY_CURRENT_USER, PrivacyKey);
+    RegDeleteKeyIfEmpty(HKEY_CURRENT_USER, 'Software\ScreenLove');
+  end;
 end;

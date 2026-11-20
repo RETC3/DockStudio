@@ -14,5 +14,15 @@
   "license.invalid": "File di licenza non valido",
   "license.otherApp": "La licenza di {0} non comprende questa app",
 
-  "documents.step": "Passo {0}"
+  "documents.step": "Passo {0}",
+
+  "privacy.title": "Aiutaci a migliorare {0}",
+  "privacy.intro": "Puoi scegliere di inviarci alcune informazioni anonime. Servono solo a capire quante persone usano l'app, quanto la usano e quali errori correggere: non a seguire quello che fai.",
+  "privacy.usage": "Statistiche d'uso anonime",
+  "privacy.usageDetail": "Un codice casuale, la versione dell'app e il tempo di utilizzo.",
+  "privacy.errors": "Segnalazioni degli errori",
+  "privacy.errorsDetail": "Cosa si è rotto e in quale versione, senza nomi di file né dati personali.",
+  "privacy.local": "I tuoi file e tutto quello che fai nell'app restano sul tuo computer e non vengono mai inviati. Puoi cambiare idea in qualsiasi momento dalle Impostazioni.",
+  "privacy.downloads": "Il sito conta i download in forma anonima, senza indirizzo IP.",
+  "privacy.confirm": "Conferma"
 }

@@ -83,8 +83,13 @@
                 <TextBlock Style="{StaticResource Section}" Text="Aggiornamenti"/>
                 <CheckBox x:Name="UpdatesBox" Content="Controlla se ci sono nuove versioni (una volta al giorno)"/>
                 <CheckBox x:Name="StatsBox" Margin="0,6,0,0"
-                          Content="Invia statistiche anonime d'uso (un codice casuale, la versione e il tipo di Windows)"
-                          ToolTip="Insieme al controllo degli aggiornamenti: serve solo a contare quante copie di ScreenLove sono in uso. Disattivandola, il codice viene cancellato."/>
+                          Content="Statistiche d'uso anonime (un codice casuale, la versione e il tempo di utilizzo)"
+                          ToolTip="Insieme al controllo degli aggiornamenti, una volta al giorno: serve solo a capire quante copie di ScreenLove sono in uso e quanto si usano. Disattivandola, il codice viene cancellato."/>
+                <CheckBox x:Name="ErrorsBox" Margin="0,6,0,0"
+                          Content="Segnalazioni degli errori (cosa si è rotto e in quale versione)"
+                          ToolTip="Quando qualcosa va storto si inviano il tipo di errore e il punto del codice, senza nomi di file né dati personali."/>
+                <TextBlock Style="{StaticResource Label}" TextWrapping="Wrap" Margin="0,6,0,0"
+                           Text="Le tue catture, i tuoi file e quello che fai in ScreenLove restano sul tuo computer e non vengono mai inviati."/>
                 <StackPanel Orientation="Horizontal" Margin="0,6,0,0">
                     <TextBlock x:Name="VersionText" Style="{StaticResource Label}" Margin="0,0,12,0"/>
                     <Button Style="{StaticResource ToolButton}" Click="CheckUpdates_Click" Content="Cerca ora"/>

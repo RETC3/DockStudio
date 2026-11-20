@@ -42,6 +42,8 @@ namespace ScreenLove.Checks
             Section("Impostazioni", CheckSettings);
             Section("Aggiornamenti", CheckUpdater);
             Section("Statistiche anonime", CheckUsageStats);
+            Section("Segnalazioni degli errori", CheckErrorReports);
+            Section("Scelta dell'installer su statistiche ed errori", CheckInstallerPrivacyChoice);
             Section("Suite: licenza", CheckLicense);
             Section("Lingue", CheckLanguages);
             Section("Suite: registro delle app", CheckSuiteRegistry);
@@ -320,7 +322,8 @@ namespace ScreenLove.Checks
         private static void CheckUsageStats()
         {
             var s = new AppSettings();
-            Check(s.SendUsageStats && s.InstallId == null, "predefinito: statistiche attive, nessun codice finché non serve");
+            Check(!s.PrivacyChoiceMade && !s.SendUsageStats && !s.SendErrorReports && s.InstallId == null,
+                "predefinito: nessuna scelta, statistiche ed errori spenti, nessun codice");
             var id = UsageStats.EnsureInstallId(s);
             Check(UsageStats.IsValidId(id) && s.InstallId == id, $"codice casuale di 32 cifre esadecimali ({id})");
             Check(UsageStats.EnsureInstallId(s) == id, "il codice resta lo stesso");
@@ -328,27 +331,135 @@ namespace ScreenLove.Checks
             s.InstallId = "non-valido";
             Check(UsageStats.IsValidId(UsageStats.EnsureInstallId(s)), "codice non valido sostituito");
 
-            using (var doc = System.Text.Json.JsonDocument.Parse(UsageStats.BuildPing(id, new Version(0, 2, 0), "arm64", installed: false)))
+            using (var doc = System.Text.Json.JsonDocument.Parse(UsageStats.BuildPing(id, new Version(0, 6, 0), "arm64", installed: false, minutes: 42)))
             {
                 var names = doc.RootElement.EnumerateObject().Select(p => p.Name).OrderBy(n => n).ToArray();
-                Check(string.Join(",", names) == "arch,id,kind,version", "il ping contiene solo id, versione, architettura e tipo");
-                Check(doc.RootElement.GetProperty("version").GetString() == "0.2.0"
+                Check(string.Join(",", names) == "arch,id,kind,minutes,version", "il ping contiene solo id, versione, architettura, tipo e minuti");
+                Check(doc.RootElement.GetProperty("version").GetString() == "0.6.0"
                       && doc.RootElement.GetProperty("kind").GetString() == "portable"
-                      && doc.RootElement.GetProperty("arch").GetString() == "arm64", "valori del ping corretti");
+                      && doc.RootElement.GetProperty("arch").GetString() == "arm64"
+                      && doc.RootElement.GetProperty("minutes").GetInt32() == 42, "valori del ping corretti");
             }
 
-            // invio vero a un piccolo server locale
+            // tempo di utilizzo: si conta solo con le statistiche scelte, fino a un tetto
+            var undecided = new AppSettings { SendUsageStats = true };
+            Check(!UsageStats.AddUsageMinute(undecided) && undecided.UsageMinutes == 0, "minuti: nessun conteggio finché l'utente non ha scelto");
+            var counting = new AppSettings { PrivacyChoiceMade = true, SendUsageStats = true };
+            UsageStats.AddUsageMinute(counting);
+            UsageStats.AddUsageMinute(counting);
+            Check(counting.UsageMinutes == 2, "minuti: contati con le statistiche scelte");
+            counting.UsageMinutes = DockStudio.Core.Updates.UsageStats.MaxPendingMinutes;
+            Check(!UsageStats.AddUsageMinute(counting), "minuti: si fermano al tetto di una settimana");
+
+            WithLocalServer("SCREENLOVE_STATS_URL", "/api/ping", receive =>
+            {
+                var undecidedOn = new AppSettings { SendUsageStats = true };
+                Check(receive(() => UsageStats.SendAsync(undecidedOn)) == null && undecidedOn.InstallId == null,
+                    "scelta non fatta: nessun invio anche con l'opzione attiva (come chi aggiorna dalla 0.5.0)");
+                var off = new AppSettings { PrivacyChoiceMade = true, SendUsageStats = false };
+                Check(receive(() => UsageStats.SendAsync(off)) == null && off.InstallId == null, "statistiche non scelte: nessun invio e nessun codice");
+                var noUpdates = new AppSettings { PrivacyChoiceMade = true, SendUsageStats = true, CheckForUpdates = false };
+                Check(receive(() => UsageStats.SendAsync(noUpdates)) == null, "aggiornamenti disattivati: nessun invio");
+
+                var on = new AppSettings { PrivacyChoiceMade = true, SendUsageStats = true, UsageMinutes = 37 };
+                var request = receive(() => UsageStats.SendAsync(on)) ?? "";
+                Check(request.StartsWith("POST /api/ping ", StringComparison.Ordinal) && on.InstallId != null
+                      && request.Contains("\"id\":\"" + on.InstallId + "\"") && request.Contains("\"version\":\"" + Updater.CurrentVersion.ToString(3) + "\"")
+                      && request.Contains("\"minutes\":37"),
+                    "statistiche scelte: un POST con codice, versione e minuti");
+                Check(on.UsageMinutes == 0, "minuti azzerati dopo l'invio riuscito");
+            });
+
+            var nobody = new AppSettings { PrivacyChoiceMade = true, SendUsageStats = true, UsageMinutes = 5 };
+            Environment.SetEnvironmentVariable("SCREENLOVE_STATS_URL", "http://127.0.0.1:9/api/ping");
+            try { Check(!UsageStats.SendAsync(nobody).GetAwaiter().GetResult() && nobody.UsageMinutes == 5, "sito irraggiungibile: nessun errore e i minuti restano per il prossimo invio"); }
+            finally { Environment.SetEnvironmentVariable("SCREENLOVE_STATS_URL", null); }
+        }
+
+        private static void CheckErrorReports()
+        {
+            Exception sample;
+            try
+            {
+                try { throw new IOException(@"Impossibile aprire C:\Users\mario\Desktop\segreto.png"); }
+                catch (Exception inner) { throw new InvalidOperationException("Salvataggio non riuscito per mario", inner); }
+            }
+            catch (Exception ex) { sample = ex; }
+
+            var dirty = "   at ScreenLove.App.Save(String path) in C:\\dev\\ScreenLove\\src\\App.cs:line 42\n"
+                        + "   at ScreenLove.Store.Load() in /Users/mario/src/Store.cs:line 7\n"
+                        + "   at X.Y(C:\\Users\\mario\\foto.png)";
+            var clean = DockStudio.Core.Updates.ErrorReports.CleanStack(dirty);
+            Check(!clean.Contains("mario") && !clean.Contains(":line") && !clean.Contains("dev\\ScreenLove")
+                  && clean.Contains("at ScreenLove.App.Save(String path)") && clean.Contains("<percorso>"),
+                "punti del codice ripuliti: niente percorsi, file sorgente e numeri di riga");
+
+            var json = DockStudio.Core.Updates.ErrorReports.BuildReport(sample, new Version(0, 6, 0), "x64", "windows 10.0.19045", fatal: true);
+            using (var doc = System.Text.Json.JsonDocument.Parse(json))
+            {
+                var names = doc.RootElement.EnumerateObject().Select(p => p.Name).OrderBy(n => n).ToArray();
+                Check(string.Join(",", names) == "arch,fatal,os,stack,type,version", "la segnalazione contiene solo versione, architettura, sistema, tipo, punti del codice e chiusura");
+                Check(doc.RootElement.GetProperty("type").GetString() == "System.InvalidOperationException ← System.IO.IOException"
+                      && doc.RootElement.GetProperty("fatal").GetBoolean(), "tipo dell'errore e degli errori interni");
+                Check(!json.Contains("mario") && !json.Contains("segreto") && !json.Contains("Salvataggio"),
+                    "nessun messaggio dell'errore, nome utente o nome di file");
+                Check(!json.Contains("\"id\""), "nessun codice dell'installazione");
+            }
+            Check(System.Text.RegularExpressions.Regex.IsMatch(DockStudio.Core.Updates.ErrorReports.OperatingSystem, @"^windows \d+\.\d+\.\d+$"),
+                $"sistema: {DockStudio.Core.Updates.ErrorReports.OperatingSystem}");
+
+            WithLocalServer("SCREENLOVE_ERRORS_URL", "/api/errore", receive =>
+            {
+                Check(receive(() => ErrorReports.SendAsync(new AppSettings { SendErrorReports = true }, sample)) == null,
+                    "scelta non fatta: nessuna segnalazione");
+                Check(receive(() => ErrorReports.SendAsync(new AppSettings { PrivacyChoiceMade = true, SendUsageStats = true }, sample)) == null,
+                    "segnalazioni non scelte: nessun invio (anche con le statistiche scelte)");
+                var on = new AppSettings { PrivacyChoiceMade = true, SendErrorReports = true };
+                var request = receive(() => ErrorReports.SendAsync(on, sample)) ?? "";
+                Check(request.StartsWith("POST /api/errore ", StringComparison.Ordinal) && request.Contains("InvalidOperationException")
+                      && !request.Contains("mario"), "segnalazioni scelte: un POST con l'errore ripulito");
+                Check(receive(() => ErrorReports.SendAsync(on, sample)) == null, "lo stesso errore si segnala una volta sola per avvio");
+            });
+        }
+
+        private static void CheckInstallerPrivacyChoice()
+        {
+            var identity = Updater.Identity with { Name = "ScreenLoveChecks" };
+            DockStudio.Core.Windows.InstallerPrivacyChoice.Take(identity); // pulizia di prove precedenti
+            Check(DockStudio.Core.Windows.InstallerPrivacyChoice.Take(identity) == null, "senza installer: nessuna scelta");
+            DockStudio.Core.Windows.InstallerPrivacyChoice.Write(identity, new(UsageStats: false, ErrorReports: true));
+            var choice = DockStudio.Core.Windows.InstallerPrivacyChoice.Take(identity);
+            Check(choice is { UsageStats: false, ErrorReports: true }, "scelta dell'installer letta dal registro");
+            Check(DockStudio.Core.Windows.InstallerPrivacyChoice.Take(identity) == null
+                  && Microsoft.Win32.Registry.CurrentUser.OpenSubKey(DockStudio.Core.Windows.InstallerPrivacyChoice.KeyPath(identity)) == null,
+                "dopo la lettura la chiave viene cancellata");
+            Microsoft.Win32.Registry.CurrentUser.DeleteSubKeyTree(@"Software\ScreenLoveChecks", throwOnMissingSubKey: false);
+        }
+
+        /// <summary>
+        /// Piccolo server HTTP locale per le prove di invio: la variabile d'ambiente indica all'app dove mandare
+        /// la richiesta; receive esegue l'invio e restituisce la richiesta ricevuta (o null se non arriva nulla).
+        /// </summary>
+        private static void WithLocalServer(string envVar, string path, Action<Func<Func<Task<bool>>, string?>> body)
+        {
             var listener = new System.Net.Sockets.TcpListener(System.Net.IPAddress.Loopback, 0);
             listener.Start();
             int port = ((System.Net.IPEndPoint)listener.LocalEndpoint).Port;
-            Environment.SetEnvironmentVariable("SCREENLOVE_STATS_URL", $"http://127.0.0.1:{port}/api/ping");
+            Environment.SetEnvironmentVariable(envVar, $"http://127.0.0.1:{port}{path}");
             try
             {
-                string? Receive(AppSettings settings)
+                // un'attesa di connessione rimasta aperta (nessun invio) serve alla prova successiva
+                Task<System.Net.Sockets.TcpClient>? pending = null;
+                string? Receive(Func<Task<bool>> send)
                 {
-                    var accept = listener.AcceptTcpClientAsync();
-                    UsageStats.SendAsync(settings).GetAwaiter().GetResult();
-                    if (!accept.Wait(TimeSpan.FromSeconds(1))) return null;
+                    var accept = pending ??= listener.AcceptTcpClientAsync();
+                    var sending = send();
+                    if (!accept.Wait(TimeSpan.FromSeconds(1)))
+                    {
+                        sending.GetAwaiter().GetResult();
+                        return null;
+                    }
+                    pending = null;
                     using var client = accept.Result;
                     var stream = client.GetStream();
                     var buf = new byte[8192];
@@ -362,32 +473,19 @@ namespace ScreenLove.Checks
                         var raw = text.ToString();
                         int head = raw.IndexOf("\r\n\r\n", StringComparison.Ordinal);
                         var len = System.Text.RegularExpressions.Regex.Match(raw, @"Content-Length:\s*(\d+)", System.Text.RegularExpressions.RegexOptions.IgnoreCase);
-                        if (head >= 0 && len.Success && raw.Length - head - 4 >= int.Parse(len.Groups[1].Value)) break;
+                        if (head >= 0 && len.Success && System.Text.Encoding.UTF8.GetByteCount(raw[(head + 4)..]) >= int.Parse(len.Groups[1].Value)) break;
                     }
                     var reply = System.Text.Encoding.ASCII.GetBytes("HTTP/1.1 204 No Content\r\nConnection: close\r\n\r\n");
                     stream.Write(reply, 0, reply.Length);
+                    sending.GetAwaiter().GetResult();
                     return text.ToString();
                 }
 
-                var off = new AppSettings { SendUsageStats = false };
-                Check(Receive(off) == null && off.InstallId == null, "statistiche disattivate: nessun invio e nessun codice");
-                var noUpdates = new AppSettings { CheckForUpdates = false };
-                Check(Receive(noUpdates) == null, "aggiornamenti disattivati: nessun invio");
-
-                var on = new AppSettings();
-                var request = Receive(on) ?? "";
-                Check(request.StartsWith("POST /api/ping ", StringComparison.Ordinal) && on.InstallId != null
-                      && request.Contains("\"id\":\"" + on.InstallId + "\"") && request.Contains("\"version\":\"" + Updater.CurrentVersion.ToString(3) + "\""),
-                    "statistiche attive: un POST con il codice e la versione");
-
-                listener.Stop();
-                var nobody = new AppSettings();
-                UsageStats.SendAsync(nobody).GetAwaiter().GetResult();
-                Check(true, "sito irraggiungibile: nessun errore per l'utente");
+                body(Receive);
             }
             finally
             {
-                Environment.SetEnvironmentVariable("SCREENLOVE_STATS_URL", null);
+                Environment.SetEnvironmentVariable(envVar, null);
                 try { listener.Stop(); } catch { }
             }
         }

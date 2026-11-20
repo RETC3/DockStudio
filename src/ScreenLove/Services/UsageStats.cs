@@ -15,10 +15,12 @@ namespace ScreenLove.Services
         public static bool IsValidId(string? id) => Core.IsValidId(id);
         public static string EnsureInstallId(AppSettings settings) => Core.EnsureInstallId(settings);
 
-        public static string BuildPing(string id, Version version, string arch, bool installed) =>
-            Core.BuildPing(id, version, arch, installed);
+        public static string BuildPing(string id, Version version, string arch, bool installed, int minutes = 0) =>
+            Core.BuildPing(id, version, arch, installed, minutes);
 
-        public static Task SendAsync(AppSettings settings, CancellationToken ct = default) =>
+        public static bool AddUsageMinute(AppSettings settings) => Core.AddUsageMinute(settings);
+
+        public static Task<bool> SendAsync(AppSettings settings, CancellationToken ct = default) =>
             Service.SendAsync(settings, Updater.IsInstalled, ct);
     }
 }

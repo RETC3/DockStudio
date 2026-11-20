@@ -40,8 +40,20 @@ namespace ScreenLove
         public bool CheckForUpdates { get; set; } = true;
         public DateTime? LastUpdateCheck { get; set; }
 
-        /// <summary>Statistiche anonime insieme al controllo degli aggiornamenti (vedi Services.UsageStats).</summary>
-        public bool SendUsageStats { get; set; } = true;
+        /// <summary>
+        /// True quando l'utente ha scelto cosa condividere (installer, finestra al primo avvio o impostazioni).
+        /// Finché è false non si invia nulla, nemmeno con le opzioni qui sotto attive.
+        /// </summary>
+        public bool PrivacyChoiceMade { get; set; } = false;
+
+        /// <summary>Statistiche d'uso anonime insieme al controllo degli aggiornamenti (vedi Services.UsageStats).</summary>
+        public bool SendUsageStats { get; set; } = false;
+
+        /// <summary>Segnalazioni automatiche degli errori (vedi Services.ErrorReports).</summary>
+        public bool SendErrorReports { get; set; } = false;
+
+        /// <summary>Minuti di utilizzo dall'ultimo invio delle statistiche.</summary>
+        public int UsageMinutes { get; set; }
 
         /// <summary>Codice casuale dell'installazione per le statistiche; null finché non serve.</summary>
         public string? InstallId { get; set; }

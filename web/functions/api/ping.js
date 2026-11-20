@@ -1,7 +1,8 @@
 // POST /api/ping: l'app installata segnala di essere in uso (al massimo una volta al giorno, solo se
-// l'utente non ha disattivato le statistiche anonime nelle impostazioni).
-// Corpo JSON: { "id": "<32 cifre esadecimali casuali>", "version": "0.2.0", "arch": "x64", "kind": "setup" }
-// Si salvano solo questi quattro campi e il giorno: niente IP né altri dati (web/lib/stats.js).
+// l'utente ha scelto le statistiche anonime; fino alla 0.5.0 erano attive finché non si spegnevano).
+// Corpo JSON: { "id": "<32 cifre esadecimali casuali>", "version": "0.6.0", "arch": "x64", "kind": "setup",
+//               "minutes": 95 }   (minutes: minuti di utilizzo dall'ultimo invio, dalla 0.6.0)
+// Si salvano solo questi campi e il giorno: niente IP né altri dati (web/lib/stats.js).
 
 import { parsePing, savePing } from '../../lib/stats.js';
 

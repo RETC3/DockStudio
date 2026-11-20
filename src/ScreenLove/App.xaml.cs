@@ -55,11 +55,25 @@ namespace ScreenLove
             base.OnStartup(e);
             DispatcherUnhandledException += (_, args) =>
             {
+                if (Settings != null) _ = ErrorReports.SendAsync(Settings, args.Exception);
                 MessageBox.Show(args.Exception.Message, "ScreenLove — errore", MessageBoxButton.OK, MessageBoxImage.Error);
                 args.Handled = true;
             };
+            // errore che chiude l'app: si prova a segnalarlo (se scelto) prima di uscire, al massimo per pochi secondi
+            AppDomain.CurrentDomain.UnhandledException += (_, args) =>
+            {
+                if (Settings == null || args.ExceptionObject is not Exception ex) return;
+                try { System.Threading.Tasks.Task.Run(() => ErrorReports.SendAsync(Settings, ex, fatal: true, TimeSpan.FromSeconds(3))).Wait(4000); }
+                catch { }
+            };
+            System.Threading.Tasks.TaskScheduler.UnobservedTaskException += (_, args) =>
+            {
+                if (Settings != null) _ = ErrorReports.SendAsync(Settings, args.Exception);
+                args.SetObserved();
+            };
 
             Settings = AppSettings.Load();
+            bool askPrivacy = ResolvePrivacyChoice();
             Suite.Register();
             Store = new CaptureStore(Settings.CapturesFolder);
             Store.Load();
@@ -91,6 +105,15 @@ namespace ScreenLove
                 ShowWorkspace();
             else
                 Notify("ScreenLove è attivo", HotkeySummary);
+
+            if (askPrivacy)
+                Dispatcher.BeginInvoke(System.Windows.Threading.DispatcherPriority.ApplicationIdle, () =>
+                {
+                    var privacy = new Options.PrivacyWindow();
+                    privacy.Show();
+                    privacy.Activate();
+                });
+            StartUsageTimer();
 
             // "--check-updates": controllo immediato con esito sempre visibile.
             if (e.Args.Contains("--check-updates"))
@@ -162,12 +185,51 @@ namespace ScreenLove
             }
         }
 
-        /// <summary>Statistiche anonime, insieme al controllo automatico (al massimo una volta al giorno).</summary>
+        /// <summary>Statistiche anonime, insieme al controllo automatico (al massimo una volta al giorno), se scelte.</summary>
         private async System.Threading.Tasks.Task SendUsageStatsAsync()
         {
             var hadId = Settings.InstallId;
-            await UsageStats.SendAsync(Settings);
-            if (Settings.InstallId != hadId) Settings.Save(); // codice appena creato
+            bool sent = await UsageStats.SendAsync(Settings);
+            if (sent || Settings.InstallId != hadId) Settings.Save(); // minuti azzerati o codice appena creato
+        }
+
+        // ---------- scelta su statistiche ed errori ----------
+
+        /// <summary>
+        /// Se l'utente non ha ancora scelto cosa condividere, usa la scelta fatta nell'installer.
+        /// </summary>
+        /// <returns>True se la scelta manca e va chiesta con la finestra.</returns>
+        private static bool ResolvePrivacyChoice()
+        {
+            if (Settings.PrivacyChoiceMade) return false;
+            if (InstallerPrivacyChoice.Take(Updater.Identity) is { } choice)
+            {
+                Options.PrivacyWindow.Apply(choice.UsageStats, choice.ErrorReports);
+                return false;
+            }
+            return true;
+        }
+
+        private int _unsavedMinutes;
+
+        /// <summary>
+        /// Tempo di utilizzo: ogni minuto in cui una finestra di ScreenLove è in primo piano, o si sta
+        /// registrando un video, conta un minuto (solo se le statistiche sono state scelte).
+        /// </summary>
+        private void StartUsageTimer()
+        {
+            var timer = new System.Windows.Threading.DispatcherTimer { Interval = TimeSpan.FromMinutes(1) };
+            timer.Tick += (_, _) =>
+            {
+                bool inUse = Recorder.IsRecording || Windows.OfType<Window>().Any(w => w.IsVisible && w.IsActive);
+                if (!inUse || !UsageStats.AddUsageMinute(Settings)) return;
+                if (++_unsavedMinutes >= 5)
+                {
+                    _unsavedMinutes = 0;
+                    Settings.Save();
+                }
+            };
+            timer.Start();
         }
 
         public void ShowUpdate()
@@ -406,6 +468,7 @@ namespace ScreenLove
 
         protected override void OnExit(ExitEventArgs e)
         {
+            if (_unsavedMinutes > 0) try { Settings.Save(); } catch { }
             _instance?.Dispose();
             base.OnExit(e);
         }

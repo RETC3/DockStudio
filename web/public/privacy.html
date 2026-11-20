@@ -37,6 +37,7 @@
   .lead { color: var(--muted); font-size: 18px; margin: 0; }
   ul { padding-left: 22px; } li { margin: 6px 0; }
   .box { background: var(--panel); border: 1px solid var(--line); border-radius: 14px; padding: 16px 20px; margin: 14px 0; }
+  h3 { font-size: 18px; margin: 26px 0 8px; }
   code { font-size: 15px; background: var(--panel); border: 1px solid var(--line); border-radius: 6px; padding: 1px 6px; }
   .box code { background: transparent; }
   footer { margin-top: 48px; padding-top: 18px; border-top: 1px solid var(--line); color: var(--muted); font-size: 14.5px; }
@@ -46,7 +47,7 @@
 <main>
   <a class="back" href="/">← Torna a ScreenLove</a>
   <h1>Privacy, <i>in breve</i></h1>
-  <p class="lead">ScreenLove non sa chi sei. Conta solo quante volte viene scaricato e quante copie sono in uso.</p>
+  <p class="lead">ScreenLove non sa chi sei. Il sito conta quante volte viene scaricato; tutto il resto lo scegli tu.</p>
 
   <h2>Le tue catture</h2>
   <p>Screenshot, video, testi e documenti restano sul tuo computer. L'app non li invia da nessuna parte:
@@ -59,22 +60,42 @@
         dall'aggiornamento dell'app). Non si registra chi l'ha scaricato.</li>
   </ul>
 
-  <h2>L'app</h2>
-  <p>Una volta al giorno, se è attivo il controllo degli aggiornamenti, ScreenLove legge sul sito qual è
-     l'ultima versione. Insieme invia queste quattro informazioni:</p>
+  <h2>L'app: scegli tu cosa condividere</h2>
+  <p>Durante l'installazione (o al primo avvio, per la versione portatile e per chi aggiorna) ScreenLove
+     chiede se vuoi aiutarci a migliorarla. Le due caselle partono vuote: finché non le scegli tu, l'app
+     non invia nessuna statistica e nessun errore. Serve solo a capire quante persone usano l'app, quanto
+     la usano e quali errori correggere, non a seguire quello che fai.</p>
+
+  <h3>Statistiche d'uso anonime</h3>
+  <p>Una volta al giorno, insieme al controllo degli aggiornamenti, ScreenLove invia:</p>
   <div class="box">
     <ul>
       <li><code>id</code>: un codice casuale creato dall'app (non deriva dal computer né da te);</li>
-      <li><code>version</code>: la versione di ScreenLove, per esempio 0.2.0;</li>
+      <li><code>version</code>: la versione di ScreenLove, per esempio 0.6.0;</li>
       <li><code>arch</code>: il tipo di Windows (x64 o ARM64);</li>
-      <li><code>kind</code>: se ScreenLove è installato o è la versione portatile.</li>
+      <li><code>kind</code>: se ScreenLove è installato o è la versione portatile;</li>
+      <li><code>minutes</code>: i minuti di utilizzo dall'invio precedente (minuti con una finestra di
+          ScreenLove in primo piano o un video in registrazione).</li>
     </ul>
   </div>
-  <p>Servono solo a sapere quante copie sono in uso e in quali versioni. Si conservano al massimo per
-     400 giorni, nell'Unione Europea.</p>
-  <p>Puoi disattivarle quando vuoi: <b>Impostazioni → Aggiornamenti → Invia statistiche anonime d'uso</b>.
-     Il codice casuale viene cancellato e non si invia più nulla. Se disattivi il controllo degli
-     aggiornamenti, non parte nessuna richiesta.</p>
+
+  <h3>Segnalazioni degli errori</h3>
+  <p>Quando qualcosa va storto, ScreenLove invia cosa si è rotto e dove:</p>
+  <div class="box">
+    <ul>
+      <li><code>type</code> e <code>stack</code>: il tipo di errore e i punti del codice in cui è successo,
+          senza percorsi, nomi di file né il testo del messaggio;</li>
+      <li><code>version</code>, <code>arch</code> e <code>os</code>: la versione di ScreenLove e quella di Windows;</li>
+      <li><code>fatal</code>: se l'errore ha chiuso l'app.</li>
+    </ul>
+  </div>
+  <p>Le segnalazioni non contengono il codice casuale: non si possono collegare tra loro né a te.</p>
+
+  <p>Le statistiche si conservano al massimo per 400 giorni, gli errori per 180, nell'Unione Europea.
+     Puoi cambiare idea quando vuoi in <b>Impostazioni → Aggiornamenti</b>: togliendo le statistiche il
+     codice casuale viene cancellato. Se disattivi il controllo degli aggiornamenti, non parte nessuna
+     statistica. Le versioni fino alla 0.5.0 inviavano le prime quattro informazioni finché non si
+     spegnevano le statistiche; dalla 0.6.0 chiedono prima.</p>
 
   <h2>Chi gestisce i dati</h2>
   <p>Il sito, i download e le statistiche sono ospitati da Cloudflare, che come ogni server riceve

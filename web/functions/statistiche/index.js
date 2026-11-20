@@ -1,4 +1,5 @@
-// GET /statistiche: download e installazioni attive (solo numeri), riservata con Cloudflare Access.
+// GET /statistiche: download, installazioni attive, tempo di utilizzo ed errori segnalati (solo numeri e
+// punti del codice ripuliti), riservata con Cloudflare Access.
 
 import { isAuthorized } from '../../lib/access.js';
 import { readStats } from '../../lib/stats.js';
@@ -84,6 +85,20 @@ function render(stats, now) {
   const fileRows = dl.byFile.map(r => [esc(r.file), num(r.n), num(r.web), num(r.app)]);
   const archRows = inst.byArch.map(r => [esc(r.arch), num(r.n)]);
 
+  const u = stats.usage || { minutes: 0, reports: 0, installs: 0 };
+  const avgMinutes = u.reports ? Math.round(Number(u.minutes) / Number(u.reports)) : 0;
+  const hours = Math.round(Number(u.minutes) / 60);
+
+  const errorRows = (stats.errors || []).map(r => `<tr>
+      <td><details><summary>${esc(r.type)}${r.fatal ? ' <span class="tag">ha chiuso l\'app</span>' : ''}</summary><pre>${esc(r.stack || '(nessun punto del codice)')}</pre></details></td>
+      <td class="n">${num(r.n)}</td>
+      <td class="n">${esc(String(r.versions || '').split(',').sort(compareVersions).join(', '))}</td>
+      <td class="n">${esc(new Date(r.last + 'T00:00:00Z').toLocaleDateString('it-IT', { day: 'numeric', month: 'short', timeZone: 'UTC' }))}</td>
+    </tr>`).join('');
+  const errorsTable = errorRows
+    ? `<table><thead><tr><th>Errore</th><th>Volte</th><th>Versioni</th><th>Ultima</th></tr></thead><tbody>${errorRows}</tbody></table>`
+    : '<p class="empty">Nessun errore segnalato negli ultimi 30 giorni.</p>';
+
   const updated = now.toLocaleString('it-IT', { dateStyle: 'medium', timeStyle: 'short', timeZone: 'Europe/Rome' });
 
   return `<!doctype html>
@@ -122,6 +137,8 @@ function render(stats, now) {
   tr:last-child td { border-bottom: 0; }
   td.n, th:not(:first-child) { text-align: right; font-variant-numeric: tabular-nums; }
   td:first-child { word-break: break-all; }
+  details summary { cursor: pointer; } details pre { white-space: pre-wrap; word-break: break-all; color: var(--muted); font-size: 12.5px; margin: 8px 0 0; }
+  .tag { font-size: 11.5px; color: var(--accent); border: 1px solid var(--accent); border-radius: 6px; padding: 1px 6px; margin-left: 6px; white-space: nowrap; }
   .empty { color: var(--muted); }
   .note { color: var(--muted); font-size: 13.5px; margin-top: 40px; border-top: 1px solid var(--line); padding-top: 16px; }
   a { color: inherit; }
@@ -146,6 +163,17 @@ function render(stats, now) {
     <div><h2>Per architettura</h2>${table(['Architettura', 'Installazioni'], archRows)}</div>
   </div>
 
+  <h2>Tempo di utilizzo</h2>
+  <div class="cards">
+    <div class="card main"><b>${num(avgMinutes)} min</b><span>in media per invio, ultimi 30 giorni</span></div>
+    <div class="card"><b>${num(hours)} h</b><span>in totale, ultimi 30 giorni</span></div>
+    <div class="card"><b>${num(u.installs)}</b><span>installazioni che lo inviano</span></div>
+  </div>
+
+  <h2>Errori segnalati</h2>
+  <p class="sub">Ultimi 30 giorni, raggruppati per tipo e punto del codice. Solo dalle app in cui l'utente ha scelto le segnalazioni.</p>
+  ${errorsTable}
+
   <h2>Download</h2>
   <div class="cards">
     <div class="card main"><b>${num(t.all_time)}</b><span>in totale</span></div>
@@ -159,7 +187,10 @@ function render(stats, now) {
 
   <p class="note">
     Un'installazione è "attiva" se l'app ha cercato aggiornamenti in quel periodo: succede al massimo una volta al giorno,
-    solo con gli aggiornamenti automatici e le statistiche anonime attivi. Le copie 0.1.0 non vengono contate.
+    solo con gli aggiornamenti automatici e le statistiche anonime attivi. Dalla 0.6.0 le statistiche e gli errori arrivano
+    solo da chi li ha scelti (installer, primo avvio o impostazioni): i numeri sono più bassi delle copie in uso.
+    Il tempo di utilizzo conta i minuti con una finestra dell'app in primo piano o un video in registrazione.
+    Le copie 0.1.0 non vengono contate.
     I download contano i file scaricati per intero, dal sito o dall'aggiornamento automatico dell'app. Date in UTC.
   </p>
 </main>

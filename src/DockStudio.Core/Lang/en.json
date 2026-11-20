@@ -14,5 +14,15 @@
   "license.invalid": "Invalid license file",
   "license.otherApp": "The license for {0} does not include this app",
 
-  "documents.step": "Step {0}"
+  "documents.step": "Step {0}",
+
+  "privacy.title": "Help us improve {0}",
+  "privacy.intro": "You can choose to send us some anonymous information. It is only used to understand how many people use the app, how much they use it and which bugs to fix: never to follow what you do.",
+  "privacy.usage": "Anonymous usage statistics",
+  "privacy.usageDetail": "A random code, the app version and the time of use.",
+  "privacy.errors": "Error reports",
+  "privacy.errorsDetail": "What broke and in which version, with no file names or personal data.",
+  "privacy.local": "Your files and everything you do in the app stay on your computer and are never sent. You can change your mind at any time in Settings.",
+  "privacy.downloads": "The website counts downloads anonymously, without IP addresses.",
+  "privacy.confirm": "Confirm"
 }
