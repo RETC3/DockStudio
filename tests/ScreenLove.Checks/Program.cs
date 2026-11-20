@@ -919,6 +919,9 @@ namespace ScreenLove.Checks
 
         private static void CheckDocuments()
         {
+            // come l'app (App.OnStartup): ScreenLove è in italiano anche su un Windows in inglese, per esempio
+            // le macchine di GitHub Actions
+            Languages.Set(Languages.Base);
             var paths = new List<string>();
             for (int i = 0; i < 3; i++)
             {
