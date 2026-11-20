@@ -1,0 +1,252 @@
+<!doctype html>
+<html lang="it">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>DockStudio — Tutto il tuo lavoro resta tuo.</title>
+  <meta name="description" content="DockStudio è una suite di app per il lavoro di ogni giorno: catture, PDF, note, posta, video e altro. Funzionano sul tuo computer, senza account.">
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="/style.css">
+  <script>
+    // Tema scelto dall'utente (chiaro/scuro), altrimenti quello del sistema.
+    try { const t = localStorage.getItem("theme"); if (t) document.documentElement.dataset.theme = t; } catch (e) {}
+  </script>
+</head>
+<body>
+
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <symbol id="logo" viewBox="0 0 64 64">
+    <rect x="6" y="8" width="12" height="48" rx="3" fill="currentColor"/>
+    <path d="M22 8h12a22 22 0 0 1 21.2 16H22z" fill="currentColor"/>
+    <rect x="22" y="28" width="35" height="8" rx="2" fill="currentColor"/>
+    <path d="M22 40h33.2A22 22 0 0 1 34 56H22z" fill="currentColor"/>
+  </symbol>
+  <symbol id="i-download" viewBox="0 0 24 24"><path d="M12 3v12m0 0-5-5m5 5 5-5M4 19h16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+  <symbol id="i-grid" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="4" width="6" height="6" rx="1.5"/><rect x="14" y="4" width="6" height="6" rx="1.5"/><rect x="4" y="14" width="6" height="6" rx="1.5"/><rect x="14" y="14" width="6" height="6" rx="1.5"/></g></symbol>
+  <symbol id="i-moon" viewBox="0 0 24 24"><path d="M20 14.5A8 8 0 0 1 9.5 4a8 8 0 1 0 10.5 10.5z" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/></symbol>
+  <symbol id="i-sun" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M2 12h2M20 12h2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></g></symbol>
+  <symbol id="i-check" viewBox="0 0 24 24"><path d="m5 12.5 4.5 4.5L19 7.5" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+  <symbol id="i-mail" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="m4 7 8 6 8-6"/></g></symbol>
+</svg>
+
+<header class="top">
+  <div class="wrap">
+    <a class="brand" href="#inizio" aria-label="DockStudio, inizio"><svg><use href="#logo"/></svg>DockStudio</a>
+    <nav class="nav" aria-label="Sezioni">
+      <a href="#app">App</a>
+      <a href="#principi">Principi</a>
+      <a href="#aziende">Aziende</a>
+      <a href="https://screenlove.it/novita">Novità</a>
+    </nav>
+    <div class="top-actions">
+      <button class="icon-btn" id="theme" type="button" aria-label="Tema chiaro o scuro">
+        <svg class="moon"><use href="#i-moon"/></svg><svg class="sun" hidden><use href="#i-sun"/></svg>
+      </button>
+      <a class="btn btn-dark" href="https://screenlove.it/#scarica"><svg><use href="#i-download"/></svg><span>Scarica</span></a>
+    </div>
+  </div>
+</header>
+
+<main>
+  <section class="hero" id="inizio">
+    <div class="wrap">
+      <div class="wordmark" aria-hidden="true"><svg><use href="#logo"/></svg><span>DOCKSTUDIO</span></div>
+      <h1>Tutto il tuo lavoro<br>resta tuo.</h1>
+      <p class="lead">DockStudio è una suite di app per il lavoro di ogni giorno: catture dello schermo, PDF, note, posta, video e altro.
+        Funzionano sul tuo computer, senza account e senza pubblicità.</p>
+      <div class="cta">
+        <a class="btn btn-primary" href="https://screenlove.it/#scarica"><svg><use href="#i-download"/></svg>Scarica ScreenLove</a>
+        <a class="btn btn-ghost" href="#app"><svg><use href="#i-grid"/></svg>Scopri le app</a>
+      </div>
+      <p class="cta-note mono">La prima app è pronta · Windows 10 e 11 · <a href="https://screenlove.it">screenlove.it</a></p>
+      <ul class="facts mono">
+        <li>Funziona offline</li>
+        <li>Niente account</li>
+        <li>I file restano tuoi</li>
+        <li>Windows · Mac in arrivo</li>
+      </ul>
+    </div>
+  </section>
+
+  <section class="block" id="app">
+    <div class="wrap">
+      <div class="kicker mono"><b>01</b> Le app · undici in tutto</div>
+      <h2>Ogni app fa una cosa, e la fa bene.</h2>
+      <p class="intro">Si installano una alla volta e ognuna funziona da sola. Insieme condividono licenza, aggiornamenti e collegamenti:
+        da una cattura crei un PDF, da una nota apri una foto.</p>
+
+      <div class="apps">
+        <a class="app featured" href="https://screenlove.it" style="--c:#FF3D7F">
+          <div class="app-head"><span class="app-icon">S</span><span class="app-num mono">01</span></div>
+          <span class="app-cat mono">Catture dello schermo</span>
+          <h3>ScreenLove</h3>
+          <p>Catture di finestre, zone e pagine intere, editor con frecce e passaggi, video con audio e webcam, testo dalle immagini e documenti PDF e Word.</p>
+          <div class="app-foot"><span class="tag ok">Disponibile</span><span class="tag">Windows</span><span class="tag">Mac in arrivo</span></div>
+          <span class="go">Vai a ScreenLove →</span>
+        </a>
+
+        <div class="app" style="--c:#0EA5E9">
+          <div class="app-head"><span class="app-icon">Sp</span><span class="app-num mono">02</span></div>
+          <span class="app-cat mono">Spazio su disco</span>
+          <h3>DockSpace</h3>
+          <p>Scopri cosa riempie il disco, trova i doppioni e fai pulizia in sicurezza.</p>
+          <div class="app-foot"><span class="tag soon">In arrivo</span><span class="tag">Windows</span><span class="tag">Mac</span></div>
+        </div>
+
+        <div class="app" style="--c:#E5484D">
+          <div class="app-head"><span class="app-icon">P</span><span class="app-num mono">03</span></div>
+          <span class="app-cat mono">PDF</span>
+          <h3>DockPDF</h3>
+          <p>Unisci, dividi, comprimi, compila e firma i PDF. Con lo scanner per i documenti di carta.</p>
+          <div class="app-foot"><span class="tag soon">In arrivo</span><span class="tag">Windows</span><span class="tag">Mac</span></div>
+        </div>
+
+        <div class="app" style="--c:#8B5CF6">
+          <div class="app-head"><span class="app-icon">Pl</span><span class="app-num mono">04</span></div>
+          <span class="app-cat mono">Video e musica</span>
+          <h3>DockPlay</h3>
+          <p>Video e musica in quasi ogni formato, con sottotitoli e playlist. Senza pubblicità.</p>
+          <div class="app-foot"><span class="tag soon">In arrivo</span><span class="tag">Windows</span><span class="tag">Mac</span></div>
+        </div>
+
+        <div class="app" style="--c:#F59E0B">
+          <div class="app-head"><span class="app-icon">C</span><span class="app-num mono">05</span></div>
+          <span class="app-cat mono">Convertitore</span>
+          <h3>DockConvert</h3>
+          <p>Immagini, documenti, audio e video da un formato all'altro, anche tanti file insieme.</p>
+          <div class="app-foot"><span class="tag soon">In arrivo</span><span class="tag">Windows</span><span class="tag">Mac</span></div>
+        </div>
+
+        <div class="app" style="--c:#10B981">
+          <div class="app-head"><span class="app-icon">N</span><span class="app-num mono">06</span></div>
+          <span class="app-cat mono">Note</span>
+          <h3>DockNotes</h3>
+          <p>Quaderni, sezioni e pagine libere, con immagini, catture e liste di cose da fare.</p>
+          <div class="app-foot"><span class="tag soon">In arrivo</span><span class="tag">Windows</span><span class="tag">Mac</span></div>
+        </div>
+
+        <div class="app" style="--c:#2447F5">
+          <div class="app-head"><span class="app-icon">Po</span><span class="app-num mono">07</span></div>
+          <span class="app-cat mono">Posta e calendario</span>
+          <h3>DockPost</h3>
+          <p>Tutte le caselle di posta in un'unica app, con calendario e contatti.</p>
+          <div class="app-foot"><span class="tag soon">In arrivo</span><span class="tag">Windows</span><span class="tag">Mac</span></div>
+        </div>
+
+        <div class="app" style="--c:#EC4899">
+          <div class="app-head"><span class="app-icon">V</span><span class="app-num mono">08</span></div>
+          <span class="app-cat mono">Registratore</span>
+          <h3>DockVoice</h3>
+          <p>Registra riunioni e note vocali e trasformale in testo, senza mandarle su internet.</p>
+          <div class="app-foot"><span class="tag soon">In arrivo</span><span class="tag">Windows</span><span class="tag">Mac</span></div>
+        </div>
+
+        <div class="app" style="--c:#14B8A6">
+          <div class="app-head"><span class="app-icon">F</span><span class="app-num mono">09</span></div>
+          <span class="app-cat mono">Foto</span>
+          <h3>DockFrame</h3>
+          <p>Sfoglia, ordina e ritocca le foto, con album e ricerca per data e luogo.</p>
+          <div class="app-foot"><span class="tag soon">In arrivo</span><span class="tag">Windows</span><span class="tag">Mac</span></div>
+        </div>
+
+        <div class="app" style="--c:#64748B">
+          <div class="app-head"><span class="app-icon">T</span><span class="app-num mono">10</span></div>
+          <span class="app-cat mono">Attività</span>
+          <h3>DockTask</h3>
+          <p>Liste, scadenze e promemoria per organizzare il lavoro e i progetti.</p>
+          <div class="app-foot"><span class="tag soon">In arrivo</span><span class="tag">Windows</span><span class="tag">Mac</span></div>
+        </div>
+
+        <div class="app" style="--c:#0F766E">
+          <div class="app-head"><span class="app-icon">B</span><span class="app-num mono">11</span></div>
+          <span class="app-cat mono">Backup</span>
+          <h3>DockSafe</h3>
+          <p>Copie di sicurezza e sincronizzazione delle cartelle, in automatico.</p>
+          <div class="app-foot"><span class="tag soon">In arrivo</span><span class="tag">Windows</span><span class="tag">Mac</span></div>
+        </div>
+      </div>
+
+      <div class="next">
+        <span><strong>Ne manca una?</strong> Dicci quale app vorresti trovare in DockStudio.</span>
+        <a class="btn btn-ghost" href="mailto:info@getdockstudio.it?subject=Un'app%20per%20DockStudio"><svg><use href="#i-mail"/></svg>Scrivici</a>
+      </div>
+    </div>
+  </section>
+
+  <section class="block" id="principi">
+    <div class="wrap">
+      <div class="kicker mono"><b>02</b> Principi · uguali in ogni app</div>
+      <h2>Le regole che seguono tutte le app.</h2>
+      <p class="intro">Ogni app di DockStudio nasce dallo stesso nucleo e rispetta le stesse promesse.</p>
+      <div class="principles">
+        <div class="principle"><span class="n mono">01</span><h3>Sul tuo computer</h3><p>Le app lavorano sui tuoi file, in locale. Niente viaggi nel cloud tra te e il tuo lavoro.</p></div>
+        <div class="principle"><span class="n mono">02</span><h3>Senza account</h3><p>Le installi e le usi. Nessuna registrazione, nessuna password da ricordare.</p></div>
+        <div class="principle"><span class="n mono">03</span><h3>Leggere e veloci</h3><p>App vere per il desktop, non pagine web travestite. Partono subito e restituiscono la memoria quando hai finito.</p></div>
+        <div class="principle"><span class="n mono">04</span><h3>Familiari da subito</h3><p>Pulsanti, menu e scorciatoie dove te li aspetti. Niente da imparare da capo.</p></div>
+        <div class="principle"><span class="n mono">05</span><h3>Lavorano insieme</h3><p>Una sola licenza, aggiornamenti coordinati e collegamenti diretti da un'app all'altra.</p></div>
+        <div class="principle"><span class="n mono">06</span><h3>Windows e Mac</h3><p>Stesse funzioni sui due sistemi, e ogni aggiornamento esce per entrambi.</p></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="block" id="aziende">
+    <div class="wrap">
+      <div class="kicker mono"><b>03</b> Aziende · licenza Business</div>
+      <h2>Per uffici e aziende.</h2>
+      <p class="intro">Le stesse app, pronte da distribuire su tutti i computer dell'ufficio.</p>
+      <div class="business">
+        <div class="card">
+          <ul>
+            <li><svg><use href="#i-check"/></svg><span><b>Una licenza per tutta la suite.</b> Un solo file vale per tutte le app DockStudio installate.</span></li>
+            <li><svg><use href="#i-check"/></svg><span><b>Installazione silenziosa.</b> Un unico installer da distribuire su tutti i PC, senza domande.</span></li>
+            <li><svg><use href="#i-check"/></svg><span><b>Nessun account per i dipendenti.</b> La licenza è sul computer, non legata alle persone.</span></li>
+            <li><svg><use href="#i-check"/></svg><span><b>Dati che non escono.</b> Le app funzionano offline: i documenti restano sui vostri computer.</span></li>
+          </ul>
+        </div>
+        <div class="card contact">
+          <div>
+            <span class="mono">In arrivo</span>
+            <h3>La licenza Business è in preparazione.</h3>
+            <p>Vuoi provarla per primo nella tua azienda? Scrivici e ti teniamo aggiornato.</p>
+          </div>
+          <a class="btn" href="mailto:info@getdockstudio.it?subject=Licenza%20Business%20DockStudio"><svg><use href="#i-mail"/></svg>Scrivici</a>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="closing">
+    <div class="wrap">
+      <div class="kicker mono"><b>04</b> Per iniziare</div>
+      <h2>Inizia da ScreenLove.</h2>
+      <p>La prima app di DockStudio è già pronta: catture, editor, video e documenti, gratis.</p>
+      <div class="cta">
+        <a class="btn btn-primary" href="https://screenlove.it/#scarica"><svg><use href="#i-download"/></svg>Scarica ScreenLove</a>
+        <a class="btn btn-ghost" href="https://screenlove.it/novita">Novità di ScreenLove</a>
+      </div>
+    </div>
+  </section>
+</main>
+
+<nav class="rail mono" aria-label="Indice della pagina">
+  <a href="#inizio"><span>Inizio</span><i></i></a>
+  <a href="#app"><span>App</span><i></i></a>
+  <a href="#principi"><span>Principi</span><i></i></a>
+  <a href="#aziende"><span>Aziende</span><i></i></a>
+</nav>
+
+<footer>
+  <div class="wrap">
+    <a class="brand" href="#inizio"><svg><use href="#logo"/></svg>DockStudio</a>
+    <nav class="mono">
+      <a href="https://screenlove.it">ScreenLove</a>
+      <a href="/privacy">Privacy</a>
+      <a href="mailto:info@getdockstudio.it">info@getdockstudio.it</a>
+    </nav>
+    <span class="mono">© 2026 DockStudio</span>
+  </div>
+</footer>
+
+<script src="/site.js" defer></script>
+</body>
+</html>

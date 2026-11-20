@@ -1,0 +1,5 @@
+# Sito della suite DockStudio su Cloudflare Pages (progetto "dockstudio": dockstudio.pages.dev, poi getdockstudio.it).
+# Pubblicato dal workflow .github/workflows/site-dockstudio.yml; in locale basta servire la cartella public/.
+name = "dockstudio"
+pages_build_output_dir = "public"
+compatibility_date = "2026-10-01"

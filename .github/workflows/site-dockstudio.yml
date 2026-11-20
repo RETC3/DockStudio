@@ -1,0 +1,70 @@
+# Pubblica il sito della suite DockStudio (Cloudflare Pages, progetto "dockstudio").
+# Parte da solo quando cambia la cartella site/. Servono i secret CLOUDFLARE_API_TOKEN e CLOUDFLARE_ACCOUNT_ID:
+# senza, il workflow si limita a un avviso.
+name: Sito DockStudio
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'site/**'
+      - '.github/workflows/site-dockstudio.yml'
+  workflow_dispatch:
+
+concurrency:
+  group: site-dockstudio
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    env:
+      CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+      CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+    steps:
+      - name: Secret di Cloudflare
+        id: cf
+        run: |
+          if [ -z "$CLOUDFLARE_API_TOKEN" ] || [ -z "$CLOUDFLARE_ACCOUNT_ID" ]; then
+            echo "::warning::Mancano i secret CLOUDFLARE_API_TOKEN / CLOUDFLARE_ACCOUNT_ID: sito non pubblicato."
+            echo "ok=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "ok=true" >> "$GITHUB_OUTPUT"
+          fi
+
+      - uses: actions/checkout@v5
+        if: steps.cf.outputs.ok == 'true'
+
+      - uses: actions/setup-node@v5
+        if: steps.cf.outputs.ok == 'true'
+        with:
+          node-version: '22'
+
+      - name: Progetto Pages
+        if: steps.cf.outputs.ok == 'true'
+        working-directory: site
+        run: |
+          npx --yes wrangler@4 pages project create dockstudio --production-branch main >/dev/null 2>&1 \
+            && echo "Progetto Pages creato" || echo "Progetto Pages già presente"
+
+      - name: Pubblicazione su Cloudflare Pages
+        if: steps.cf.outputs.ok == 'true'
+        working-directory: site
+        run: |
+          npx --yes wrangler@4 pages deploy --project-name dockstudio --branch main --commit-dirty=true | tee /tmp/deploy.txt
+          # indirizzo della pubblicazione (se "dockstudio" era già preso, Cloudflare aggiunge un suffisso al nome)
+          url=$(grep -oE 'https://[a-z0-9.-]+\.pages\.dev' /tmp/deploy.txt | tail -1)
+          echo "URL=$url" >> "$GITHUB_ENV"
+
+      - name: Controllo del sito
+        if: steps.cf.outputs.ok == 'true'
+        run: |
+          for i in $(seq 1 12); do
+            if curl -fsSL "$URL/" | grep -q "DockStudio"; then
+              echo "Sito pubblicato: $URL"
+              exit 0
+            fi
+            sleep 10
+          done
+          echo "::error::Il sito non risponde come previsto dopo 2 minuti."
+          exit 1

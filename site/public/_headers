@@ -1,0 +1,15 @@
+# Indirizzo tecnico di Cloudflare (dockstudio.pages.dev e anteprime): fuori dai motori di ricerca,
+# così Google indicizza solo il dominio vero.
+https://:project.pages.dev/*
+  X-Robots-Tag: noindex
+
+https://:version.:project.pages.dev/*
+  X-Robots-Tag: noindex
+
+/*
+  X-Content-Type-Options: nosniff
+  Referrer-Policy: strict-origin-when-cross-origin
+  Permissions-Policy: camera=(), microphone=(), geolocation=()
+
+/fonts/*
+  Cache-Control: public, max-age=31536000, immutable
