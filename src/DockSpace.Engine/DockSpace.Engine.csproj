@@ -1,0 +1,15 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!-- Motore di DockSpace, senza interfaccia: scansione delle cartelle (su ogni sistema), lettura veloce
+       della tabella NTFS (solo Windows, da amministratore), tipi di file, file più grandi, mappa a riquadri. -->
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>disable</ImplicitUsings>
+    <LangVersion>latest</LangVersion>
+    <DebugType>embedded</DebugType>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <RootNamespace>DockSpace.Engine</RootNamespace>
+  </PropertyGroup>
+
+</Project>

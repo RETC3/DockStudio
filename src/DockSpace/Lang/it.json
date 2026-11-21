@@ -1,0 +1,83 @@
+{
+  // Testi di DockSpace (italiano, lingua base).
+  "app.tagline": "Scopri cosa occupa spazio sul disco.",
+  "common.cancel": "Annulla",
+
+  "scan.start": "Analizza",
+  "scan.folder": "Cartella…",
+  "scan.folderTitle": "Scegli la cartella da analizzare",
+  "scan.stop": "Ferma",
+  "scan.fast": "Veloce",
+  "scan.fastTip": "Legge direttamente la tabella dei file del disco NTFS: un disco intero in pochi secondi. Serve avviare DockSpace come amministratore.",
+
+  "welcome.title": "Cosa occupa spazio?",
+  "welcome.body": "Scegli un disco e premi Analizza, oppure scegli una cartella. DockSpace legge tutto sul tuo computer: nessun file lascia il disco.",
+
+  "drive.label": "{0}   {1} liberi su {2}",
+
+  "folder.up": "Cartella superiore",
+  "folder.details": "{0} · {1} file · {2} cartelle",
+  "item.inaccessible": "{0} (non accessibile)",
+
+  "tab.content": "Contenuto",
+  "tab.types": "Tipi di file",
+  "tab.largest": "File più grandi",
+
+  "col.name": "Nome",
+  "col.share": "Quota",
+  "col.size": "Dimensione",
+  "col.files": "File",
+  "col.modified": "Modificato",
+  "col.extension": "Estensione",
+  "col.category": "Tipo",
+  "col.file": "File",
+
+  "types.noExtension": "(senza estensione)",
+  "category.other": "Altro",
+  "category.image": "Immagini",
+  "category.video": "Video",
+  "category.audio": "Audio",
+  "category.document": "Documenti",
+  "category.archive": "Archivi e dischi",
+  "category.code": "Codice",
+  "category.program": "Programmi",
+  "category.system": "Sistema e temporanei",
+
+  "map.empty": "Questa cartella è vuota.",
+
+  "menu.appearance": "Aspetto",
+  "appearance.system": "Come il sistema",
+  "appearance.light": "Chiaro",
+  "appearance.dark": "Scuro",
+  "menu.about": "Informazioni su {0}",
+
+  "action.open": "Apri",
+  "action.reveal": "Mostra nella cartella",
+  "action.copyPath": "Copia il percorso",
+  "action.trash": "Sposta nel Cestino…",
+
+  "status.ready": "Pronto.",
+  "status.readyAdmin": "Pronto (avviato come amministratore: la scansione veloce è disponibile).",
+  "status.scanning": "Analisi in corso… {0} file, {1} cartelle, {2} — {3}",
+  "status.readingTable": "Lettura della tabella del disco… {0}",
+  "status.done": "Analisi completata in {0} s: {1} file, {2} cartelle, {3}.",
+  "status.doneFast": "Analisi veloce completata in {0} s: {1} file, {2} cartelle, {3}.",
+  "status.driveUsed": "Spazio usato sul disco: {0}.",
+  "status.fastFallback": "La scansione veloce non è disponibile su questo disco: è stata usata quella normale.",
+  "status.canceled": "Analisi interrotta.",
+  "status.failed": "Analisi non riuscita: {0}",
+  "status.actionFailed": "Operazione non riuscita: {0}",
+
+  "elevate.title": "Scansione veloce",
+  "elevate.body": "Per leggere direttamente la tabella del disco DockSpace deve essere avviato come amministratore. Windows ti chiederà il permesso e DockSpace si riaprirà.",
+  "elevate.confirm": "Riavvia come amministratore",
+  "elevate.denied": "Permesso negato: puoi usare la scansione normale.",
+  "elevate.skipped": "Scansione veloce annullata: puoi usare la scansione normale.",
+
+  "trash.title": "Spostare nel Cestino?",
+  "trash.body": "{0}",
+  "trash.detailFolder": "{0} in {1} file. Potrai recuperarli dal Cestino.",
+  "trash.confirm": "Sposta nel Cestino",
+  "trash.done": "{0} spostato nel Cestino: liberati {1}.",
+  "trash.failed": "Non è stato possibile spostarlo nel Cestino: {0}"
+}

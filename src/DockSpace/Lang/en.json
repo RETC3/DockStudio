@@ -1,0 +1,83 @@
+{
+  // DockSpace texts (English).
+  "app.tagline": "Find out what takes up space on your disk.",
+  "common.cancel": "Cancel",
+
+  "scan.start": "Analyze",
+  "scan.folder": "Folder…",
+  "scan.folderTitle": "Choose the folder to analyze",
+  "scan.stop": "Stop",
+  "scan.fast": "Fast",
+  "scan.fastTip": "Reads the NTFS disk's file table directly: a whole disk in a few seconds. DockSpace must run as administrator.",
+
+  "welcome.title": "What takes up space?",
+  "welcome.body": "Choose a disk and press Analyze, or choose a folder. DockSpace reads everything on your computer: no file leaves the disk.",
+
+  "drive.label": "{0}   {1} free of {2}",
+
+  "folder.up": "Parent folder",
+  "folder.details": "{0} · {1} files · {2} folders",
+  "item.inaccessible": "{0} (not accessible)",
+
+  "tab.content": "Contents",
+  "tab.types": "File types",
+  "tab.largest": "Largest files",
+
+  "col.name": "Name",
+  "col.share": "Share",
+  "col.size": "Size",
+  "col.files": "Files",
+  "col.modified": "Modified",
+  "col.extension": "Extension",
+  "col.category": "Type",
+  "col.file": "File",
+
+  "types.noExtension": "(no extension)",
+  "category.other": "Other",
+  "category.image": "Images",
+  "category.video": "Video",
+  "category.audio": "Audio",
+  "category.document": "Documents",
+  "category.archive": "Archives and disk images",
+  "category.code": "Code",
+  "category.program": "Programs",
+  "category.system": "System and temporary",
+
+  "map.empty": "This folder is empty.",
+
+  "menu.appearance": "Appearance",
+  "appearance.system": "Same as system",
+  "appearance.light": "Light",
+  "appearance.dark": "Dark",
+  "menu.about": "About {0}",
+
+  "action.open": "Open",
+  "action.reveal": "Show in folder",
+  "action.copyPath": "Copy path",
+  "action.trash": "Move to Recycle Bin…",
+
+  "status.ready": "Ready.",
+  "status.readyAdmin": "Ready (running as administrator: fast scan is available).",
+  "status.scanning": "Analyzing… {0} files, {1} folders, {2} — {3}",
+  "status.readingTable": "Reading the disk's file table… {0}",
+  "status.done": "Analysis completed in {0} s: {1} files, {2} folders, {3}.",
+  "status.doneFast": "Fast analysis completed in {0} s: {1} files, {2} folders, {3}.",
+  "status.driveUsed": "Space used on the disk: {0}.",
+  "status.fastFallback": "Fast scan isn't available on this disk: the normal scan was used.",
+  "status.canceled": "Analysis stopped.",
+  "status.failed": "Analysis failed: {0}",
+  "status.actionFailed": "The operation failed: {0}",
+
+  "elevate.title": "Fast scan",
+  "elevate.body": "To read the disk's file table directly, DockSpace must run as administrator. Windows will ask for permission and DockSpace will reopen.",
+  "elevate.confirm": "Restart as administrator",
+  "elevate.denied": "Permission denied: you can use the normal scan.",
+  "elevate.skipped": "Fast scan canceled: you can use the normal scan.",
+
+  "trash.title": "Move to the Recycle Bin?",
+  "trash.body": "{0}",
+  "trash.detailFolder": "{0} in {1} files. You can restore them from the Recycle Bin.",
+  "trash.confirm": "Move to Recycle Bin",
+  "trash.done": "{0} moved to the Recycle Bin: {1} freed.",
+  "trash.failed": "Couldn't move it to the Recycle Bin: {0}"
+}

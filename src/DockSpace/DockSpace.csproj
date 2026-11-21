@@ -1,0 +1,40 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!-- DockSpace: analizzatore dello spazio su disco della suite DockStudio (Avalonia, Windows e in futuro macOS). -->
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>net10.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>disable</ImplicitUsings>
+    <LangVersion>latest</LangVersion>
+    <DebugType>embedded</DebugType>
+    <RootNamespace>DockSpace</RootNamespace>
+    <AssemblyName>DockSpace</AssemblyName>
+    <Version>0.1.0</Version>
+    <Product>DockSpace</Product>
+    <Company>DockStudio</Company>
+    <ApplicationManifest>app.manifest</ApplicationManifest>
+    <AvaloniaUseCompiledBindingsByDefault>true</AvaloniaUseCompiledBindingsByDefault>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Avalonia" Version="12.1.5" />
+    <PackageReference Include="Avalonia.Desktop" Version="12.1.5" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\DockStudio.Core\DockStudio.Core.csproj" />
+    <ProjectReference Include="..\DockStudio.UI\DockStudio.UI.csproj" />
+    <ProjectReference Include="..\DockSpace.Engine\DockSpace.Engine.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <InternalsVisibleTo Include="DockSpace.Checks" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- Testi dell'app, uno per lingua: risorse DockSpace.Lang.<lingua>.json -->
+    <EmbeddedResource Include="Lang\*.json" LogicalName="DockSpace.Lang.%(Filename).json" />
+  </ItemGroup>
+
+</Project>
