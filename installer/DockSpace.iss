@@ -11,6 +11,7 @@
 #endif
 #define AppExe "DockSpace.exe"
 #define AppMutexName "DockSpace.Running"
+#define PrivacyKey "Software\DockSpace\Privacy"
 
 [Setup]
 AppId={{C236BCE8-3505-4502-958B-ADD55D15F867}
@@ -53,6 +54,17 @@ italian.ContextMenu=Aggiungi "Analizza con DockSpace" al menu del tasto destro s
 english.ContextMenu=Add "Analyze with DockSpace" to the right-click menu of folders and drives
 italian.ContextMenuVerb=Analizza con DockSpace
 english.ContextMenuVerb=Analyze with DockSpace
+; pagina "Aiutaci a migliorare": stesso testo della finestra dell'app (src/DockStudio.Core/Lang)
+italian.PrivacyTitle=Aiutaci a migliorare DockSpace
+english.PrivacyTitle=Help us improve DockSpace
+italian.PrivacySubtitle=Scegli tu cosa condividere. Puoi cambiare idea in qualsiasi momento dal menu di DockSpace.
+english.PrivacySubtitle=You choose what to share. You can change your mind at any time from the DockSpace menu.
+italian.PrivacyIntro=Puoi scegliere di inviarci alcune informazioni anonime. Servono solo a capire quante persone usano l'app, quanto la usano e quali errori correggere: non a seguire quello che fai.%n%nI tuoi file, le cartelle che analizzi e quello che fai in DockSpace restano sul tuo computer e non vengono mai inviati. Il sito conta i download in forma anonima, senza indirizzo IP.
+english.PrivacyIntro=You can choose to send us some anonymous information. It is only used to understand how many people use the app, how much they use it and which bugs to fix: never to follow what you do.%n%nYour files, the folders you analyze and what you do in DockSpace stay on your computer and are never sent. The website counts downloads anonymously, without IP addresses.
+italian.PrivacyUsage=Statistiche d'uso anonime: un codice casuale, la versione dell'app e il tempo di utilizzo
+english.PrivacyUsage=Anonymous usage statistics: a random code, the app version and the time of use
+italian.PrivacyErrors=Segnalazioni degli errori: cosa si è rotto e in quale versione, senza nomi di file né dati personali
+english.PrivacyErrors=Error reports: what broke and in which version, with no file names or personal data
 italian.StillRunning=DockSpace è aperto.%n%nChiudi tutte le finestre di DockSpace e riprova.
 english.StillRunning=DockSpace is open.%n%nClose all DockSpace windows and try again.
 
@@ -89,6 +101,9 @@ Filename: "{app}\{#AppExe}"; Description: "{cm:LaunchProgram,DockSpace}"; Flags:
 Filename: "{app}\{#AppExe}"; Flags: nowait; Check: IsUpdate
 
 [Code]
+var
+  PrivacyPage: TInputOptionWizardPage;
+
 function IsUpdate(): Boolean;
 begin
   Result := ExpandConstant('{param:UPDATE|0}') = '1';
@@ -110,6 +125,34 @@ begin
     end;
   end;
   Result := True;
+end;
+
+// Pagina "Aiutaci a migliorare": due caselle vuote, dopo la scelta delle attività aggiuntive.
+// La scelta va nel registro (HKCU\Software\DockSpace\Privacy) e l'app la legge al primo avvio
+// (DockStudio.Core.Windows.InstallerPrivacyChoice). Negli aggiornamenti e nelle installazioni silenziose
+// la pagina non c'è: se serve, chiede l'app.
+procedure InitializeWizard();
+begin
+  PrivacyPage := CreateInputOptionPage(wpSelectTasks, CustomMessage('PrivacyTitle'), CustomMessage('PrivacySubtitle'),
+    CustomMessage('PrivacyIntro'), False, False);
+  PrivacyPage.Add(CustomMessage('PrivacyUsage'));
+  PrivacyPage.Add(CustomMessage('PrivacyErrors'));
+  PrivacyPage.Values[0] := False;
+  PrivacyPage.Values[1] := False;
+end;
+
+function ShouldSkipPage(PageID: Integer): Boolean;
+begin
+  Result := (PrivacyPage <> nil) and (PageID = PrivacyPage.ID) and IsUpdate();
+end;
+
+procedure CurStepChanged(CurStep: TSetupStep);
+begin
+  if (CurStep = ssPostInstall) and not IsUpdate() and not WizardSilent() then
+  begin
+    RegWriteDWordValue(HKEY_CURRENT_USER, '{#PrivacyKey}', 'UsageStats', Ord(PrivacyPage.Values[0]));
+    RegWriteDWordValue(HKEY_CURRENT_USER, '{#PrivacyKey}', 'ErrorReports', Ord(PrivacyPage.Values[1]));
+  end;
 end;
 
 function InitializeUninstall(): Boolean;
@@ -136,5 +179,15 @@ begin
       Result := False;
       Exit;
     end;
+  end;
+end;
+
+procedure CurUninstallStepChanged(CurUninstallStep: TUninstallStep);
+begin
+  // Una scelta dell'installer mai letta dall'app non deve restare nel registro.
+  if CurUninstallStep = usPostUninstall then
+  begin
+    RegDeleteKeyIncludingSubkeys(HKEY_CURRENT_USER, '{#PrivacyKey}');
+    RegDeleteKeyIfEmpty(HKEY_CURRENT_USER, 'Software\DockSpace');
   end;
 end;

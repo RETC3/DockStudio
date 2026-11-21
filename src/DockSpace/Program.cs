@@ -12,9 +12,10 @@ namespace DockSpace
 {
     /// <summary>
     /// Opzioni da riga di comando: "--scan &lt;percorso&gt;" avvia subito la scansione, "--fast" la vuole veloce (NTFS).
-    /// <paramref name="CheckUpdates"/> false (solo nei controlli automatici) evita il controllo degli aggiornamenti.
+    /// <paramref name="Automatic"/> false (solo nei controlli automatici) evita quello che l'app fa da sola all'apertura:
+    /// la domanda sulla privacy, il controllo degli aggiornamenti e le statistiche.
     /// </summary>
-    public sealed record StartOptions(string? ScanPath, bool Fast, bool CheckUpdates = true)
+    public sealed record StartOptions(string? ScanPath, bool Fast, bool Automatic = true)
     {
         public static StartOptions Parse(string[] args)
         {
@@ -38,9 +39,45 @@ namespace DockSpace
         public override void Initialize()
         {
             Settings = SettingsStore.Load();
+            WatchErrors();
             Languages.Set(Settings.Language);
             var appearance = Enum.TryParse<Appearance>(Settings.Appearance, out var a) ? a : Appearance.System;
             DockTheme.Apply(this, AppInfo.Accent, appearance);
+        }
+
+        /// <summary>
+        /// La scelta su statistiche ed errori: dall'installer, dalla finestra al primo avvio o dal menu.
+        /// Senza statistiche si cancellano codice e minuti accumulati.
+        /// </summary>
+        public static void ApplyPrivacy(bool usage, bool errors)
+        {
+            Settings.ApplyPrivacy(usage, errors);
+            SettingsStore.Save(Settings);
+        }
+
+        /// <summary>Errori non gestiti: si segnalano (solo se l'utente l'ha scelto) e, se possibile, si va avanti.</summary>
+        private static void WatchErrors()
+        {
+            Avalonia.Threading.Dispatcher.UIThread.UnhandledException += (_, args) =>
+            {
+                _ = AppInfo.Errors.SendAsync(Settings, args.Exception);
+                // Un errore in un'azione non deve chiudere l'app con l'analisi in corso: si mostra e si continua.
+                args.Handled = true;
+                if (Current?.ApplicationLifetime is IClassicDesktopStyleApplicationLifetime { MainWindow: MainWindow main })
+                    main.ShowError(args.Exception);
+            };
+            // errore che chiude l'app: si prova a segnalarlo prima di uscire, al massimo per pochi secondi
+            AppDomain.CurrentDomain.UnhandledException += (_, args) =>
+            {
+                if (args.ExceptionObject is not Exception ex) return;
+                try { System.Threading.Tasks.Task.Run(() => AppInfo.Errors.SendAsync(Settings, ex, fatal: true, TimeSpan.FromSeconds(3))).Wait(4000); }
+                catch { /* niente */ }
+            };
+            System.Threading.Tasks.TaskScheduler.UnobservedTaskException += (_, args) =>
+            {
+                _ = AppInfo.Errors.SendAsync(Settings, args.Exception);
+                args.SetObserved();
+            };
         }
 
         public override void OnFrameworkInitializationCompleted()

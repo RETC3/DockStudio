@@ -1,9 +1,11 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
-  <!-- Parte del nucleo che esiste solo su Windows: avvio di una sola copia, installer Inno Setup.
-       Su macOS ci sarà DockStudio.Core.Mac con le stesse funzioni. -->
+  <!-- Parte del nucleo che esiste solo su Windows: avvio di una sola copia, installer Inno Setup, scelta
+       della privacy fatta nell'installer. Su macOS ci sarà DockStudio.Core.Mac con le stesse funzioni.
+       È net10.0 (non net10.0-windows) perché la possano usare anche le app Avalonia multipiattaforma: tutto è
+       segnato come solo Windows (SupportedOSPlatform) e le app lo chiamano dopo OperatingSystem.IsWindows(). -->
   <PropertyGroup>
-    <TargetFramework>net10.0-windows</TargetFramework>
+    <TargetFramework>net10.0</TargetFramework>
     <Nullable>enable</Nullable>
     <ImplicitUsings>disable</ImplicitUsings>
     <LangVersion>latest</LangVersion>

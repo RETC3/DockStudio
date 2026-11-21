@@ -13,6 +13,8 @@ using DockSpace.Engine;
 using DockSpace.Engine.Ntfs;
 using DockSpace.Views;
 using DockStudio.Core.Localization;
+using DockStudio.Core.Updates;
+using DockStudio.UI.Windows;
 using DockStudio.UI;
 
 namespace DockSpace.Checks
@@ -44,6 +46,7 @@ namespace DockSpace.Checks
                 Section("Mappa a riquadri", () => CheckTreemap(sample));
                 if (OperatingSystem.IsWindows()) Section("Scansione veloce NTFS", () => CheckNtfs(sample));
                 Section("Aggiornamenti", CheckUpdates);
+                Section("Statistiche ed errori", CheckPrivacy);
                 Section("Finestra principale", () => CheckWindow(sample));
             }
             finally
@@ -287,6 +290,28 @@ namespace DockSpace.Checks
             }
         }
 
+        private static void CheckPrivacy()
+        {
+            var s = new Settings();
+            Check(!s.PrivacyChoiceMade && !UsageStats.Allowed(s) && !ErrorReports.Allowed(s), "finché non si sceglie non parte nulla");
+            Check(!UsageStats.AddUsageMinute(s) && s.UsageMinutes == 0, "senza scelta i minuti non si contano");
+            s.ApplyPrivacy(usage: true, errors: false);
+            Check(UsageStats.Allowed(s) && !ErrorReports.Allowed(s), "scelta: solo statistiche");
+            Check(UsageStats.AddUsageMinute(s) && s.UsageMinutes == 1, "con le statistiche i minuti si contano");
+            UsageStats.EnsureInstallId(s);
+            Check(UsageStats.IsValidId(s.InstallId), "codice casuale creato");
+            s.ApplyPrivacy(usage: false, errors: true);
+            Check(s.InstallId == null && s.UsageMinutes == 0 && ErrorReports.Allowed(s), "togliendo le statistiche si cancellano codice e minuti");
+
+            Check(AppInfo.Usage.PingUrl == "https://getdockstudio.it/api/ping", "statistiche verso getdockstudio.it/api/ping");
+            Check(AppInfo.Errors.ReportUrl == "https://getdockstudio.it/api/errore", "errori verso getdockstudio.it/api/errore");
+            var ping = UsageStats.BuildPing(AppInfo.Identity.StatsName, new string('a', 32), new Version(0, 1, 0), "x64", true, 12);
+            Check(ping.Contains("\"app\":\"dockspace\""), "il ping porta il nome dell'app: " + ping);
+            var report = ErrorReports.BuildReport(AppInfo.Identity.StatsName, new InvalidOperationException(@"C:\Users\Mario\segreto.txt"),
+                new Version(0, 1, 0), "x64", "Windows");
+            Check(report.Contains("dockspace") && !report.Contains("Mario"), "la segnalazione non contiene il messaggio dell'errore");
+        }
+
         private static void CheckUpdates()
         {
             var client = AppInfo.Updates;
@@ -359,7 +384,7 @@ namespace DockSpace.Checks
                 {
                     Languages.Set(language);
                     DockTheme.SetAppearance(Application.Current!, dark ? Appearance.Dark : Appearance.Light);
-                    var window = new MainWindow(new StartOptions(null, false, CheckUpdates: false)) { Width = 1180, Height = 760 };
+                    var window = new MainWindow(new StartOptions(null, false, Automatic: false)) { Width = 1180, Height = 760 };
                     window.Show();
                     Pump();
                     Save(window, $"benvenuto-{language}-{(dark ? "scuro" : "chiaro")}");
@@ -373,6 +398,12 @@ namespace DockSpace.Checks
                     Pump();
                     Save(window, $"grandi-{language}-{(dark ? "scuro" : "chiaro")}");
                     window.Close();
+
+                    var privacy = new PrivacyWindow(AppInfo.Branding);
+                    privacy.Show();
+                    Pump();
+                    Save(privacy, $"privacy-{language}-{(dark ? "scuro" : "chiaro")}");
+                    privacy.Close();
                 }
             Languages.Set("it");
         }

@@ -90,15 +90,26 @@ namespace DockSpace
         }
 
         /// <summary>True se DockSpace è stato installato con l'installer (accanto all'exe c'è il disinstallatore).</summary>
-        public static bool IsInstalled =>
-            OperatingSystem.IsWindows() && File.Exists(Path.Combine(AppContext.BaseDirectory, "unins000.exe"));
+        public static bool IsInstalled => OperatingSystem.IsWindows() && DockStudio.Core.Windows.InnoSetup.IsInstalled;
 
         /// <summary>
         /// Avvia l'installer scaricato senza domande: aspetta che DockSpace sia chiuso, sostituisce l'exe e lo
-        /// riapre (stessi parametri di DockStudio.Core.Windows.InnoSetup). Chi chiama deve chiudere l'app subito dopo.
+        /// riapre. Chi chiama deve chiudere l'app subito dopo.
         /// </summary>
-        public static void LaunchUpdate(string setupPath) =>
-            Process.Start(new ProcessStartInfo(setupPath, "/SILENT /NOCANCEL /NORESTART /UPDATE=1") { UseShellExecute = true });
+        public static void LaunchUpdate(string setupPath)
+        {
+            if (OperatingSystem.IsWindows()) DockStudio.Core.Windows.InnoSetup.LaunchUpdate(setupPath);
+        }
+
+        /// <summary>
+        /// La scelta fatta nella pagina "Aiutaci a migliorare" dell'installer (che poi si cancella), o null se
+        /// non c'è: aggiornamento, installazione silenziosa, versione portatile, macOS.
+        /// </summary>
+        public static (bool Usage, bool Errors)? TakeInstallerPrivacyChoice()
+        {
+            if (!OperatingSystem.IsWindows()) return null;
+            return DockStudio.Core.Windows.InstallerPrivacyChoice.Take(AppInfo.Identity) is { } c ? (c.UsageStats, c.ErrorReports) : null;
+        }
 
         private static void Run(string file, params string[] args)
         {

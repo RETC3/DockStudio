@@ -61,6 +61,9 @@
   "update.none": "DockSpace è aggiornato (versione {0}).",
   "update.failed": "Controllo degli aggiornamenti non riuscito: {0}",
 
+  "menu.privacy": "Statistiche ed errori…",
+  "status.unexpected": "Si è verificato un errore: {0}",
+
   "action.open": "Apri",
   "action.reveal": "Mostra nella cartella",
   "action.copyPath": "Copia il percorso",

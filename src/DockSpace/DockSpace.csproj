@@ -26,6 +26,8 @@
 
   <ItemGroup>
     <ProjectReference Include="..\DockStudio.Core\DockStudio.Core.csproj" />
+    <!-- Solo Windows (installer, scelta della privacy fatta nell'installer): si usa dopo OperatingSystem.IsWindows() -->
+    <ProjectReference Include="..\DockStudio.Core.Windows\DockStudio.Core.Windows.csproj" />
     <ProjectReference Include="..\DockStudio.UI\DockStudio.UI.csproj" />
     <ProjectReference Include="..\DockSpace.Engine\DockSpace.Engine.csproj" />
   </ItemGroup>

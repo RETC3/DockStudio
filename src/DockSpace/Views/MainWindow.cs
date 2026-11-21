@@ -152,7 +152,7 @@ namespace DockSpace.Views
             Opened += (_, _) =>
             {
                 if (_start.ScanPath != null) StartScan(_start.ScanPath, _start.Fast);
-                if (_start.CheckUpdates) CheckForUpdates(manual: false);
+                if (_start.Automatic) StartAutomatic();
             };
             Closing += (_, _) =>
             {
@@ -294,6 +294,9 @@ namespace DockSpace.Views
                 };
                 appearance.Items.Add(item);
             }
+            var privacy = new MenuItem { Header = T("menu.privacy") };
+            privacy.Click += async (_, _) => await AskPrivacy();
+            flyout.Items.Add(privacy);
             var check = new MenuItem { Header = T("menu.checkUpdates") };
             check.Click += (_, _) => CheckForUpdates(manual: true);
             flyout.Items.Add(check);
@@ -304,6 +307,64 @@ namespace DockSpace.Views
             flyout.Items.Add(about);
             return flyout;
         }
+
+        // ---- Avvio, privacy e statistiche ----------------------------------------------------------------
+
+        /// <summary>Quello che DockSpace fa da solo all'apertura: scelta sulla privacy, aggiornamenti, minuti d'uso.</summary>
+        private async void StartAutomatic()
+        {
+            if (!App.Settings.PrivacyChoiceMade)
+            {
+                if (Shell.TakeInstallerPrivacyChoice() is { } choice) App.ApplyPrivacy(choice.Usage, choice.Errors);
+                else await AskPrivacy();
+            }
+            CheckForUpdates(manual: false);
+            StartUsageTimer();
+        }
+
+        /// <summary>"Aiutaci a migliorare": al primo avvio (se l'installer non l'ha già chiesto) e dal menu.</summary>
+        private async Task AskPrivacy()
+        {
+            var s = App.Settings;
+            var window = new PrivacyWindow(AppInfo.Branding, s.PrivacyChoiceMade && s.SendUsageStats, s.PrivacyChoiceMade && s.SendErrorReports)
+            {
+                Icon = AppInfo.Icon,
+            };
+            // Chiudere la finestra senza confermare vale come "nessuna delle due".
+            window.Chosen += App.ApplyPrivacy;
+            await window.ShowDialog(this);
+        }
+
+        private int _unsavedMinutes;
+
+        /// <summary>
+        /// Tempo di utilizzo: ogni minuto con la finestra di DockSpace in primo piano conta un minuto (solo se le
+        /// statistiche sono state scelte). Si salva ogni 5 minuti e alla chiusura.
+        /// </summary>
+        private void StartUsageTimer()
+        {
+            var timer = new DispatcherTimer { Interval = TimeSpan.FromMinutes(1) };
+            timer.Tick += (_, _) =>
+            {
+                if (!IsActive || !UsageStats.AddUsageMinute(App.Settings)) return;
+                if (++_unsavedMinutes < 5) return;
+                _unsavedMinutes = 0;
+                App.SettingsStore.Save(App.Settings);
+            };
+            timer.Start();
+            Closed += (_, _) => timer.Stop();
+        }
+
+        /// <summary>Statistiche anonime insieme al controllo automatico (al massimo una volta al giorno), se scelte.</summary>
+        private static async Task SendUsageStatsAsync()
+        {
+            var hadId = App.Settings.InstallId;
+            bool sent = await AppInfo.Usage.SendAsync(App.Settings, Shell.IsInstalled);
+            if (sent || App.Settings.InstallId != hadId) App.SettingsStore.Save(App.Settings); // minuti azzerati o codice nuovo
+        }
+
+        /// <summary>Un errore non previsto: messaggio nella barra di stato (la segnalazione parte a parte, se scelta).</summary>
+        internal void ShowError(Exception ex) => _status.Text = F("status.unexpected", ex.Message);
 
         // ---- Aggiornamenti ------------------------------------------------------------------------------
 
@@ -320,6 +381,7 @@ namespace DockSpace.Views
                 var update = await AppInfo.Updates.CheckAsync();
                 App.Settings.LastUpdateCheck = DateTime.UtcNow;
                 App.SettingsStore.Save(App.Settings);
+                if (!manual) _ = SendUsageStatsAsync();
                 _available = update;
                 _update.IsVisible = update != null;
                 if (update != null)
