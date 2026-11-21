@@ -24,8 +24,20 @@ namespace DockSpace.Engine
         public bool IsDirectory { get; }
         public FsNode? Parent { get; internal set; }
 
-        /// <summary>Dimensione in byte (per le cartelle, di tutto il contenuto).</summary>
+        /// <summary>
+        /// Dimensione secondo la misura scelta (<see cref="FsTree.UseMeasure"/>): lo spazio su disco o la
+        /// dimensione dei file. Per le cartelle è il totale del contenuto. Ordinamento, quote e mappa usano questa.
+        /// </summary>
         public long Size { get; internal set; }
+
+        /// <summary>Dimensione dei file, come la mostra Esplora file in "Dimensione".</summary>
+        public long Length { get; internal set; }
+
+        /// <summary>
+        /// Spazio occupato davvero sul disco: arrotondato ai cluster, più piccolo per i file compressi o sparsi,
+        /// zero per i file di OneDrive solo online e (con la scansione veloce) per i file minuscoli tenuti nella tabella NTFS.
+        /// </summary>
+        public long OnDisk { get; internal set; }
 
         /// <summary>File contenuti, a qualsiasi profondità (per un file: 1).</summary>
         public long FileCount { get; internal set; }

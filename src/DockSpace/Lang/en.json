@@ -16,7 +16,7 @@
   "drive.label": "{0}   {1} free of {2}",
 
   "folder.up": "Parent folder",
-  "folder.details": "{0} · {1} files · {2} folders",
+  "folder.details": "{0} on disk · {1} of files · {2} files · {3} folders",
   "item.inaccessible": "{0} (not accessible)",
 
   "tab.content": "Contents",
@@ -26,6 +26,10 @@
   "col.name": "Name",
   "col.share": "Share",
   "col.size": "Size",
+  "col.onDisk": "On disk",
+  "measure.onDisk": "Size on disk",
+  "measure.length": "File size",
+  "measure.tip": "Size on disk: how much space the files really take (rounded up to disk blocks, less for compressed files, zero for online-only OneDrive files). File size: what File Explorer shows as \"Size\".",
   "col.files": "Files",
   "col.modified": "Modified",
   "col.extension": "Extension",

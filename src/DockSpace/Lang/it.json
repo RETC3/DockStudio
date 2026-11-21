@@ -16,7 +16,7 @@
   "drive.label": "{0}   {1} liberi su {2}",
 
   "folder.up": "Cartella superiore",
-  "folder.details": "{0} · {1} file · {2} cartelle",
+  "folder.details": "{0} su disco · {1} di file · {2} file · {3} cartelle",
   "item.inaccessible": "{0} (non accessibile)",
 
   "tab.content": "Contenuto",
@@ -26,6 +26,10 @@
   "col.name": "Nome",
   "col.share": "Quota",
   "col.size": "Dimensione",
+  "col.onDisk": "Su disco",
+  "measure.onDisk": "Spazio su disco",
+  "measure.length": "Dimensione dei file",
+  "measure.tip": "Spazio su disco: quanto occupano davvero i file (arrotondato ai blocchi del disco, meno per i file compressi, zero per quelli di OneDrive solo online). Dimensione dei file: quella che Esplora file mostra in \"Dimensione\".",
   "col.files": "File",
   "col.modified": "Modificato",
   "col.extension": "Estensione",

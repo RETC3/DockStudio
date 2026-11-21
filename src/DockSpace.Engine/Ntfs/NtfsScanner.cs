@@ -77,6 +77,7 @@ namespace DockSpace.Engine.Ntfs
                 Name = new string?[count];
                 NameNamespace = new byte[count];
                 Size = new long[count];
+                Allocated = new long[count];
                 LastWrite = new long[count];
                 Flags = new byte[count];
                 Array.Fill(Parent, -1);
@@ -86,6 +87,7 @@ namespace DockSpace.Engine.Ntfs
             public readonly string?[] Name;
             public readonly byte[] NameNamespace;
             public readonly long[] Size;
+            public readonly long[] Allocated;
             public readonly long[] LastWrite;
 
             /// <summary>Bit 0: record in uso; bit 1: cartella; bit 2: ha un nome.</summary>
@@ -325,12 +327,18 @@ namespace DockSpace.Engine.Ntfs
                     {
                         if (!nonResident)
                         {
+                            // Dati dentro la tabella stessa: nessun cluster occupato.
                             table.Size[target] = BinaryPrimitives.ReadUInt32LittleEndian(a.Slice(0x10));
+                            table.Allocated[target] = 0;
                         }
                         else if (BinaryPrimitives.ReadInt64LittleEndian(a.Slice(0x10)) == 0)
                         {
                             // Solo il primo frammento (VCN iniziale 0) riporta la dimensione reale del file.
                             table.Size[target] = BinaryPrimitives.ReadInt64LittleEndian(a.Slice(0x30));
+                            // File compressi o sparsi: lo spazio occupato davvero sta in un campo in più (0x40).
+                            ushort attrFlags = BinaryPrimitives.ReadUInt16LittleEndian(a.Slice(0x0C));
+                            bool compact = (attrFlags & 0x8001) != 0 && a.Length >= 0x48;
+                            table.Allocated[target] = BinaryPrimitives.ReadInt64LittleEndian(a.Slice(compact ? 0x40 : 0x28));
                         }
                         break;
                     }
@@ -359,7 +367,8 @@ namespace DockSpace.Engine.Ntfs
                 bool isDir = (t.Flags[i] & 0x02) != 0;
                 nodes[i] = new FsNode(t.Name[i]!, isDir, parent: null)
                 {
-                    Size = isDir ? 0 : t.Size[i],
+                    Length = isDir ? 0 : t.Size[i],
+                    OnDisk = isDir ? 0 : t.Allocated[i],
                     LastWriteUtc = ToUtc(t.LastWrite[i]),
                 };
                 if (isDir) folders++;

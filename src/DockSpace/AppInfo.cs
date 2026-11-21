@@ -51,6 +51,9 @@ namespace DockSpace
         public string Appearance { get; set; } = "System";
         public string Language { get; set; } = Languages.Auto;
         public string? LastPath { get; set; }
+
+        /// <summary>"OnDisk" (spazio su disco, predefinito) o "Length" (dimensione dei file).</summary>
+        public string Measure { get; set; } = "OnDisk";
         public double? Width { get; set; }
         public double? Height { get; set; }
     }

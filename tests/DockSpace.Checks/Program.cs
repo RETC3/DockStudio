@@ -136,7 +136,13 @@ namespace DockSpace.Checks
         {
             var progress = new ScanProgress();
             var root = FolderScanner.Scan(sample, progress);
-            Check(root.Size == Total, $"dimensione totale {root.Size} = {Total}");
+            // Su disco: ogni file arrotondato ai cluster (i file di prova non sono compressi né sparsi).
+            long cluster = ClusterSize(sample);
+            long onDisk = SampleSizes.Sum(s => (s + cluster - 1) / cluster * cluster);
+            Check(root.OnDisk == onDisk && root.Size == onDisk, $"spazio su disco {root.OnDisk:N0} = {onDisk:N0} (cluster {cluster} byte), misura predefinita");
+            Check(root.Length == Total, $"dimensione dei file {root.Length:N0} = {Total:N0}");
+            FsTree.UseMeasure(root, SizeMeasure.Length);
+            Check(root.Size == Total, $"con la misura 'dimensione dei file' il totale è {Total:N0}");
             Check(root.FileCount == 9, $"9 file (trovati {root.FileCount})");
             Check(root.FolderCount == 3, $"3 cartelle, la giunzione non si segue (trovate {root.FolderCount})");
             Check(progress.Files == 9 && progress.Bytes == Total, "avanzamento coerente con il risultato");
@@ -148,8 +154,22 @@ namespace DockSpace.Checks
             var raw = foto.Children.First(c => c.Name == "raw");
             Check(raw.Children[0].FullPath == Path.Combine(sample, "foto", "raw", "c.cr2"), "percorso completo");
             Check(Math.Abs(foto.ShareOfParent - 195_000.0 / Total) < 1e-9, "quota nella cartella superiore");
-            Check(root.Children.Any(c => c.Name == "vuoto.bin" && c.Size == 0), "file vuoti presenti");
+            Check(root.Children.Any(c => c.Name == "vuoto.bin" && c.Size == 0 && c.OnDisk == 0), "file vuoti presenti, senza spazio su disco");
+            FsTree.UseMeasure(root, SizeMeasure.OnDisk);
+            Check(root.Size == onDisk && root.Children.Select(c => c.Size).SequenceEqual(root.Children.Select(c => c.OnDisk)),
+                "si torna allo spazio su disco");
         }
+
+        private static readonly long[] SampleSizes = { 300_000, 1_200, 0, 50_000, 25_000, 120_000, 80_000, 200_000, 3_000 };
+
+        private static long ClusterSize(string path)
+        {
+            var root = Path.GetPathRoot(Path.GetFullPath(path))!;
+            return GetDiskFreeSpaceW(root, out uint spc, out uint bps, out _, out _) ? (long)spc * bps : 4096;
+        }
+
+        [System.Runtime.InteropServices.DllImport("kernel32.dll", CharSet = System.Runtime.InteropServices.CharSet.Unicode)]
+        private static extern bool GetDiskFreeSpaceW(string root, out uint spc, out uint bps, out uint free, out uint total);
 
         private static void CheckCancel(string sample)
         {
@@ -164,6 +184,7 @@ namespace DockSpace.Checks
         private static void CheckRemove(string sample)
         {
             var root = FolderScanner.Scan(sample);
+            FsTree.UseMeasure(root, SizeMeasure.Length);
             var foto = root.Children.First(c => c.Name == "foto");
             var raw = foto.Children.First(c => c.Name == "raw");
             Check(FsTree.Remove(raw), "rimozione di una cartella");
@@ -180,6 +201,7 @@ namespace DockSpace.Checks
         private static void CheckTypes(string sample)
         {
             var root = FolderScanner.Scan(sample);
+            FsTree.UseMeasure(root, SizeMeasure.Length);
             var ext = FileTypes.ByExtension(root);
             Check(ext[0].Extension == "mp4" && ext[0].Category == FileCategory.Video, "estensione più grande: mp4 (video)");
             Check(ext.Sum(e => e.Size) == Total && ext.Sum(e => e.Count) == 9, "i totali per estensione tornano");
@@ -194,6 +216,7 @@ namespace DockSpace.Checks
         private static void CheckTreemap(string sample)
         {
             var root = FolderScanner.Scan(sample);
+            FsTree.UseMeasure(root, SizeMeasure.Length);
             var bounds = new TreemapRect(0, 0, 800, 500);
             var top = Treemap.Squarify(root.Children, bounds).ToList();
             Check(top.Count == root.Children.Count(c => c.Size > 0), "un riquadro per ogni elemento non vuoto");
@@ -255,9 +278,11 @@ namespace DockSpace.Checks
             if (node != null)
             {
                 Check(node.FileCount == classic.FileCount, $"stessi file ({node.FileCount} / {classic.FileCount})");
-                Check(node.Size == classic.Size, $"stessa dimensione ({node.Size:N0} / {classic.Size:N0})");
+                Check(node.Length == classic.Length, $"stessa dimensione dei file ({node.Length:N0} / {classic.Length:N0})");
+                Check(node.OnDisk == classic.OnDisk, $"stesso spazio su disco ({node.OnDisk:N0} / {classic.OnDisk:N0})");
                 var raw = Find(fast, Path.Combine(sample, "foto", "raw"));
-                Check(raw?.Children.FirstOrDefault()?.Name == "c.cr2" && raw.Size == 120_000, "sottocartelle e nomi uguali");
+                Check(raw?.Children.FirstOrDefault()?.Name == "c.cr2" && raw.Length == 120_000, "sottocartelle e nomi uguali");
+                Console.WriteLine($"  disco intero: {Sizes.Format(fast.OnDisk)} su disco, {Sizes.Format(fast.Length)} di file");
             }
         }
 

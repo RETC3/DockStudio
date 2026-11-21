@@ -36,7 +36,7 @@ namespace DockSpace.Views
     public sealed class MainWindow : Window
     {
         private const int LargestCount = 500;
-        private const string ContentColumns = "16,*,90,64,84,76,120";
+        private const string ContentColumns = "16,*,80,60,84,84,70,100";
 
         private readonly ComboBox _drives = new() { MinWidth = 300 };
         private readonly CheckBox _fast = new();
@@ -44,6 +44,7 @@ namespace DockSpace.Views
         private readonly Button _pickFolder = new();
         private readonly Button _stop = new() { IsVisible = false };
         private readonly Button _menu = new() { Content = "⋯", Padding = new Thickness(12, 7) };
+        private readonly ComboBox _measure = new() { MinWidth = 170 };
 
         private readonly TreeView _tree = new();
         private readonly ListBox _content = new();
@@ -96,6 +97,10 @@ namespace DockSpace.Views
             _up.Click += (_, _) => { if (_current?.Parent != null) Navigate(_current.Parent); };
             _drives.SelectionChanged += (_, _) => UpdateFastOption();
             _menu.Flyout = BuildMenu();
+            _measure.ItemsSource = new[] { T("measure.onDisk"), T("measure.length") };
+            _measure.SelectedIndex = Measure == SizeMeasure.Length ? 1 : 0;
+            ToolTip.SetTip(_measure, T("measure.tip"));
+            _measure.SelectionChanged += (_, _) => ChangeMeasure(_measure.SelectedIndex == 1 ? SizeMeasure.Length : SizeMeasure.OnDisk);
 
             var toolbar = new DockPanel { Margin = new Thickness(16, 12, 16, 8), LastChildFill = false };
             var left = new StackPanel { Orientation = Orientation.Horizontal, Spacing = 8 };
@@ -109,8 +114,12 @@ namespace DockSpace.Views
             foreach (var c in left.Children) c.VerticalAlignment = VerticalAlignment.Center;
             DockPanel.SetDock(left, Dock.Left);
             DockPanel.SetDock(_menu, Dock.Right);
+            DockPanel.SetDock(_measure, Dock.Right);
+            _measure.Margin = new Thickness(0, 0, 8, 0);
+            _measure.VerticalAlignment = VerticalAlignment.Center;
             toolbar.Children.Add(left);
             toolbar.Children.Add(_menu);
+            toolbar.Children.Add(_measure);
 
             _workspace = BuildWorkspace();
             _workspace.IsVisible = false;
@@ -186,7 +195,7 @@ namespace DockSpace.Views
             _content.KeyDown += OnListKeyDown;
             _content.ContextMenu = BuildContextMenu(() => _content.SelectedItem as FsNode);
             var contentPanel = new DockPanel();
-            var header = HeaderRow(ContentColumns, "", T("col.name"), "", T("col.share"), T("col.size"), T("col.files"), T("col.modified"));
+            var header = HeaderRow(ContentColumns, "", T("col.name"), "", T("col.share"), T("col.size"), T("col.onDisk"), T("col.files"), T("col.modified"));
             DockPanel.SetDock(header, Dock.Top);
             contentPanel.Children.Add(header);
             contentPanel.Children.Add(_content);
@@ -400,6 +409,9 @@ namespace DockSpace.Views
             return row;
         }
 
+        /// <summary>Colonna di una dimensione: quella usata per l'ordinamento in evidenza, l'altra attenuata.</summary>
+        private static TextBlock SizeCell(long bytes, bool active) => Cell(Culture(bytes), right: true, muted: !active);
+
         private Control ContentRow(FsNode node)
         {
             var row = Row(ContentColumns,
@@ -407,7 +419,8 @@ namespace DockSpace.Views
                 Cell(DisplayName(node)),
                 ShareBar(node.ShareOfParent),
                 Cell(Sizes.Percent(node.ShareOfParent, Languages.Culture), right: true, muted: true),
-                Cell(Culture(node.Size), right: true),
+                SizeCell(node.Length, Measure == SizeMeasure.Length),
+                SizeCell(node.OnDisk, Measure == SizeMeasure.OnDisk),
                 Cell(node.IsDirectory ? Count(node.FileCount) : "", right: true, muted: true),
                 Cell(Date(node.LastWriteUtc), right: true, muted: true));
             return row;
@@ -530,6 +543,7 @@ namespace DockSpace.Views
 
             if (result == null || cancel.IsCancellationRequested) return;
             App.Settings.LastPath = path;
+            if (Measure != SizeMeasure.OnDisk) FsTree.UseMeasure(result, Measure);
             ShowResult(result);
             _status.Text = Summary(result, watch.Elapsed, useNtfs && note == null) + (note != null ? "  " + note : "");
         }
@@ -610,6 +624,25 @@ namespace DockSpace.Views
 
         // ---- Navigazione --------------------------------------------------------------------------------
 
+        /// <summary>Misura scelta: spazio su disco (predefinita) o dimensione dei file.</summary>
+        private static SizeMeasure Measure =>
+            Enum.TryParse<SizeMeasure>(App.Settings.Measure, out var m) ? m : SizeMeasure.OnDisk;
+
+        /// <summary>Cambia la misura: si riordina tutto e si ridisegnano albero, elenco, mappa e schede.</summary>
+        internal void ChangeMeasure(SizeMeasure measure)
+        {
+            if (measure == Measure) return;
+            App.Settings.Measure = measure.ToString();
+            App.SettingsStore.Save(App.Settings);
+            _measure.SelectedIndex = measure == SizeMeasure.Length ? 1 : 0;
+            if (_root == null) return;
+            var current = _current ?? _root;
+            FsTree.UseMeasure(_root, measure);
+            _rootItem = FolderItem.CreateRoot(_root);
+            _tree.ItemsSource = new[] { _rootItem };
+            Navigate(current);
+        }
+
         /// <summary>Per i controlli: scheda da mostrare (0 contenuto, 1 tipi, 2 file più grandi).</summary>
         internal void ShowTab(int index) => _tabs.SelectedIndex = index;
 
@@ -646,7 +679,7 @@ namespace DockSpace.Views
         private void UpdateFolderDetails()
         {
             if (_current == null) return;
-            _folderDetails.Text = F("folder.details", Culture(_current.Size), Count(_current.FileCount), Count(_current.FolderCount));
+            _folderDetails.Text = F("folder.details", Culture(_current.OnDisk), Culture(_current.Length), Count(_current.FileCount), Count(_current.FolderCount));
         }
 
         /// <summary>Apre i rami dell'albero fino alla cartella e la seleziona.</summary>

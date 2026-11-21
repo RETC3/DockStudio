@@ -3,6 +3,16 @@ using System.Collections.Generic;
 
 namespace DockSpace.Engine
 {
+    /// <summary>Quale dimensione usare per ordinare, per le quote e per la mappa.</summary>
+    public enum SizeMeasure
+    {
+        /// <summary>Spazio occupato davvero sul disco (come "Dimensione su disco" di Esplora file).</summary>
+        OnDisk,
+
+        /// <summary>Dimensione dei file.</summary>
+        Length,
+    }
+
     /// <summary>Operazioni sull'albero di una scansione: totali, ordinamento, rimozione di un elemento.</summary>
     public static class FsTree
     {
@@ -16,7 +26,7 @@ namespace DockSpace.Engine
         /// Calcola i totali delle cartelle (dimensione, file, cartelle, ultima modifica) dal basso verso l'alto
         /// e ordina ogni contenuto dal più grande. Va chiamato una volta, alla fine della scansione.
         /// </summary>
-        public static void Complete(FsNode root)
+        public static void Complete(FsNode root, SizeMeasure measure = SizeMeasure.OnDisk)
         {
             // Visita in ordine posticipato senza ricorsione: le cartelle possono essere molto profonde.
             var stack = new Stack<(FsNode Node, bool Visited)>();
@@ -27,6 +37,7 @@ namespace DockSpace.Engine
                 if (!node.IsDirectory)
                 {
                     node.FileCount = 1;
+                    node.Size = Pick(node, measure);
                     continue;
                 }
                 if (!visited)
@@ -38,13 +49,14 @@ namespace DockSpace.Engine
                     continue;
                 }
 
-                long size = 0, files = 0, folders = 0;
+                long length = 0, onDisk = 0, files = 0, folders = 0;
                 var last = node.LastWriteUtc;
                 if (node.ChildList != null)
                 {
                     foreach (var child in node.ChildList)
                     {
-                        size += child.Size;
+                        length += child.Length;
+                        onDisk += child.OnDisk;
                         files += child.FileCount;
                         folders += child.FolderCount + (child.IsDirectory ? 1 : 0);
                         if (child.LastWriteUtc > last) last = child.LastWriteUtc;
@@ -52,10 +64,33 @@ namespace DockSpace.Engine
                     node.ChildList.Sort(BySizeDescending);
                     node.ChildList.TrimExcess();
                 }
-                node.Size = size;
+                node.Length = length;
+                node.OnDisk = onDisk;
+                node.Size = Pick(node, measure);
                 node.FileCount = files;
                 node.FolderCount = folders;
                 node.LastWriteUtc = last;
+            }
+        }
+
+        private static long Pick(FsNode node, SizeMeasure measure) => measure == SizeMeasure.Length ? node.Length : node.OnDisk;
+
+        /// <summary>Cambia la misura di tutto l'albero e riordina ogni contenuto dal più grande.</summary>
+        public static void UseMeasure(FsNode root, SizeMeasure measure)
+        {
+            var stack = new Stack<FsNode>();
+            stack.Push(root);
+            while (stack.Count > 0)
+            {
+                var node = stack.Pop();
+                node.Size = Pick(node, measure);
+                if (node.ChildList == null) continue;
+                foreach (var child in node.ChildList)
+                {
+                    child.Size = Pick(child, measure);
+                    if (child.IsDirectory) stack.Push(child);
+                }
+                node.ChildList.Sort(BySizeDescending);
             }
         }
 
@@ -73,6 +108,8 @@ namespace DockSpace.Engine
             for (var p = parent; p != null; p = p.Parent)
             {
                 p.Size -= node.Size;
+                p.Length -= node.Length;
+                p.OnDisk -= node.OnDisk;
                 p.FileCount -= files;
                 p.FolderCount -= folders;
             }

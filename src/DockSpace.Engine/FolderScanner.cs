@@ -37,7 +37,8 @@ namespace DockSpace.Engine
 
             var root = new FsNode(full, isDirectory: true, parent: null) { LastWriteUtc = SafeLastWrite(info) };
             progress.AddFolder();
-            try { ScanDirectory(root, full, 0, progress, cancel); }
+            var allocation = Allocation.For(full);
+            try { ScanDirectory(root, full, 0, allocation, progress, cancel); }
             catch (AggregateException) when (cancel.IsCancellationRequested)
             {
                 throw new OperationCanceledException(cancel);
@@ -47,7 +48,7 @@ namespace DockSpace.Engine
             return root;
         }
 
-        private static void ScanDirectory(FsNode dir, string path, int depth, ScanProgress progress, CancellationToken cancel)
+        private static void ScanDirectory(FsNode dir, string path, int depth, Allocation allocation, ScanProgress progress, CancellationToken cancel)
         {
             cancel.ThrowIfCancellationRequested();
             progress.CurrentPath = path;
@@ -72,7 +73,12 @@ namespace DockSpace.Engine
                     }
                     else
                     {
-                        dir.AddChild(new FsNode(e.Name, isDirectory: false, dir) { Size = e.Length, LastWriteUtc = e.LastWriteUtc });
+                        dir.AddChild(new FsNode(e.Name, isDirectory: false, dir)
+                        {
+                            Length = e.Length,
+                            OnDisk = allocation.OnDisk(path, e.Name, e.Length, e.Attributes),
+                            LastWriteUtc = e.LastWriteUtc,
+                        });
                         progress.AddFile(e.Length);
                     }
                 }
@@ -87,12 +93,12 @@ namespace DockSpace.Engine
             if (depth < ParallelDepth && subdirs.Count > 1)
             {
                 Parallel.ForEach(subdirs, new ParallelOptions { CancellationToken = cancel },
-                    s => ScanDirectory(s.Node, s.Path, depth + 1, progress, cancel));
+                    s => ScanDirectory(s.Node, s.Path, depth + 1, allocation, progress, cancel));
             }
             else
             {
                 foreach (var s in subdirs)
-                    ScanDirectory(s.Node, s.Path, depth + 1, progress, cancel);
+                    ScanDirectory(s.Node, s.Path, depth + 1, allocation, progress, cancel);
             }
         }
 
