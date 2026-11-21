@@ -8,6 +8,7 @@ namespace DockSpace.Views
         public ConfirmWindow(string title, string message, string confirm, string? detail = null) : base(AppInfo.Branding)
         {
             Title = title;
+            Icon = AppInfo.Icon;
             var body = new System.Collections.Generic.List<Avalonia.Controls.Control> { Text(title, "heading"), Text(message) };
             if (detail != null) body.Add(Text(detail, "muted"));
             body.Add(Buttons(

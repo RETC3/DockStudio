@@ -76,6 +76,7 @@ namespace DockSpace.Views
             _start = start;
             Classes.Add("dock");
             Title = "DockSpace";
+            Icon = AppInfo.Icon;
             Width = App.Settings.Width ?? 1180;
             Height = App.Settings.Height ?? 760;
             MinWidth = 760;
@@ -98,6 +99,7 @@ namespace DockSpace.Views
 
             var toolbar = new DockPanel { Margin = new Thickness(16, 12, 16, 8), LastChildFill = false };
             var left = new StackPanel { Orientation = Orientation.Horizontal, Spacing = 8 };
+            left.Children.Add(new LogoMark());
             left.Children.Add(new TextBlock { Text = "DockSpace", Classes = { "brand" }, FontSize = 20, VerticalAlignment = VerticalAlignment.Center, Margin = new Thickness(0, 0, 12, 0) });
             left.Children.Add(_drives);
             left.Children.Add(_scan);
@@ -290,9 +292,9 @@ namespace DockSpace.Views
                 new SuiteRegistry().Installed(),
                 openLicense: () =>
                 {
-                    var lw = new LicenseWindow(AppInfo.Branding, licenses);
+                    var lw = new LicenseWindow(AppInfo.Branding, licenses) { Icon = AppInfo.Icon };
                     lw.Show(licenses.Check());
-                });
+                }) { Icon = AppInfo.Icon };
             window.ShowDialog(this);
         }
 

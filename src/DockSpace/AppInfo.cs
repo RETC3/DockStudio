@@ -1,6 +1,8 @@
 using System;
 using System.Reflection;
+using Avalonia.Controls;
 using Avalonia.Media;
+using Avalonia.Platform;
 using DockStudio.Core;
 using DockStudio.Core.Localization;
 using DockStudio.UI;
@@ -21,6 +23,11 @@ namespace DockSpace
 
         /// <summary>Verde acqua: distinto dal blu della suite e dal colore di ScreenLove.</summary>
         public static readonly Color Accent = Color.Parse("#0F9D8A");
+
+        private static WindowIcon? _icon;
+
+        /// <summary>Icona delle finestre (la stessa dell'exe).</summary>
+        public static WindowIcon Icon => _icon ??= new WindowIcon(AssetLoader.Open(new Uri("avares://DockSpace/Assets/app.ico")));
 
         public static DockBranding Branding => new(Identity, Accent, Text.Strings["app.tagline"]);
 
