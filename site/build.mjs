@@ -149,6 +149,7 @@ function cardApp(a) {
   const tags = [tagStato(a), ...a.piattaforme.map((p) => `<span class="tag">${esc(p.replace(' 10 e 11', ''))}</span>`)].join('');
   return `
         <a class="app" href="/${a.slug}/" style="--c:${a.colore}">
+          ${a.copertina ? `<span class="app-shot"><img src="${a.copertina.src}" alt="" width="${a.copertina.larghezza}" height="${a.copertina.altezza}" loading="lazy" decoding="async"></span>` : ''}
           <div class="app-head">${icona(a)}<span class="app-num mono">${a.num}</span></div>
           <span class="app-cat mono">${esc(a.categoria)}</span>
           <h3>${esc(a.nome)}</h3>
