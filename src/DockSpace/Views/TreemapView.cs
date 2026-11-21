@@ -103,7 +103,7 @@ namespace DockSpace.Views
                 return;
             }
 
-            var folderBorder = new Pen(new SolidColorBrush(dark ? Color.Parse("#00000080") : Color.Parse("#FFFFFFB0")), 1);
+            var folderBorder = new Pen(new SolidColorBrush(dark ? Color.Parse("#80000000") : Color.Parse("#B0FFFFFF")), 1);
             var fileBorder = new Pen(new SolidColorBrush(dark ? Color.Parse("#1B1C20") : Color.Parse("#FFFFFF")), 0.6);
             var headerText = new SolidColorBrush(dark ? Color.Parse("#ECEDEF") : Color.Parse("#1D1F24"));
             var typeface = new Typeface(FontFamily.Default);

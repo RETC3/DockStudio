@@ -173,8 +173,10 @@ function paginaApp(a, i) {
   const nov = conNovita(a);
   const ultima = nov && a.novita.versioni?.[0];
 
-  const azioni = uscita
-    ? `<a class="btn btn-primary" href="${a.scarica}"><svg><use href="#i-download"/></svg>Scarica ${esc(a.nome)}</a>
+  // App che si scaricano da getdockstudio.it: il pulsante porta alla sezione "Scarica" della pagina.
+  const scarica = a.scaricabile ? '#scarica' : a.scarica;
+  const azioni = uscita || a.scaricabile
+    ? `<a class="btn btn-primary" href="${scarica}"><svg><use href="#i-download"/></svg>Scarica ${esc(a.nome)}</a>
         ${nov ? `<a class="btn btn-ghost" href="/${a.slug}/novita/">Novità</a>` : ''}
         ${a.sito ? `<a class="btn btn-ghost" href="${a.sito}">${esc(a.sito.replace('https://', ''))}</a>` : ''}`
     : `<a class="btn btn-primary" href="mailto:info@getdockstudio.it?subject=${encodeURIComponent(`Avvisatemi quando esce ${a.nome}`)}"><svg><use href="#i-mail"/></svg>Avvisami quando esce</a>
@@ -187,14 +189,37 @@ function paginaApp(a, i) {
   const sezFunzioni = `
   <section class="block">
     <div class="wrap">
-      ${kicker(uscita ? 'Cosa fa' : 'Cosa farà')}
-      <h2>${uscita ? 'Tutto quello che serve, niente di più.' : 'Le funzioni previste.'}</h2>
-      ${uscita ? '' : `<p class="intro">${esc(a.nome)} non è ancora in sviluppo: questo è il progetto di partenza e può cambiare strada facendo.</p>`}
+      ${kicker(uscita || a.stato === 'sviluppo' ? 'Cosa fa' : 'Cosa farà')}
+      <h2>${uscita ? 'Tutto quello che serve, niente di più.' : a.stato === 'sviluppo' ? 'Quello che c\'è già.' : 'Le funzioni previste.'}</h2>
+      ${uscita ? '' : a.stato === 'sviluppo'
+        ? `<p class="intro">${esc(a.nome)} è in sviluppo: queste funzioni ci sono già nella prima versione.</p>`
+        : `<p class="intro">${esc(a.nome)} non è ancora in sviluppo: questo è il progetto di partenza e può cambiare strada facendo.</p>`}
       <div class="features">${a.funzioni.map(([t, d], k) => `
         <div class="feature"><span class="n mono">${String(k + 1).padStart(2, '0')}</span><h3>${testo(t)}</h3><p>${testo(d)}</p></div>`).join('')}
       </div>
     </div>
   </section>`;
+
+  // Versione, dimensione e link li mette site.js leggendo /<app>/latest.json: la pagina non va rigenerata a ogni uscita.
+  const sezScarica = a.scaricabile ? `
+  <section class="block" id="scarica">
+    <div class="wrap">
+      ${kicker('Scarica')}
+      <h2>Scarica ${esc(a.nome)}.</h2>
+      <div class="download card-soft" data-latest="/${a.slug}/latest.json" data-app="${esc(a.nome)}">
+        <p class="download-wait">La prima versione di ${esc(a.nome)} è quasi pronta: questa sezione si riempie da sola quando esce.</p>
+        <div class="download-ready" hidden>
+          <span class="mono label download-version"></span>
+          <div class="cta left">
+            <a class="btn btn-primary download-setup" href="/${a.slug}/download/latest"><svg><use href="#i-download"/></svg>Installer per Windows</a>
+          </div>
+          <p class="download-note">Per Windows 10 e 11, computer x64 e ARM64. Si installa senza permessi di amministratore e si aggiorna da solo.</p>
+          <ul class="download-files mono"></ul>
+        </div>
+        <noscript><p><a href="/${a.slug}/download/latest">Scarica l'ultima versione dell'installer</a></p></noscript>
+      </div>
+    </div>
+  </section>` : '';
 
   const sezNovita = nov ? `
   <section class="block">
@@ -231,6 +256,7 @@ function paginaApp(a, i) {
     </div>
   </section>
 ${sezFunzioni}
+${sezScarica}
 ${sezNovita}
   <nav class="pager wrap" aria-label="Altre app">
     <a href="/${prima.slug}/"><span class="mono">← Precedente</span>${icona(prima, 'app-icon sm')}<b>${esc(prima.nome)}</b></a>
@@ -257,7 +283,7 @@ function paginaNovitaApp(a) {
       <h1>Novità di ${esc(a.nome)}.</h1>
       <p class="lead">Cosa stiamo preparando e cosa è cambiato in ogni versione.</p>
       <div class="cta left">
-        ${a.scarica ? `<a class="btn btn-primary" href="${a.scarica}"><svg><use href="#i-download"/></svg>Scarica ${esc(a.nome)}</a>` : ''}
+        ${a.scarica || a.scaricabile ? `<a class="btn btn-primary" href="${a.scaricabile ? `/${a.slug}/#scarica` : a.scarica}"><svg><use href="#i-download"/></svg>Scarica ${esc(a.nome)}</a>` : ''}
         <a class="btn btn-ghost" href="/${a.slug}/">Pagina di ${esc(a.nome)}</a>
       </div>
     </div>

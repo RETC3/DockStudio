@@ -48,6 +48,9 @@ namespace DockSpace.Checks
                 Section("Aggiornamenti", CheckUpdates);
                 Section("Statistiche ed errori", CheckPrivacy);
                 Section("Finestra principale", () => CheckWindow(sample));
+                // Copertina del sito (site/public/apps/dockspace/copertina.png): DOCKSPACE_COVER=<file png>.
+                if (Environment.GetEnvironmentVariable("DOCKSPACE_COVER") is { Length: > 0 } cover)
+                    Section("Copertina del sito", () => MakeCover(cover));
             }
             finally
             {
@@ -369,6 +372,26 @@ namespace DockSpace.Checks
                 if (node == null) return null;
             }
             return node;
+        }
+
+        /// <summary>
+        /// La copertina della pagina di DockSpace sul sito: la finestra vera, in italiano e tema chiaro, su C:\Windows
+        /// (cartella uguale su ogni PC, senza nomi personali), con la cartella più grande aperta.
+        /// </summary>
+        private static void MakeCover(string file)
+        {
+            var folder = Environment.GetFolderPath(Environment.SpecialFolder.Windows);
+            var root = FolderScanner.Scan(folder);
+            Languages.Set("it");
+            DockTheme.SetAppearance(Application.Current!, Appearance.Light);
+            var window = new MainWindow(new StartOptions(null, false, Automatic: false)) { Width = 1200, Height = 760 };
+            window.Show();
+            window.ShowResult(root);
+            Pump();
+            var frame = window.CaptureRenderedFrame();
+            frame?.Save(Path.GetFullPath(file), Avalonia.Media.Imaging.PngBitmapEncoderOptions.Default);
+            Check(File.Exists(file), $"copertina {file} ({root.FileCount:N0} file in {folder})");
+            window.Close();
         }
 
         private static void CheckWindow(string sample)

@@ -293,3 +293,12 @@ kbd { font-family: var(--mono); font-size: .86em; padding: 1px 6px; border: 1px 
   box-shadow: 0 30px 60px -30px rgba(17, 18, 22, .45), 0 0 0 6px color-mix(in srgb, var(--c, var(--accent)) 12%, transparent); }
 .cover img { width: 100%; height: auto; }
 @media (max-width: 960px) { .phero-grid { grid-template-columns: 1fr; gap: 36px; } }
+
+/* sezione "Scarica" delle app (riempita da site.js con /<app>/latest.json) */
+.download .download-wait { margin: 0; color: var(--muted); }
+.download .download-note { color: var(--muted); margin: 14px 0 0; }
+.download-files { text-transform: none; letter-spacing: 0; list-style: none; padding: 0; margin: 18px 0 0; display: grid; gap: 10px; font-size: 12px; }
+.download-files li { display: grid; gap: 2px; }
+.download-files .sha { color: var(--muted); overflow-wrap: anywhere; font-size: 11px; }
+[hidden] { display: none !important; }
+

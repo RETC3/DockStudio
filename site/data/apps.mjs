@@ -6,10 +6,13 @@
 // funzioni: per le app non ancora uscite sono quelle previste e possono cambiare.
 // logo:      icona dell'app (SVG in site/public/apps/<app>/), al posto della lettera colorata.
 // copertina: immagine grande accanto al titolo nella pagina dell'app.
+// scaricabile: l'app si scarica da getdockstudio.it (site/lib/downloads.js); la pagina ha la sezione "Scarica"
+//            che legge /<app>/latest.json e si riempie da sola alla prima uscita.
 //
 // Nei testi si possono usare **grassetto** e `tasti`.
 
 import * as screenlove from '../../web/lib/novita.js';
+import * as dockspace from './novita/dockspace.mjs';
 
 export const apps = [
   {
@@ -47,17 +50,24 @@ export const apps = [
     colore: '#0F9D8A',
     icona: 'Sp',
     logo: '/apps/dockspace/logo.svg',
+    copertina: { src: '/apps/dockspace/copertina.png', larghezza: 1200, altezza: 760,
+      alt: 'DockSpace: a sinistra le cartelle di un disco, a destra il loro contenuto ordinato per dimensione, in basso la mappa a riquadri colorati per tipo di file.' },
     categoria: 'Spazio su disco',
-    breve: 'Scopri cosa riempie il disco, trova i doppioni e fai pulizia in sicurezza.',
-    lead: 'Una mappa del disco che mostra a colpo d\'occhio cartelle e file più pesanti, con i doppioni e una pulizia che non tocca nulla senza chiedere.',
-    stato: 'arrivo',
-    piattaforme: ['Windows', 'Mac'],
+    breve: 'Scopri cosa riempie il disco: una mappa a riquadri, le cartelle e i file più grandi e lo spazio che occupano davvero.',
+    lead: "Una mappa del disco che mostra a colpo d'occhio cartelle e file più pesanti. Un disco intero in pochi secondi, e quello che non serve finisce nel Cestino, mai cancellato di colpo.",
+    stato: 'sviluppo',
+    // Download dal sito (site/lib/downloads.js): la sezione "Scarica" legge /dockspace/latest.json.
+    scaricabile: true,
+    piattaforme: ['Windows 10 e 11', 'Mac in arrivo'],
     funzioni: [
-      ['Mappa del disco', 'Cartelle e file disegnati in proporzione al loro peso: si vede subito dove finisce lo spazio.'],
-      ['Doppioni', 'File identici trovati per contenuto, non solo per nome, anche se stanno in cartelle diverse.'],
-      ['Pulizia sicura', 'Prima di cancellare vedi cosa sparisce e quanto spazio recuperi. I file vanno nel cestino, non spariscono subito.'],
-      ['Anche dischi esterni', 'Chiavette, dischi USB e cartelle di rete, con la scansione che si può fermare e riprendere.'],
+      ['Mappa a riquadri', 'Cartelle e file disegnati in proporzione al loro peso, colorati per tipo: si vede subito dove finisce lo spazio. Doppio clic per entrare in una cartella.'],
+      ['Un disco in pochi secondi', 'La scansione veloce legge direttamente la tabella dei dischi NTFS: centinaia di migliaia di file in pochi secondi. Oppure una cartella qualsiasi, senza permessi speciali.'],
+      ['Lo spazio vero', "Per ogni file e cartella la dimensione e lo **spazio su disco** reale: meno per i file compressi, zero per quelli di OneDrive solo online."],
+      ['Tipi e file più grandi', 'Quanto pesano video, immagini, archivi e programmi, estensione per estensione, e i 500 file più grandi della cartella scelta.'],
+      ['Nel Cestino, non nel nulla', 'Quello che non serve va nel **Cestino**, dopo una conferma con la dimensione: se ti sbagli, lo recuperi.'],
+      ['Dal tasto destro', 'Su una cartella o un disco, **Analizza con DockSpace** apre subito l\'analisi. Installer per x64 e ARM64, aggiornamenti con l\'impronta SHA-256.'],
     ],
+    novita: { versioni: dockspace.versioni, inArrivo: dockspace.inArrivo },
   },
   {
     slug: 'dockpdf',
