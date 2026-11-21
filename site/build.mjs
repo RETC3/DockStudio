@@ -146,16 +146,15 @@ function versione(v, { voci = v.voci, app } = {}) {
 
 // ---------- home ----------
 function cardApp(a) {
-  const featured = a.stato === 'disponibile' && a.slug === 'screenlove';
   const tags = [tagStato(a), ...a.piattaforme.map((p) => `<span class="tag">${esc(p.replace(' 10 e 11', ''))}</span>`)].join('');
   return `
-        <a class="app${featured ? ' featured' : ''}" href="/${a.slug}/" style="--c:${a.colore}">
+        <a class="app" href="/${a.slug}/" style="--c:${a.colore}">
           <div class="app-head">${icona(a)}<span class="app-num mono">${a.num}</span></div>
           <span class="app-cat mono">${esc(a.categoria)}</span>
           <h3>${esc(a.nome)}</h3>
           <p>${testo(a.breve)}</p>
           <div class="app-foot">${tags}</div>
-          ${featured ? `<span class="go">Vai a ${esc(a.nome)} →</span>` : ''}
+          <span class="go" aria-hidden="true">Vai a ${esc(a.nome)} →</span>
         </a>`;
 }
 
