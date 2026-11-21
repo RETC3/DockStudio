@@ -15,7 +15,8 @@ namespace DockSpace
         public static readonly AppIdentity Identity = new(
             Name: "DockSpace",
             SiteUrl: "https://getdockstudio.it/dockspace",
-            PagesUrl: null,
+            // Riserva se il dominio non risponde: lo stesso sito su Cloudflare Pages.
+            PagesUrl: "https://dockstudio.pages.dev/dockspace",
             GitHubRepo: null,
             SetupAssetPattern: @"^DockSpace-Setup-[\d.]+\.exe$",
             EnvPrefix: "DOCKSPACE",
@@ -28,6 +29,9 @@ namespace DockSpace
 
         /// <summary>Icona delle finestre (la stessa dell'exe).</summary>
         public static WindowIcon Icon => _icon ??= new WindowIcon(AssetLoader.Open(new Uri("avares://DockSpace/Assets/app.ico")));
+
+        /// <summary>Aggiornamenti: legge getdockstudio.it/dockspace/latest.json e scarica da .../download/.</summary>
+        public static readonly DockStudio.Core.Updates.UpdateClient Updates = new(Identity, typeof(AppInfo).Assembly);
 
         public static DockBranding Branding => new(Identity, Accent, Text.Strings["app.tagline"]);
 
@@ -54,6 +58,9 @@ namespace DockSpace
 
         /// <summary>"OnDisk" (spazio su disco, predefinito) o "Length" (dimensione dei file).</summary>
         public string Measure { get; set; } = "OnDisk";
+
+        /// <summary>Ultimo controllo automatico degli aggiornamenti (UTC): al massimo uno al giorno.</summary>
+        public DateTime? LastUpdateCheck { get; set; }
         public double? Width { get; set; }
         public double? Height { get; set; }
     }

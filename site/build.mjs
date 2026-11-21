@@ -403,4 +403,10 @@ const asset = { "/style.css": impronta("style.css"), "/site.js": impronta("site.
   }
 })(DIST);
 
+// Quali indirizzi passano dalle funzioni (site/functions): solo statistiche, API e versioni/download delle app.
+// Senza questo file Cloudflare manderebbe ogni richiesta alla funzione /[app]/..., anche le pagine statiche.
+const funzioni = ['/api/*', '/statistiche', '/statistiche/*'];
+for (const a of apps) if (a.slug !== 'screenlove') funzioni.push(`/${a.slug}/latest.json`, `/${a.slug}/download/*`);
+writeFileSync(join(DIST, '_routes.json'), JSON.stringify({ version: 1, include: funzioni, exclude: [] }, null, 2) + '\n');
+
 console.log(`Sito generato in ${DIST}: ${pagine.length} pagine.`);

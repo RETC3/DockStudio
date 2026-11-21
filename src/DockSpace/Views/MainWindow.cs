@@ -23,6 +23,7 @@ using DockSpace.Engine.Ntfs;
 using DockStudio.Core.Licensing;
 using DockStudio.Core.Localization;
 using DockStudio.Core.Suite;
+using DockStudio.Core.Updates;
 using DockStudio.UI;
 using DockStudio.UI.Windows;
 using static DockSpace.Text;
@@ -45,6 +46,8 @@ namespace DockSpace.Views
         private readonly Button _stop = new() { IsVisible = false };
         private readonly Button _menu = new() { Content = "⋯", Padding = new Thickness(12, 7) };
         private readonly ComboBox _measure = new() { MinWidth = 170 };
+        private readonly Button _update = new() { IsVisible = false, Classes = { "accent" } };
+        private UpdateInfo? _available;
 
         private readonly TreeView _tree = new();
         private readonly ListBox _content = new();
@@ -115,11 +118,16 @@ namespace DockSpace.Views
             DockPanel.SetDock(left, Dock.Left);
             DockPanel.SetDock(_menu, Dock.Right);
             DockPanel.SetDock(_measure, Dock.Right);
+            DockPanel.SetDock(_update, Dock.Right);
+            _update.Margin = new Thickness(0, 0, 8, 0);
+            _update.VerticalAlignment = VerticalAlignment.Center;
+            _update.Click += (_, _) => { if (_available != null) ShowUpdate(_available); };
             _measure.Margin = new Thickness(0, 0, 8, 0);
             _measure.VerticalAlignment = VerticalAlignment.Center;
             toolbar.Children.Add(left);
             toolbar.Children.Add(_menu);
             toolbar.Children.Add(_measure);
+            toolbar.Children.Add(_update);
 
             _workspace = BuildWorkspace();
             _workspace.IsVisible = false;
@@ -144,6 +152,7 @@ namespace DockSpace.Views
             Opened += (_, _) =>
             {
                 if (_start.ScanPath != null) StartScan(_start.ScanPath, _start.Fast);
+                if (_start.CheckUpdates) CheckForUpdates(manual: false);
             };
             Closing += (_, _) =>
             {
@@ -285,12 +294,64 @@ namespace DockSpace.Views
                 };
                 appearance.Items.Add(item);
             }
+            var check = new MenuItem { Header = T("menu.checkUpdates") };
+            check.Click += (_, _) => CheckForUpdates(manual: true);
+            flyout.Items.Add(check);
             var about = new MenuItem { Header = F("menu.about", "DockSpace") };
             about.Click += (_, _) => ShowAbout();
             flyout.Items.Add(appearance);
             flyout.Items.Add(new Separator());
             flyout.Items.Add(about);
             return flyout;
+        }
+
+        // ---- Aggiornamenti ------------------------------------------------------------------------------
+
+        /// <summary>
+        /// Cerca una nuova versione. Automatico: al massimo una volta al giorno, in silenzio; se c'è, compare il
+        /// pulsante "Aggiorna". Dal menu: sempre, con l'esito nella barra di stato.
+        /// </summary>
+        private async void CheckForUpdates(bool manual)
+        {
+            if (!manual && App.Settings.LastUpdateCheck is DateTime last && DateTime.UtcNow - last < TimeSpan.FromHours(20)) return;
+            if (manual) _status.Text = T("update.checking");
+            try
+            {
+                var update = await AppInfo.Updates.CheckAsync();
+                App.Settings.LastUpdateCheck = DateTime.UtcNow;
+                App.SettingsStore.Save(App.Settings);
+                _available = update;
+                _update.IsVisible = update != null;
+                if (update != null)
+                {
+                    _update.Content = F("update.button", update.Version.ToString(3));
+                    if (manual) ShowUpdate(update);
+                }
+                else if (manual)
+                {
+                    _status.Text = F("update.none", AppInfo.Updates.CurrentVersion.ToString(3));
+                }
+            }
+            catch (Exception ex)
+            {
+                // Senza internet o con il sito irraggiungibile: in automatico non si disturba.
+                if (manual) _status.Text = F("update.failed", ex.Message);
+            }
+        }
+
+        private void ShowUpdate(UpdateInfo update)
+        {
+            Action<string>? launch = Shell.IsInstalled
+                ? setup =>
+                {
+                    Shell.LaunchUpdate(setup);
+                    // L'installer aspetta che DockSpace sia chiuso, poi lo riapre.
+                    if (Application.Current?.ApplicationLifetime is Avalonia.Controls.ApplicationLifetimes.IClassicDesktopStyleApplicationLifetime desktop)
+                        desktop.Shutdown();
+                }
+                : null; // versione portatile: solo il link alla pagina
+            var window = new UpdateWindow(AppInfo.Branding, AppInfo.Updates, update, launch) { Icon = AppInfo.Icon };
+            window.ShowDialog(this);
         }
 
         private void ShowAbout()

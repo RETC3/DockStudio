@@ -32,3 +32,25 @@ Se manca o è scaduto, il workflow si ferma all'inizio, prima di compilare e di 
   che non contiene più il codice nuovo: serve solo a tenere insieme i file della release.
 - Quando ScreenLove passerà al sito DockStudio (getdockstudio.it/screenlove), `/latest.json`, `/download/` e
   `/api/ping` devono restare serviti su screenlove.it per le versioni già installate.
+
+## DockSpace (e le prossime app della suite)
+
+Le app nuove non hanno un repository pubblico: installer, zip e `latest.json` stanno nel bucket R2
+`dockstudio-downloads` (una cartella per app) e li serve getdockstudio.it (`site/lib/downloads.js`):
+
+- `https://getdockstudio.it/dockspace/latest.json`: ultima versione, letta dall'app per gli aggiornamenti;
+- `https://getdockstudio.it/dockspace/download/<file>` e `.../download/latest`: i file da scaricare.
+
+Per pubblicare una versione:
+
+```powershell
+git tag -a dockspace-v0.2.0 -m "Novità della versione (testo che l'app mostra nell'aggiornamento)"
+git push origin dockspace-v0.2.0
+```
+
+Il workflow `release-dockspace.yml` esegue i controlli, compila exe (x64 e ARM64), zip e installer, crea
+`latest.json` (`scripts/make-app-latest.ps1`), carica tutto su R2 (per ultimo `latest.json`) e archivia la release
+in questo repository. Servono solo i secret `CLOUDFLARE_API_TOKEN` e `CLOUDFLARE_ACCOUNT_ID`.
+
+Prova in locale senza pubblicare: la variabile `DOCKSPACE_UPDATE_FEED` indica un `latest.json` sul disco
+(con il link `file:///` dell'installer) al posto di quello del sito.

@@ -55,6 +55,23 @@ jobs:
           npx --yes wrangler@4 pages project create dockstudio --production-branch main >/dev/null 2>&1 \
             && echo "Progetto Pages creato" || echo "Progetto Pages già presente"
 
+      - name: Bucket R2 dei download
+        if: steps.cf.outputs.ok == 'true'
+        working-directory: site
+        run: |
+          # Installer e latest.json delle app (site/lib/downloads.js). Senza il bucket il sito esce lo stesso,
+          # ma /<app>/latest.json e /<app>/download/ rispondono 404.
+          BUCKET=dockstudio-downloads
+          if ! npx --yes wrangler@4 r2 bucket list 2>/dev/null | grep -q "$BUCKET"; then
+            npx --yes wrangler@4 r2 bucket create "$BUCKET" >/dev/null 2>&1 && echo "Bucket R2 $BUCKET creato"
+          fi
+          if npx --yes wrangler@4 r2 bucket list 2>/dev/null | grep -q "$BUCKET"; then
+            echo "Bucket R2 $BUCKET presente"
+          else
+            echo "::warning::Bucket R2 $BUCKET non trovato né creabile: download delle app non disponibili."
+            sed -i '/^\[\[r2_buckets\]\]/,$d' wrangler.toml
+          fi
+
       - name: Pubblicazione su Cloudflare Pages
         if: steps.cf.outputs.ok == 'true'
         working-directory: site

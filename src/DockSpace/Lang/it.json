@@ -55,6 +55,12 @@
   "appearance.dark": "Scuro",
   "menu.about": "Informazioni su {0}",
 
+  "menu.checkUpdates": "Controlla gli aggiornamenti",
+  "update.checking": "Controllo degli aggiornamenti…",
+  "update.button": "Aggiorna a {0}",
+  "update.none": "DockSpace è aggiornato (versione {0}).",
+  "update.failed": "Controllo degli aggiornamenti non riuscito: {0}",
+
   "action.open": "Apri",
   "action.reveal": "Mostra nella cartella",
   "action.copyPath": "Copia il percorso",

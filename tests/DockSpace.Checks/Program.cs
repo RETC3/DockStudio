@@ -43,6 +43,7 @@ namespace DockSpace.Checks
                 Section("Tipi di file e file più grandi", () => CheckTypes(sample));
                 Section("Mappa a riquadri", () => CheckTreemap(sample));
                 if (OperatingSystem.IsWindows()) Section("Scansione veloce NTFS", () => CheckNtfs(sample));
+                Section("Aggiornamenti", CheckUpdates);
                 Section("Finestra principale", () => CheckWindow(sample));
             }
             finally
@@ -286,6 +287,53 @@ namespace DockSpace.Checks
             }
         }
 
+        private static void CheckUpdates()
+        {
+            var client = AppInfo.Updates;
+            Check(client.Feeds.First() == "https://getdockstudio.it/dockspace/latest.json", "fonte principale: getdockstudio.it/dockspace/latest.json");
+            Check(client.Feeds.Contains("https://dockstudio.pages.dev/dockspace/latest.json"), "riserva: dockstudio.pages.dev");
+            Check(client.IsTrustedDownload("https://getdockstudio.it/dockspace/download/DockSpace-Setup-9.0.0.exe"), "download accettato dal sito");
+            Check(!client.IsTrustedDownload("https://getdockstudio.it/dockpdf/download/DockSpace-Setup-9.0.0.exe"), "download di un'altra app rifiutato");
+            Check(!client.IsTrustedDownload("https://example.com/download/DockSpace-Setup-9.0.0.exe"), "download da un altro sito rifiutato");
+
+            // Il formato scritto da scripts/make-app-latest.ps1.
+            var dir = Path.Combine(Path.GetTempPath(), "dockspace-update-" + Guid.NewGuid().ToString("N")[..8]);
+            Directory.CreateDirectory(dir);
+            try
+            {
+                var setup = Path.Combine(dir, "DockSpace-Setup-9.0.0.exe");
+                File.WriteAllBytes(setup, new byte[] { 1, 2, 3, 4, 5 });
+                string sha = Convert.ToHexString(System.Security.Cryptography.SHA256.HashData(File.ReadAllBytes(setup))).ToLowerInvariant();
+                string Json(string url, string hash) =>
+                    "{ \"tag_name\": \"v9.0.0\", \"name\": \"DockSpace 9.0.0\", \"html_url\": \"https://getdockstudio.it/dockspace/\", " +
+                    "\"body\": \"Novità di prova\", \"assets\": [ { \"name\": \"DockSpace-Setup-9.0.0.exe\", \"size\": 5, " +
+                    $"\"browser_download_url\": \"{url}\", \"sha256\": \"{hash}\" }} ] }}";
+                var site = client.Parse(Json("https://getdockstudio.it/dockspace/download/DockSpace-Setup-9.0.0.exe", sha), new Version(0, 1, 0));
+                Check(site?.Version == new Version(9, 0, 0) && site.SetupSha256 == sha && site.Notes == "Novità di prova", "latest.json letto");
+                Check(site?.PageUrl == "https://getdockstudio.it/dockspace/", "pagina delle novità sul sito");
+                Check(client.Parse(Json("x", sha), new Version(9, 0, 0)) == null, "nessun aggiornamento se la versione è la stessa");
+
+                // Download vero da un feed locale (variabile DOCKSPACE_UPDATE_FEED), con controllo dell'impronta.
+                var feed = Path.Combine(dir, "latest.json");
+                Environment.SetEnvironmentVariable("DOCKSPACE_UPDATE_FEED", new Uri(feed).AbsoluteUri);
+                File.WriteAllText(feed, Json(new Uri(setup).AbsoluteUri, sha));
+                var update = client.CheckAsync().GetAwaiter().GetResult();
+                Check(update != null, "aggiornamento trovato dal feed locale");
+                var downloaded = client.DownloadSetupAsync(update!, null).GetAwaiter().GetResult();
+                Check(File.ReadAllBytes(downloaded).Length == 5, "installer scaricato e impronta verificata");
+                File.WriteAllText(feed, Json(new Uri(setup).AbsoluteUri, new string('0', 64)));
+                bool rejected = false;
+                try { client.DownloadSetupAsync(client.CheckAsync().GetAwaiter().GetResult()!, null).GetAwaiter().GetResult(); }
+                catch (IOException) { rejected = true; }
+                Check(rejected, "installer con impronta sbagliata rifiutato");
+            }
+            finally
+            {
+                Environment.SetEnvironmentVariable("DOCKSPACE_UPDATE_FEED", null);
+                try { Directory.Delete(dir, true); } catch { }
+            }
+        }
+
         private static FsNode? Find(FsNode root, string path)
         {
             var rel = Path.GetRelativePath(root.Name, path);
@@ -311,7 +359,7 @@ namespace DockSpace.Checks
                 {
                     Languages.Set(language);
                     DockTheme.SetAppearance(Application.Current!, dark ? Appearance.Dark : Appearance.Light);
-                    var window = new MainWindow(new StartOptions(null, false)) { Width = 1180, Height = 760 };
+                    var window = new MainWindow(new StartOptions(null, false, CheckUpdates: false)) { Width = 1180, Height = 760 };
                     window.Show();
                     Pump();
                     Save(window, $"benvenuto-{language}-{(dark ? "scuro" : "chiaro")}");

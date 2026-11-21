@@ -89,6 +89,17 @@ namespace DockSpace
             }
         }
 
+        /// <summary>True se DockSpace è stato installato con l'installer (accanto all'exe c'è il disinstallatore).</summary>
+        public static bool IsInstalled =>
+            OperatingSystem.IsWindows() && File.Exists(Path.Combine(AppContext.BaseDirectory, "unins000.exe"));
+
+        /// <summary>
+        /// Avvia l'installer scaricato senza domande: aspetta che DockSpace sia chiuso, sostituisce l'exe e lo
+        /// riapre (stessi parametri di DockStudio.Core.Windows.InnoSetup). Chi chiama deve chiudere l'app subito dopo.
+        /// </summary>
+        public static void LaunchUpdate(string setupPath) =>
+            Process.Start(new ProcessStartInfo(setupPath, "/SILENT /NOCANCEL /NORESTART /UPDATE=1") { UseShellExecute = true });
+
         private static void Run(string file, params string[] args)
         {
             var psi = new ProcessStartInfo(file) { UseShellExecute = false };

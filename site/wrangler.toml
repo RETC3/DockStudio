@@ -16,3 +16,9 @@ ACCESS_AUD = "100e1cfd440c562d4cdb5e638331def3e3b6fea7e040a278823775f39f1e1810"
 binding = "STATS"
 database_name = "screenlove-stats"
 database_id = "2b567977-bfec-4dfe-bd54-60f28e39f4c5"
+
+# Installer, zip e latest.json delle app DockStudio (una cartella per app, vedi site/lib/downloads.js).
+# Il workflow del sito crea il bucket se manca, prima di pubblicare.
+[[r2_buckets]]
+binding = "DOWNLOADS"
+bucket_name = "dockstudio-downloads"

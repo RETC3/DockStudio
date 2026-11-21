@@ -10,8 +10,11 @@ using DockStudio.UI;
 
 namespace DockSpace
 {
-    /// <summary>Opzioni da riga di comando: "--scan &lt;percorso&gt;" avvia subito la scansione, "--fast" la vuole veloce (NTFS).</summary>
-    public sealed record StartOptions(string? ScanPath, bool Fast)
+    /// <summary>
+    /// Opzioni da riga di comando: "--scan &lt;percorso&gt;" avvia subito la scansione, "--fast" la vuole veloce (NTFS).
+    /// <paramref name="CheckUpdates"/> false (solo nei controlli automatici) evita il controllo degli aggiornamenti.
+    /// </summary>
+    public sealed record StartOptions(string? ScanPath, bool Fast, bool CheckUpdates = true)
     {
         public static StartOptions Parse(string[] args)
         {
