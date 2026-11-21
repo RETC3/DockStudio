@@ -1,0 +1,68 @@
+<!doctype html>
+<!-- Anteprima dei link di getdockstudio.it (1200x630): scripts/make-dockstudio-og.ps1 la fotografa in
+     site/public/og-image.png. Colori e caratteri sono quelli del sito (site/public/style.css). -->
+<html lang="it">
+<head>
+<meta charset="utf-8">
+<style>
+  @font-face { font-family: "Archivo"; src: url("../public/fonts/archivo-latin.woff2") format("woff2"); font-weight: 100 900; font-stretch: 62% 125%; }
+  @font-face { font-family: "Inter"; src: url("../public/fonts/inter-latin.woff2") format("woff2"); font-weight: 100 900; }
+  @font-face { font-family: "Geist Mono"; src: url("../public/fonts/geist-mono-latin.woff2") format("woff2"); font-weight: 100 900; }
+  * { box-sizing: border-box; margin: 0; }
+  html, body { width: 1200px; height: 630px; overflow: hidden; }
+  body {
+    background: #F3F1EC; color: #111216; font-family: "Inter", sans-serif; position: relative;
+    background-image: linear-gradient(rgba(17,18,22,.05) 1px, transparent 1px), linear-gradient(90deg, rgba(17,18,22,.05) 1px, transparent 1px);
+    background-size: 40px 40px; background-position: -1px -1px;
+  }
+  .left { position: absolute; left: 72px; top: 64px; width: 640px; }
+  .wordmark { display: flex; align-items: center; gap: 14px; font: 700 22px/1 "Archivo"; font-stretch: 112%; letter-spacing: .16em; }
+  .wordmark svg { width: 40px; height: 40px; }
+  h1 { margin-top: 64px; font: 800 86px/.98 "Archivo"; font-stretch: 88%; letter-spacing: -.02em; }
+  h1 em { font-style: normal; color: #2447F5; }
+  p { margin-top: 30px; font-size: 26px; line-height: 1.4; color: #3D3F46; max-width: 600px; }
+  .facts { position: absolute; left: 72px; bottom: 56px; display: flex; gap: 26px; font: 500 15px/1 "Geist Mono"; letter-spacing: .14em; text-transform: uppercase; color: #3D3F46; }
+  .facts span::before { content: ""; display: inline-block; width: 8px; height: 8px; border-radius: 2px; background: #16794A; margin-right: 10px; vertical-align: 1px; }
+  .dock { position: absolute; right: 72px; top: 64px; width: 360px; padding: 26px; border-radius: 26px;
+    background: #FBFAF7; border: 1px solid #D9D5CC; box-shadow: 0 30px 60px -30px rgba(17,18,22,.35); }
+  .dock .mono { font: 500 13px/1 "Geist Mono"; letter-spacing: .14em; text-transform: uppercase; color: #7A7C83; display: flex; justify-content: space-between; }
+  .grid { margin-top: 20px; display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; }
+  .tile { aspect-ratio: 1; border-radius: 18px; display: grid; place-items: center; color: #fff; font: 700 30px/1 "Archivo"; font-stretch: 100%; position: relative; }
+  .tile.soon { opacity: .9; }
+  .tile.on::after { content: ""; position: absolute; right: 8px; top: 8px; width: 10px; height: 10px; border-radius: 50%; background: #fff; box-shadow: 0 0 0 3px rgba(255,255,255,.35); }
+  .tile.logo { background: none !important; }
+  /* Il logo ha 1/32 di margine attorno al riquadro: lo allargo per farlo combaciare con le altre caselle. */
+  .tile.logo img { position: absolute; inset: -3.34%; width: 106.67%; height: 106.67%; }
+  .url { position: absolute; right: 72px; bottom: 52px; font: 700 26px/1 "Archivo"; font-stretch: 100%; letter-spacing: .01em; }
+  .url b { color: #2447F5; font-weight: 700; }
+</style>
+</head>
+<body>
+  <div class="left">
+    <div class="wordmark">
+      <svg viewBox="0 0 64 64" fill="#111216"><rect x="6" y="8" width="12" height="48" rx="3"/><path d="M22 8h12a22 22 0 0 1 21.2 16H22z"/><rect x="22" y="28" width="35" height="8" rx="2"/><path d="M22 40h33.2A22 22 0 0 1 34 56H22z"/></svg>
+      DOCKSTUDIO
+    </div>
+    <h1>Tutto il tuo lavoro <em>resta tuo.</em></h1>
+    <p>Una suite di app per il lavoro di ogni giorno. Funzionano sul tuo computer, senza account e senza pubblicità.</p>
+  </div>
+  <div class="facts"><span>Offline</span><span>Niente account</span><span>I file restano tuoi</span></div>
+
+  <div class="dock">
+    <div class="mono"><span>Le app</span><span>11</span></div>
+    <div class="grid" id="grid"></div>
+  </div>
+  <div class="url"><b>getdockstudio</b>.it</div>
+
+<script>
+  // Le prime nove app del sito (site/data/apps.mjs): quelle già uscite con il loro logo.
+  const apps = [
+    ['#FF3D7F', 'S', 'screenlove'], ['#0F9D8A', 'Sp', 'dockspace'], ['#E5484D', 'P'], ['#8B5CF6', 'Pl'], ['#F59E0B', 'C'],
+    ['#10B981', 'N'], ['#2447F5', 'Po'], ['#EC4899', 'V'], ['#14B8A6', 'F'],
+  ];
+  document.getElementById('grid').innerHTML = apps.map(([c, l, logo]) => logo
+    ? `<div class="tile logo"><img src="../public/apps/${logo}/logo.svg" alt=""></div>`
+    : `<div class="tile soon" style="background:${c}">${l}</div>`).join('');
+</script>
+</body>
+</html>

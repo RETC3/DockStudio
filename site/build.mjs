@@ -12,6 +12,25 @@ const ROOT = dirname(fileURLToPath(import.meta.url));
 const DIST = join(ROOT, 'dist');
 const SITE = 'https://getdockstudio.it';
 
+// Anteprima dei link (WhatsApp, Telegram, LinkedIn, Facebook, X...): site/public/og-image.png, rifatta con
+// scripts/make-dockstudio-og.ps1. Le pagine di un'app con copertina usano la copertina dell'app.
+const OG_IMAGE = { src: '/og-image.png', larghezza: 1200, altezza: 630,
+  alt: 'DockStudio: tutto il tuo lavoro resta tuo. Una suite di app che funzionano sul tuo computer.' };
+
+function social({ titolo, descrizione, percorso, immagine = OG_IMAGE }) {
+  return `<meta property="og:type" content="website">
+  <meta property="og:site_name" content="DockStudio">
+  <meta property="og:locale" content="it_IT">
+  <meta property="og:title" content="${esc(titolo)}">
+  <meta property="og:description" content="${esc(descrizione)}">
+  <meta property="og:url" content="${SITE}${percorso}">
+  <meta property="og:image" content="${SITE}${immagine.src}">
+  <meta property="og:image:width" content="${immagine.larghezza}">
+  <meta property="og:image:height" content="${immagine.altezza}">
+  <meta property="og:image:alt" content="${esc(immagine.alt)}">
+  <meta name="twitter:card" content="summary_large_image">`;
+}
+
 const MESI = ['gennaio', 'febbraio', 'marzo', 'aprile', 'maggio', 'giugno', 'luglio', 'agosto',
   'settembre', 'ottobre', 'novembre', 'dicembre'];
 const TIPI = { nuovo: 'Nuovo', migliorato: 'Migliorato', corretto: 'Corretto' };
@@ -79,7 +98,7 @@ const FOOTER = `<footer>
   </div>
 </footer>`;
 
-function pagina({ titolo, descrizione, percorso, attiva, corpo }) {
+function pagina({ titolo, descrizione, percorso, attiva, corpo, immagine }) {
   return `<!doctype html>
 <html lang="it">
 <head>
@@ -88,6 +107,7 @@ function pagina({ titolo, descrizione, percorso, attiva, corpo }) {
   <title>${esc(titolo)}</title>
   <meta name="description" content="${esc(descrizione)}">
   <link rel="canonical" href="${SITE}${percorso}">
+  ${social({ titolo, descrizione, percorso, immagine })}
   <link rel="icon" href="/favicon.svg" type="image/svg+xml">
   <link rel="stylesheet" href="/style.css">
   <script>
@@ -268,6 +288,7 @@ ${sezNovita}
     descrizione: piano(a.lead),
     percorso: `/${a.slug}/`,
     attiva: 'app',
+    immagine: a.copertina,
     corpo,
   });
 }
@@ -312,6 +333,7 @@ ${versioni.length ? `
     descrizione: `Le novità di ${a.nome}: le versioni uscite e quelle in arrivo.`,
     percorso: `/${a.slug}/novita/`,
     attiva: 'novita',
+    immagine: a.copertina,
     corpo,
   });
 }
