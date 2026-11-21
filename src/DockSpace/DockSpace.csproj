@@ -41,4 +41,11 @@
     <EmbeddedResource Include="Lang\*.json" LogicalName="DockSpace.Lang.%(Filename).json" />
   </ItemGroup>
 
+  <!-- SkiaSharp e HarfBuzzSharp aggiungono alla pubblicazione i simboli di debug delle loro librerie native:
+       non servono a chi usa l'app e non devono finire accanto all'exe. -->
+  <Target Name="RemoveNativeSymbols" AfterTargets="Publish">
+    <Delete Files="$(PublishDir)libSkiaSharp.pdb" />
+    <Delete Files="$(PublishDir)libHarfBuzzSharp.pdb" />
+  </Target>
+
 </Project>

@@ -56,10 +56,16 @@ namespace DockSpace
 
     internal static class Program
     {
+        /// <summary>Lo stesso nome sta in installer/DockSpace.iss (AppMutex).</summary>
+        public const string RunningMutexName = "DockSpace.Running";
+
         [STAThread]
         public static int Main(string[] args)
         {
             App.Start = StartOptions.Parse(args);
+            // Segnale "DockSpace è aperto" per l'installer, che così può chiedere di chiuderlo prima di
+            // aggiornare o disinstallare. Non impedisce di aprire più finestre di DockSpace.
+            using var running = new System.Threading.Mutex(false, RunningMutexName);
             return BuildAvaloniaApp().StartWithClassicDesktopLifetime(args);
         }
 

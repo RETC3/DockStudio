@@ -98,7 +98,7 @@ namespace DockSpace.Views
             _drives.SelectionChanged += (_, _) => UpdateFastOption();
             _menu.Flyout = BuildMenu();
             _measure.ItemsSource = new[] { T("measure.onDisk"), T("measure.length") };
-            _measure.SelectedIndex = Measure == SizeMeasure.Length ? 1 : 0;
+            _measure.SelectedIndex = CurrentMeasure == SizeMeasure.Length ? 1 : 0;
             ToolTip.SetTip(_measure, T("measure.tip"));
             _measure.SelectionChanged += (_, _) => ChangeMeasure(_measure.SelectedIndex == 1 ? SizeMeasure.Length : SizeMeasure.OnDisk);
 
@@ -419,8 +419,8 @@ namespace DockSpace.Views
                 Cell(DisplayName(node)),
                 ShareBar(node.ShareOfParent),
                 Cell(Sizes.Percent(node.ShareOfParent, Languages.Culture), right: true, muted: true),
-                SizeCell(node.Length, Measure == SizeMeasure.Length),
-                SizeCell(node.OnDisk, Measure == SizeMeasure.OnDisk),
+                SizeCell(node.Length, CurrentMeasure == SizeMeasure.Length),
+                SizeCell(node.OnDisk, CurrentMeasure == SizeMeasure.OnDisk),
                 Cell(node.IsDirectory ? Count(node.FileCount) : "", right: true, muted: true),
                 Cell(Date(node.LastWriteUtc), right: true, muted: true));
             return row;
@@ -543,7 +543,7 @@ namespace DockSpace.Views
 
             if (result == null || cancel.IsCancellationRequested) return;
             App.Settings.LastPath = path;
-            if (Measure != SizeMeasure.OnDisk) FsTree.UseMeasure(result, Measure);
+            if (CurrentMeasure != SizeMeasure.OnDisk) FsTree.UseMeasure(result, CurrentMeasure);
             ShowResult(result);
             _status.Text = Summary(result, watch.Elapsed, useNtfs && note == null) + (note != null ? "  " + note : "");
         }
@@ -625,13 +625,13 @@ namespace DockSpace.Views
         // ---- Navigazione --------------------------------------------------------------------------------
 
         /// <summary>Misura scelta: spazio su disco (predefinita) o dimensione dei file.</summary>
-        private static SizeMeasure Measure =>
+        private static SizeMeasure CurrentMeasure =>
             Enum.TryParse<SizeMeasure>(App.Settings.Measure, out var m) ? m : SizeMeasure.OnDisk;
 
         /// <summary>Cambia la misura: si riordina tutto e si ridisegnano albero, elenco, mappa e schede.</summary>
         internal void ChangeMeasure(SizeMeasure measure)
         {
-            if (measure == Measure) return;
+            if (measure == CurrentMeasure) return;
             App.Settings.Measure = measure.ToString();
             App.SettingsStore.Save(App.Settings);
             _measure.SelectedIndex = measure == SizeMeasure.Length ? 1 : 0;
