@@ -55,7 +55,7 @@ export const apps = [
     categoria: 'Spazio su disco',
     breve: 'Scopri cosa riempie il disco: una mappa a riquadri, le cartelle e i file più grandi e lo spazio che occupano davvero.',
     lead: "Una mappa del disco che mostra a colpo d'occhio cartelle e file più pesanti. Un disco intero in pochi secondi, e quello che non serve finisce nel Cestino, mai cancellato di colpo.",
-    stato: 'sviluppo',
+    stato: 'disponibile',
     // Download dal sito (site/lib/downloads.js): la sezione "Scarica" legge /dockspace/latest.json.
     scaricabile: true,
     piattaforme: ['Windows 10 e 11', 'Mac in arrivo'],
