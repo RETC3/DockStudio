@@ -25,6 +25,16 @@ namespace DockPDF.Checks
             try
             {
                 PdfFonts.Install();
+                // PDF di prova da usare a mano: DOCKPDF_SAMPLES=<cartella> li crea lì e basta.
+                if (Environment.GetEnvironmentVariable("DOCKPDF_SAMPLES") is { Length: > 0 } samples)
+                {
+                    Directory.CreateDirectory(samples);
+                    File.Copy(MakeForm(work), Path.Combine(samples, "Modulo di iscrizione.pdf"), true);
+                    File.Copy(MakeSample(work, "contratto.pdf", 5, "Contratto, pagina"), Path.Combine(samples, "Contratto.pdf"), true);
+                    File.Copy(MakeRotated(work), Path.Combine(samples, "Pagine girate.pdf"), true);
+                    Console.WriteLine($"PDF di prova in {samples}");
+                    return 0;
+                }
                 Section("Intervalli di pagine", CheckRanges);
                 Section("Lettura e disegno (PDFium)", () => CheckRead(work));
                 Section("Unisci, ordina, ruota, elimina", () => CheckCompose(work));
