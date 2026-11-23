@@ -1,0 +1,26 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!-- Motore di DockPDF, senza interfaccia: legge e disegna le pagine con PDFium, compone, divide e protegge
+       i PDF con PDFsharp, converte immagini e pagine. -->
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>disable</ImplicitUsings>
+    <LangVersion>latest</LangVersion>
+    <DebugType>embedded</DebugType>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <RootNamespace>DockPDF.Engine</RootNamespace>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <!-- Lettura e disegno delle pagine: PDFium (BSD/Apache), libreria nativa per Windows x64, x86 e ARM64 -->
+    <PackageReference Include="bblanchon.PDFium.Win32" Version="158.0.8125" />
+    <!-- Composizione, divisione e password (MIT): la stessa versione del generatore di documenti -->
+    <PackageReference Include="PDFsharp" Version="6.1.1" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\DockStudio.Imaging\DockStudio.Imaging.csproj" />
+  </ItemGroup>
+
+</Project>

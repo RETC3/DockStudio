@@ -1,0 +1,53 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!-- DockPDF: strumenti per i PDF della suite DockStudio (Avalonia, Windows e in futuro macOS). -->
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>net10.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>disable</ImplicitUsings>
+    <LangVersion>latest</LangVersion>
+    <DebugType>embedded</DebugType>
+    <RootNamespace>DockPDF</RootNamespace>
+    <AssemblyName>DockPDF</AssemblyName>
+    <Version>0.1.0</Version>
+    <Product>DockPDF</Product>
+    <Company>DockStudio</Company>
+    <ApplicationManifest>app.manifest</ApplicationManifest>
+    <!-- Icona dell'exe; si rigenera con scripts/make-dockpdf-icon.ps1 -->
+    <ApplicationIcon>Assets\app.ico</ApplicationIcon>
+    <AvaloniaUseCompiledBindingsByDefault>true</AvaloniaUseCompiledBindingsByDefault>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Avalonia" Version="12.1.5" />
+    <PackageReference Include="Avalonia.Desktop" Version="12.1.5" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\DockStudio.Core\DockStudio.Core.csproj" />
+    <!-- Solo Windows (avvio singolo, installer, scelta della privacy fatta nell'installer): si usa dopo OperatingSystem.IsWindows() -->
+    <ProjectReference Include="..\DockStudio.Core.Windows\DockStudio.Core.Windows.csproj" />
+    <ProjectReference Include="..\DockStudio.UI\DockStudio.UI.csproj" />
+    <ProjectReference Include="..\DockPDF.Engine\DockPDF.Engine.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <InternalsVisibleTo Include="DockPDF.Checks" />
+    <!-- La stessa icona per le finestre e per l'area di notifica -->
+    <AvaloniaResource Include="Assets\app.ico" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- Testi dell'app, uno per lingua: risorse DockPDF.Lang.<lingua>.json -->
+    <EmbeddedResource Include="Lang\*.json" LogicalName="DockPDF.Lang.%(Filename).json" />
+  </ItemGroup>
+
+  <!-- SkiaSharp e HarfBuzzSharp aggiungono alla pubblicazione i simboli di debug delle loro librerie native:
+       non servono a chi usa l'app e non devono finire accanto all'exe. -->
+  <Target Name="RemoveNativeSymbols" AfterTargets="Publish">
+    <Delete Files="$(PublishDir)libSkiaSharp.pdb" />
+    <Delete Files="$(PublishDir)libHarfBuzzSharp.pdb" />
+  </Target>
+
+</Project>

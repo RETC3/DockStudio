@@ -57,7 +57,7 @@ namespace DockStudio.Documents
     /// Fornisce a PDFsharp i caratteri di sistema da incorporare nel PDF: Segoe UI su Windows, Arial su macOS
     /// (sempre presente), con Arial o DejaVu come ripiego.
     /// </summary>
-    internal sealed class SystemFontResolver : IFontResolver
+    public sealed class SystemFontResolver : IFontResolver
     {
         private static bool _installed;
 
