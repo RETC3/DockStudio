@@ -8,6 +8,8 @@ namespace DockPDF
     /// <summary>Gli strumenti di DockPDF, nell'ordine della home e del cerchio.</summary>
     public enum PdfTool
     {
+        Edit,
+        Sign,
         Organize,
         Merge,
         Split,
@@ -55,6 +57,8 @@ namespace DockPDF
             if (Icons.TryGetValue(tool, out var g)) return g;
             g = Geometry.Parse(tool switch
             {
+                PdfTool.Edit => "M4,20 V16 L15,5 L19,9 L8,20 Z M13,7 L17,11",
+                PdfTool.Sign => "M3,16 C6,7 8,7 8,12 C8,16 11,8 13,11 C14,13 16,12 18,10 M3,20 H21",
                 PdfTool.Organize => "M4,4 H10 V10 H4 Z M14,4 H20 V10 H14 Z M4,14 H10 V20 H4 Z M14,14 H20 V20 H14 Z",
                 PdfTool.Merge => "M4,5 L10,12 M4,19 L10,12 M10,12 H20 M17,9 L20,12 L17,15",
                 PdfTool.Split => "M4,12 H11 M11,12 L19,5 M11,12 L19,19 M15,5 H19 V9 M15,19 H19 V15",

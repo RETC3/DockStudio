@@ -35,10 +35,14 @@ namespace DockPDF.Engine
     /// Un PDF aperto con PDFium per guardarlo: numero e dimensioni delle pagine, immagini delle pagine, testo.
     /// Il file si legge tutto in memoria, così resta libero (si può sovrascrivere mentre è aperto).
     /// </summary>
-    public sealed unsafe class PdfFile : IDisposable
+    public sealed unsafe partial class PdfFile : IDisposable
     {
         private readonly IntPtr _data;
         private IntPtr _document;
+
+        // Ambiente dei moduli di PDFium: struttura FPDF_FORMFILLINFO (versione 1, senza richiami) e handle.
+        private IntPtr _formInfo;
+        private IntPtr _form;
 
         private PdfFile(string name, IntPtr data, IntPtr document, bool encrypted)
         {
@@ -46,7 +50,16 @@ namespace DockPDF.Engine
             _data = data;
             _document = document;
             IsEncrypted = encrypted;
-            lock (Pdfium.Sync) PageCount = Pdfium.FPDF_GetPageCount(document);
+            lock (Pdfium.Sync)
+            {
+                PageCount = Pdfium.FPDF_GetPageCount(document);
+                // Senza l'ambiente dei moduli PDFium non disegna i campi (valori compilati, firme visibili).
+                const int size = 64 * 8;
+                _formInfo = Marshal.AllocHGlobal(size);
+                new Span<byte>((void*)_formInfo, size).Clear();
+                *(int*)_formInfo = 1;
+                _form = Pdfium.FPDFDOC_InitFormFillEnvironment(document, (void*)_formInfo);
+            }
         }
 
         /// <summary>Nome del file (per i messaggi).</summary>
@@ -140,6 +153,12 @@ namespace DockPDF.Engine
                         Pdfium.FPDFBitmap_FillRect(target, 0, 0, width, height, 0xFFFFFFFF);
                         int flags = Pdfium.FPDF_ANNOT | (forPrinting ? Pdfium.FPDF_PRINTING : 0);
                         Pdfium.FPDF_RenderPageBitmap(target, page, 0, 0, width, height, quarter, flags);
+                        if (_form != IntPtr.Zero)
+                        {
+                            Pdfium.FORM_OnAfterLoadPage(page, _form);
+                            Pdfium.FPDF_FFLDraw(_form, target, page, 0, 0, width, height, quarter, flags);
+                            Pdfium.FORM_OnBeforeClosePage(page, _form);
+                        }
                     }
                     finally
                     {
@@ -212,16 +231,26 @@ namespace DockPDF.Engine
         public void Dispose()
         {
             if (_document == IntPtr.Zero) return;
-            lock (Pdfium.Sync) Pdfium.FPDF_CloseDocument(_document);
-            _document = IntPtr.Zero;
-            Marshal.FreeHGlobal(_data);
+            Close();
             GC.SuppressFinalize(this);
         }
 
         ~PdfFile()
         {
-            if (_document == IntPtr.Zero) return;
-            lock (Pdfium.Sync) Pdfium.FPDF_CloseDocument(_document);
+            if (_document != IntPtr.Zero) Close();
+        }
+
+        private void Close()
+        {
+            lock (Pdfium.Sync)
+            {
+                if (_form != IntPtr.Zero) Pdfium.FPDFDOC_ExitFormFillEnvironment(_form);
+                Pdfium.FPDF_CloseDocument(_document);
+            }
+            _form = IntPtr.Zero;
+            _document = IntPtr.Zero;
+            if (_formInfo != IntPtr.Zero) Marshal.FreeHGlobal(_formInfo);
+            _formInfo = IntPtr.Zero;
             Marshal.FreeHGlobal(_data);
         }
     }

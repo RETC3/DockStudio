@@ -63,6 +63,59 @@ namespace DockPDF.Engine
 
         [DllImport(Lib)] public static extern int FPDF_SaveAsCopy(IntPtr document, FileWrite* writer, uint flags);
 
+        public const uint FPDF_NO_INCREMENTAL = 2;
+
+        // Geometria della pagina
+        [DllImport(Lib)] public static extern int FPDFPage_GetRotation(IntPtr page);
+        [DllImport(Lib)] public static extern int FPDFPage_GetCropBox(IntPtr page, float* left, float* bottom, float* right, float* top);
+        [DllImport(Lib)] public static extern int FPDFPage_GetMediaBox(IntPtr page, float* left, float* bottom, float* right, float* top);
+
+        // Oggetti della pagina (per modificare il testo esistente)
+        public const int FPDF_PAGEOBJ_TEXT = 1;
+
+        [StructLayout(LayoutKind.Sequential)]
+        public struct FsMatrix
+        {
+            public float A, B, C, D, E, F;
+        }
+
+        [DllImport(Lib)] public static extern int FPDFPage_CountObjects(IntPtr page);
+        [DllImport(Lib)] public static extern IntPtr FPDFPage_GetObject(IntPtr page, int index);
+        [DllImport(Lib)] public static extern int FPDFPageObj_GetType(IntPtr obj);
+        [DllImport(Lib)] public static extern int FPDFPageObj_GetBounds(IntPtr obj, float* left, float* bottom, float* right, float* top);
+        [DllImport(Lib)] public static extern int FPDFPageObj_GetMatrix(IntPtr obj, FsMatrix* matrix);
+        [DllImport(Lib)] public static extern int FPDFPageObj_GetFillColor(IntPtr obj, uint* r, uint* g, uint* b, uint* a);
+        [DllImport(Lib)] public static extern CULong FPDFTextObj_GetText(IntPtr obj, IntPtr textPage, ushort* buffer, CULong length);
+        [DllImport(Lib)] public static extern int FPDFTextObj_GetFontSize(IntPtr obj, float* size);
+        [DllImport(Lib)] public static extern IntPtr FPDFTextObj_GetFont(IntPtr obj);
+        [DllImport(Lib)] public static extern nuint FPDFFont_GetBaseFontName(IntPtr font, byte* buffer, nuint length);
+        [DllImport(Lib)] public static extern int FPDFFont_GetWeight(IntPtr font);
+        [DllImport(Lib)] public static extern int FPDFPage_RemoveObject(IntPtr page, IntPtr obj);
+        [DllImport(Lib)] public static extern void FPDFPageObj_Destroy(IntPtr obj);
+        [DllImport(Lib)] public static extern int FPDFPage_GenerateContent(IntPtr page);
+
+        // Ambiente dei moduli: serve a disegnare i campi (valori compilati, firme visibili)
+        [DllImport(Lib)] public static extern IntPtr FPDFDOC_InitFormFillEnvironment(IntPtr document, void* formInfo);
+        [DllImport(Lib)] public static extern void FPDFDOC_ExitFormFillEnvironment(IntPtr form);
+        [DllImport(Lib)] public static extern void FORM_OnAfterLoadPage(IntPtr page, IntPtr form);
+        [DllImport(Lib)] public static extern void FORM_OnBeforeClosePage(IntPtr page, IntPtr form);
+        [DllImport(Lib)] public static extern void FPDF_FFLDraw(IntPtr form, IntPtr bitmap, IntPtr page, int startX, int startY, int sizeX, int sizeY, int rotate, int flags);
+
+        // Pagine di un altro PDF incollate come oggetti (le aggiunte disegnate con PDFsharp)
+        [DllImport(Lib)] public static extern IntPtr FPDF_NewXObjectFromPage(IntPtr destination, IntPtr source, int sourcePage);
+        [DllImport(Lib)] public static extern void FPDF_CloseXObject(IntPtr xobject);
+        [DllImport(Lib)] public static extern IntPtr FPDF_NewFormObjectFromXObject(IntPtr xobject);
+        [DllImport(Lib)] public static extern void FPDFPageObj_Transform(IntPtr obj, double a, double b, double c, double d, double e, double f);
+        [DllImport(Lib)] public static extern void FPDFPage_InsertObject(IntPtr page, IntPtr obj);
+
+        // Firme digitali già presenti
+        [DllImport(Lib)] public static extern int FPDF_GetSignatureCount(IntPtr document);
+        [DllImport(Lib)] public static extern IntPtr FPDF_GetSignatureObject(IntPtr document, int index);
+        [DllImport(Lib)] public static extern CULong FPDFSignatureObj_GetContents(IntPtr signature, byte* buffer, CULong length);
+        [DllImport(Lib)] public static extern CULong FPDFSignatureObj_GetByteRange(IntPtr signature, int* buffer, CULong length);
+        [DllImport(Lib)] public static extern CULong FPDFSignatureObj_GetSubFilter(IntPtr signature, byte* buffer, CULong length);
+        [DllImport(Lib)] public static extern CULong FPDFSignatureObj_GetTime(IntPtr signature, byte* buffer, CULong length);
+
         /// <summary>
         /// FPDF_FILEWRITE di PDFium più, in coda, il riferimento allo stream di destinazione: PDFium passa
         /// indietro il puntatore alla struttura, da cui si ritrova lo stream.

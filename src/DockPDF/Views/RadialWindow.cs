@@ -142,9 +142,9 @@ namespace DockPDF.Views
                     var label = new FormattedText(Tools.ShortName(tool), CultureInfo.CurrentUICulture, FlowDirection.LeftToRight, typeface, 11, ink)
                     {
                         TextAlignment = TextAlignment.Center,
-                        MaxTextWidth = 84,
+                        MaxTextWidth = 74,
                     };
-                    context.DrawText(label, new Point(at.X - 42, at.Y + 2));
+                    context.DrawText(label, new Point(at.X - 37, at.Y + 2));
                 }
             }
 

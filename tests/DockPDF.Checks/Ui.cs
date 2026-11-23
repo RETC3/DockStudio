@@ -109,6 +109,8 @@ namespace DockPDF.Checks
                     window.OpenTool(PdfTool.PdfToImages, new[] { a });
                     Pump(30);
                     Save(window, "in-immagini-" + suffix);
+
+                    CheckEditor(window, work, suffix);
                     window.ShowHome();
                     window.Close();
 

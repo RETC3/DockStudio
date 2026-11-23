@@ -80,7 +80,7 @@ namespace DockPDF.Views
             ShowHome();
             SetStatus(T("status.ready"));
 
-            // File trascinati sulla home: PDF → Organizza (uno) o Unisci (più d'uno); immagini → Da immagini a PDF.
+            // File trascinati sulla home: PDF → Modifica (uno) o Unisci (più d'uno); immagini → Da immagini a PDF.
             Pick.AcceptDrops(_home, p => Pick.IsPdf(p) || Pick.IsImage(p), OpenFiles);
 
             Opened += (_, _) =>
@@ -99,7 +99,7 @@ namespace DockPDF.Views
 
         private Control BuildHome()
         {
-            var grid = new UniformGrid { Columns = 3 };
+            var grid = new UniformGrid { Columns = 4 };
             foreach (var tool in Tools.All) grid.Children.Add(ToolCard(tool));
             var panel = Ui.Column(6,
                 Ui.Label(T("home.title"), "title"),
@@ -144,7 +144,7 @@ namespace DockPDF.Views
                 Padding = new Thickness(18),
                 Margin = new Thickness(6),
                 CornerRadius = new CornerRadius(12),
-                MinHeight = 150,
+                MinHeight = 140,
                 // Gli strumenti non ancora pronti restano visibili ma attenuati (non con lo sfondo grigio dei pulsanti disattivati).
                 Opacity = ready ? 1 : 0.5,
                 Cursor = ready ? new Cursor(StandardCursorType.Hand) : Cursor.Default,
@@ -176,6 +176,7 @@ namespace DockPDF.Views
                 (Current as IDisposable)?.Dispose();
                 Workspace workspace = tool switch
                 {
+                    PdfTool.Edit or PdfTool.Sign => new EditorWorkspace(this, tool),
                     PdfTool.Organize or PdfTool.Merge => new PagesWorkspace(this, tool),
                     PdfTool.Split => new SplitWorkspace(this),
                     PdfTool.ImagesToPdf => new ImagesWorkspace(this),
@@ -197,7 +198,7 @@ namespace DockPDF.Views
         public void OpenFiles(IReadOnlyList<string> files)
         {
             var pdfs = files.Where(Pick.IsPdf).ToList();
-            if (pdfs.Count > 0) OpenTool(pdfs.Count == 1 ? PdfTool.Organize : PdfTool.Merge, pdfs);
+            if (pdfs.Count > 0) OpenTool(pdfs.Count == 1 ? PdfTool.Edit : PdfTool.Merge, pdfs);
             else if (files.Any(Pick.IsImage)) OpenTool(PdfTool.ImagesToPdf, files.Where(Pick.IsImage).ToList());
         }
 

@@ -24,7 +24,7 @@ namespace DockPDF.Checks
             Directory.CreateDirectory(work);
             try
             {
-                SystemFontResolver.Install();
+                PdfFonts.Install();
                 Section("Intervalli di pagine", CheckRanges);
                 Section("Lettura e disegno (PDFium)", () => CheckRead(work));
                 Section("Unisci, ordina, ruota, elimina", () => CheckCompose(work));
@@ -32,6 +32,7 @@ namespace DockPDF.Checks
                 Section("Password", () => CheckPasswords(work));
                 Section("Immagini → PDF", () => CheckImagesToPdf(work));
                 Section("PDF → immagini", () => CheckPdfToImages(work));
+                RunEditChecks(work);
                 RunUiChecks(work);
             }
             finally
@@ -44,6 +45,9 @@ namespace DockPDF.Checks
             Console.WriteLine(_failures == 0 ? "Tutti i controlli superati." : $"{_failures} controlli NON superati.");
             return _failures == 0 ? 0 : 1;
         }
+
+        /// <summary>Controlli della modifica (Edit.cs).</summary>
+        static partial void RunEditChecks(string work);
 
         /// <summary>Controlli delle finestre (nel file Ui.cs, quando c'è l'app).</summary>
         static partial void RunUiChecks(string work);
