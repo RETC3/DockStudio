@@ -82,7 +82,7 @@ export const apps = [
     categoria: 'PDF',
     breve: 'Modifica, firma, unisci, dividi e comprimi i PDF, e rendi cercabili le scansioni. Tutto sul tuo computer.',
     lead: "Tutti gli strumenti per i PDF in un'app sola, sul tuo computer: i documenti non passano da nessun sito. Un clic sull'icona accanto all'orologio apre il cerchio degli strumenti.",
-    stato: 'sviluppo',
+    stato: 'disponibile',
     // Download dal sito (site/lib/downloads.js): la sezione "Scarica" legge /dockpdf/latest.json.
     scaricabile: true,
     piattaforme: ['Windows 10 e 11', 'Mac in arrivo'],
