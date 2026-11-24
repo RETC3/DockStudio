@@ -1,5 +1,8 @@
 using System;
+using System.IO;
+using System.Linq;
 using System.Runtime.InteropServices;
+using System.Text.Json;
 using System.Threading;
 using DockStudio.Core;
 
@@ -42,6 +45,69 @@ namespace DockStudio.Core.Windows
         {
             _showEvent = new EventWaitHandle(false, EventResetMode.AutoReset, _showEventName);
             _wait = ThreadPool.RegisterWaitForSingleObject(_showEvent, (_, _) => onShowRequested(), null, Timeout.Infinite, executeOnlyOnce: false);
+        }
+
+        /// <summary>
+        /// Copia principale: come <see cref="ListenForShowRequests(Action)"/>, ma riceve anche gli argomenti con cui
+        /// è stata avviata la seconda copia (per esempio i file da aprire: doppio clic su un PDF con l'app già aperta).
+        /// Ogni richiesta arriva una volta; più richieste ravvicinate possono arrivare insieme, nell'ordine.
+        /// </summary>
+        public void ListenForShowRequests(Action<string[]> onShowRequested, AppIdentity app)
+        {
+            var folder = RequestsFolder(app);
+            ListenForShowRequests(() =>
+            {
+                var requests = TakeRequests(folder);
+                if (requests.Count == 0) onShowRequested(Array.Empty<string>());
+                foreach (var args in requests) onShowRequested(args);
+            });
+        }
+
+        /// <summary>Seconda copia: passa i suoi argomenti a quella in esecuzione e le chiede di mostrarsi.</summary>
+        public static bool RequestShow(AppIdentity app, string[] args)
+        {
+            if (args.Length > 0)
+            {
+                try
+                {
+                    var folder = RequestsFolder(app);
+                    Directory.CreateDirectory(folder);
+                    // Un file per richiesta: con più file aperti insieme Windows avvia più copie in parallelo.
+                    var name = $"{DateTime.UtcNow.Ticks:D20}-{Guid.NewGuid():N}";
+                    File.WriteAllText(Path.Combine(folder, name + ".tmp"), JsonSerializer.Serialize(args));
+                    File.Move(Path.Combine(folder, name + ".tmp"), Path.Combine(folder, name + ".json"));
+                }
+                catch (Exception)
+                {
+                    // senza argomenti l'app si mostra comunque
+                }
+            }
+            return RequestShow(app);
+        }
+
+        private static string RequestsFolder(AppIdentity app) => Path.Combine(Path.GetTempPath(), app.Name + ".Requests");
+
+        private static System.Collections.Generic.List<string[]> TakeRequests(string folder)
+        {
+            var list = new System.Collections.Generic.List<string[]>();
+            try
+            {
+                if (!Directory.Exists(folder)) return list;
+                foreach (var file in Directory.GetFiles(folder, "*.json").OrderBy(f => f, StringComparer.Ordinal))
+                {
+                    try
+                    {
+                        // Le richieste vecchie (app chiusa prima di leggerle) non si eseguono più.
+                        if (DateTime.UtcNow - File.GetLastWriteTimeUtc(file) < TimeSpan.FromMinutes(2)
+                            && JsonSerializer.Deserialize<string[]>(File.ReadAllText(file)) is { } args)
+                            list.Add(args);
+                    }
+                    catch (Exception) { /* richiesta illeggibile */ }
+                    try { File.Delete(file); } catch (Exception) { }
+                }
+            }
+            catch (Exception) { }
+            return list;
         }
 
         /// <summary>Seconda copia: chiede a quella in esecuzione di mostrarsi. False se non risponde.</summary>

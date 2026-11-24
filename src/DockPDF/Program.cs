@@ -104,9 +104,12 @@ namespace DockPDF
             {
                 _desktop = desktop;
                 // Con l'icona nell'area di notifica DockPDF resta aperto anche senza finestre.
-                desktop.ShutdownMode = Settings.KeepInTray ? ShutdownMode.OnExplicitShutdown : ShutdownMode.OnMainWindowClose;
+                // Avviato senza finestra (all'accesso a Windows o solo il cerchio) l'icona serve sempre: senza,
+                // DockPDF resterebbe aperto ma irraggiungibile.
+                bool tray = Settings.KeepInTray || Start.TrayOnly || Start.Radial;
+                desktop.ShutdownMode = tray ? ShutdownMode.OnExplicitShutdown : ShutdownMode.OnMainWindowClose;
                 desktop.ShutdownRequested += (_, _) => SettingsStore.Save(Settings);
-                if (Settings.KeepInTray) CreateTray();
+                if (tray) CreateTray();
 
                 if (Start.Radial || Start.TrayOnly)
                 {
@@ -144,6 +147,19 @@ namespace DockPDF
             main.Activate();
             if (tool != null) main.OpenTool(tool.Value, files);
             else if (files is { Count: > 0 }) main.OpenFiles(files);
+        }
+
+        /// <summary>Una richiesta arrivata da un'altra copia di DockPDF: file da aprire, strumento o cerchio.</summary>
+        public void Show(StartOptions request)
+        {
+            if (request.Radial && request.Files.Count == 0 && request.Tool == null)
+            {
+                if (_radial == null) ShowRadial();
+            }
+            else if (!request.TrayOnly || request.Files.Count > 0 || request.Tool != null)
+            {
+                ShowMain(request.Tool, request.Files);
+            }
         }
 
         /// <summary>Il cerchio degli strumenti, vicino al mouse (per esempio sopra l'icona nell'area di notifica).</summary>
@@ -217,10 +233,12 @@ namespace DockPDF
                 single = DockStudio.Core.Windows.SingleInstance.TryAcquire(AppInfo.Identity);
                 if (single == null)
                 {
-                    DockStudio.Core.Windows.SingleInstance.RequestShow(AppInfo.Identity);
+                    // I file (doppio clic su un PDF, "Apri con") passano alla copia già aperta, con il percorso completo.
+                    var forward = args.Select(a => !a.StartsWith("--", StringComparison.Ordinal) && File.Exists(a) ? Path.GetFullPath(a) : a).ToArray();
+                    DockStudio.Core.Windows.SingleInstance.RequestShow(AppInfo.Identity, forward);
                     return 0;
                 }
-                single.ListenForShowRequests(() => Dispatcher.UIThread.Post(() => App.Current?.ShowMain()));
+                single.ListenForShowRequests(received => Dispatcher.UIThread.Post(() => App.Current?.Show(StartOptions.Parse(received))), AppInfo.Identity);
             }
             // Segnale "DockPDF è aperto" per l'installer, che così può chiedere di chiuderlo prima di aggiornare.
             using var running = new System.Threading.Mutex(false, RunningMutexName);

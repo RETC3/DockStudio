@@ -99,8 +99,13 @@ namespace DockPDF.Checks
         {
             var engine = new WindowsOcrEngine();
             var languages = engine.Languages;
-            Check(languages.Count > 0, "lingue OCR di Windows: " + string.Join(", ", languages.Select(l => l.Tag)));
-            if (languages.Count == 0) return;
+            if (languages.Count == 0)
+            {
+                // Succede su alcune macchine senza lingue OCR (per esempio i server delle build): non è un errore di DockPDF.
+                Console.WriteLine("  (OCR non provato: in questo Windows non c'è nessuna lingua per il riconoscimento del testo)");
+                return;
+            }
+            Check(true, "lingue OCR di Windows: " + string.Join(", ", languages.Select(l => l.Tag)));
 
             var scan = MakeScan(work);
             using (var f = PdfFile.Open(scan))
