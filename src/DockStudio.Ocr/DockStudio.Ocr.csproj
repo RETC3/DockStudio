@@ -1,0 +1,18 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!-- Modulo OCR condiviso dalle app DockStudio: la parte comune (risultati, interfaccia del motore).
+       Il motore vero dipende dal sistema: DockStudio.Ocr.Windows (Windows.Media.Ocr); su macOS sarà Vision. -->
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>disable</ImplicitUsings>
+    <LangVersion>latest</LangVersion>
+    <DebugType>embedded</DebugType>
+    <RootNamespace>DockStudio.Ocr</RootNamespace>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\DockStudio.Imaging\DockStudio.Imaging.csproj" />
+  </ItemGroup>
+
+</Project>

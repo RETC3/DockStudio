@@ -32,6 +32,8 @@ namespace DockPDF.Checks
                     File.Copy(MakeForm(work), Path.Combine(samples, "Modulo di iscrizione.pdf"), true);
                     File.Copy(MakeSample(work, "contratto.pdf", 5, "Contratto, pagina"), Path.Combine(samples, "Contratto.pdf"), true);
                     File.Copy(MakeRotated(work), Path.Combine(samples, "Pagine girate.pdf"), true);
+                    File.Copy(MakeScan(work), Path.Combine(samples, "Scansione.pdf"), true);
+                    File.Copy(MakeHeavy(work), Path.Combine(samples, "Foto pesanti.pdf"), true);
                     Console.WriteLine($"PDF di prova in {samples}");
                     return 0;
                 }
@@ -43,6 +45,7 @@ namespace DockPDF.Checks
                 Section("Immagini → PDF", () => CheckImagesToPdf(work));
                 Section("PDF → immagini", () => CheckPdfToImages(work));
                 RunEditChecks(work);
+                RunCompressOcrChecks(work);
                 RunUiChecks(work);
             }
             finally
@@ -58,6 +61,9 @@ namespace DockPDF.Checks
 
         /// <summary>Controlli della modifica (Edit.cs).</summary>
         static partial void RunEditChecks(string work);
+
+        /// <summary>Controlli di Comprimi e OCR (CompressOcr.cs).</summary>
+        static partial void RunCompressOcrChecks(string work);
 
         /// <summary>Controlli delle finestre (nel file Ui.cs, quando c'è l'app).</summary>
         static partial void RunUiChecks(string work);

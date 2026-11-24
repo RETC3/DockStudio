@@ -55,11 +55,12 @@ namespace DockPDF.Engine
         /// <summary>Testo tolto e aggiunte incollate, con PDFium; restituisce il PDF nuovo.</summary>
         private static byte[] Rewrite(byte[] bytes, EditSet edits)
         {
-            var drawn = edits.Items.Where(i => i is not TextReplacement || ((TextReplacement)i).NewText.Length > 0).ToList();
+            var hidden = edits.Items.OfType<HiddenTextItem>().ToList();
+            var drawn = edits.Items.Where(i => i is not HiddenTextItem && (i is not TextReplacement || ((TextReplacement)i).NewText.Length > 0)).ToList();
             var remove = edits.Items.OfType<TextReplacement>()
                 .GroupBy(r => r.Page)
                 .ToDictionary(g => g.Key, g => (IReadOnlyCollection<int>)g.SelectMany(r => r.Block.Objects).ToList());
-            if (drawn.Count == 0 && remove.Count == 0) return bytes;
+            if (drawn.Count == 0 && remove.Count == 0 && hidden.Count == 0) return bytes;
 
             using var file = PdfFile.Open(bytes, "documento");
             var pages = drawn.Select(i => i.Page).Distinct().OrderBy(p => p).ToList();
@@ -87,7 +88,7 @@ namespace DockPDF.Engine
                 layer.Save(ms, false);
                 overlay = ms.ToArray();
             }
-            return file.Rewrite(remove, overlay, map);
+            return file.Rewrite(remove, overlay, map, hidden);
         }
 
         // ---- Disegno delle aggiunte -----------------------------------------------------------------------

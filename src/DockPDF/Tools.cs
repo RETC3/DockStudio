@@ -42,7 +42,7 @@ namespace DockPDF
         public static string Description(PdfTool tool) => Text.T($"tool.{Key(tool)}.description");
 
         /// <summary>Strumenti non ancora pronti in questa versione di sviluppo.</summary>
-        public static bool IsReady(PdfTool tool) => tool is not (PdfTool.Compress or PdfTool.Ocr);
+        public static bool IsReady(PdfTool tool) => true;
 
         /// <summary>Lo strumento da un nome scritto sulla riga di comando ("--tool merge").</summary>
         public static PdfTool? Parse(string? name) =>

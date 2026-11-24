@@ -3,7 +3,9 @@
   <!-- DockPDF: strumenti per i PDF della suite DockStudio (Avalonia, Windows e in futuro macOS). -->
   <PropertyGroup>
     <OutputType>WinExe</OutputType>
-    <TargetFramework>net10.0</TargetFramework>
+    <!-- Windows: serve per l'OCR integrato (Windows.Media.Ocr). Per macOS si aggiungerà net10.0 con l'OCR di Vision. -->
+    <TargetFramework>net10.0-windows10.0.19041.0</TargetFramework>
+    <SupportedOSPlatformVersion>10.0.19041.0</SupportedOSPlatformVersion>
     <Nullable>enable</Nullable>
     <ImplicitUsings>disable</ImplicitUsings>
     <LangVersion>latest</LangVersion>
@@ -30,6 +32,7 @@
     <ProjectReference Include="..\DockStudio.Core.Windows\DockStudio.Core.Windows.csproj" />
     <ProjectReference Include="..\DockStudio.UI\DockStudio.UI.csproj" />
     <ProjectReference Include="..\DockPDF.Engine\DockPDF.Engine.csproj" />
+    <ProjectReference Include="..\DockStudio.Ocr.Windows\DockStudio.Ocr.Windows.csproj" />
   </ItemGroup>
 
   <ItemGroup>

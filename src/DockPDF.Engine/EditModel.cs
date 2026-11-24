@@ -86,6 +86,12 @@ namespace DockPDF.Engine
     public sealed record TextReplacement(int Page, PdfTextBlock Block, string NewText) : EditItem(Page);
 
     /// <summary>
+    /// Testo invisibile ma selezionabile e cercabile, allargato o stretto fino a occupare il riquadro: è il testo
+    /// riconosciuto dall'OCR, messo sopra la parola nella scansione.
+    /// </summary>
+    public sealed record HiddenTextItem(int Page, PageRect Box, string Text) : EditItem(Page);
+
+    /// <summary>
     /// Una firma fatta a mano: tratti (coordinate tra 0 e 1 rispetto a un riquadro <see cref="AspectRatio"/>:1),
     /// oppure un nome scritto in corsivo, oppure un'immagine PNG con lo sfondo trasparente.
     /// </summary>

@@ -111,6 +111,13 @@ namespace DockPDF.Checks
                     Save(window, "in-immagini-" + suffix);
 
                     CheckEditor(window, work, suffix);
+
+                    window.OpenTool(PdfTool.Compress, new[] { a });
+                    Pump(30);
+                    Save(window, "comprimi-" + suffix);
+                    window.OpenTool(PdfTool.Ocr, new[] { a });
+                    Pump(30);
+                    Save(window, "ocr-" + suffix);
                     window.ShowHome();
                     window.Close();
 

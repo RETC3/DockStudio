@@ -101,6 +101,12 @@ namespace DockPDF.Engine
         [DllImport(Lib)] public static extern void FORM_OnBeforeClosePage(IntPtr page, IntPtr form);
         [DllImport(Lib)] public static extern void FPDF_FFLDraw(IntPtr form, IntPtr bitmap, IntPtr page, int startX, int startY, int sizeX, int sizeY, int rotate, int flags);
 
+        // Testo nuovo (invisibile, per l'OCR)
+        [DllImport(Lib)] public static extern IntPtr FPDFPageObj_NewTextObj(IntPtr document, [MarshalAs(UnmanagedType.LPStr)] string font, float size);
+        [DllImport(Lib)] public static extern int FPDFText_SetText(IntPtr textObject, char* text);
+        [DllImport(Lib)] public static extern int FPDFTextObj_SetTextRenderMode(IntPtr textObject, int mode);
+        public const int FPDF_TEXTRENDERMODE_INVISIBLE = 3;
+
         // Pagine di un altro PDF incollate come oggetti (le aggiunte disegnate con PDFsharp)
         [DllImport(Lib)] public static extern IntPtr FPDF_NewXObjectFromPage(IntPtr destination, IntPtr source, int sourcePage);
         [DllImport(Lib)] public static extern void FPDF_CloseXObject(IntPtr xobject);

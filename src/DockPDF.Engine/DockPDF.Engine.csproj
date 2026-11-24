@@ -23,6 +23,8 @@
 
   <ItemGroup>
     <ProjectReference Include="..\DockStudio.Imaging\DockStudio.Imaging.csproj" />
+    <!-- Interfaccia del motore OCR (il motore vero lo sceglie l'app: Windows o macOS) -->
+    <ProjectReference Include="..\DockStudio.Ocr\DockStudio.Ocr.csproj" />
   </ItemGroup>
 
 </Project>

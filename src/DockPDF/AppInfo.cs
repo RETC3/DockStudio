@@ -37,6 +37,9 @@ namespace DockPDF
         public static readonly UsageStats Usage = new(Updates);
         public static readonly ErrorReports Errors = new(Updates);
 
+        /// <summary>OCR del sistema (Windows.Media.Ocr; su macOS sarà Vision).</summary>
+        public static readonly DockStudio.Ocr.IOcrEngine Ocr = new DockStudio.Ocr.Windows.WindowsOcrEngine();
+
         public static DockBranding Branding => new(Identity, Accent, Text.Strings["app.tagline"]);
 
         public static Version Version =>

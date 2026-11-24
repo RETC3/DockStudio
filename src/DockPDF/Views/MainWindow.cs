@@ -182,6 +182,8 @@ namespace DockPDF.Views
                     PdfTool.ImagesToPdf => new ImagesWorkspace(this),
                     PdfTool.PdfToImages => new ExportWorkspace(this),
                     PdfTool.Protect => new ProtectWorkspace(this, protect: true),
+                    PdfTool.Compress => new CompressWorkspace(this),
+                    PdfTool.Ocr => new OcrWorkspace(this),
                     _ => new ProtectWorkspace(this, protect: false),
                 };
                 _host.Content = workspace;

@@ -231,7 +231,8 @@ namespace DockPDF.Engine
         /// Restituisce il PDF risultante, in memoria.
         /// </summary>
         public byte[] Rewrite(IReadOnlyDictionary<int, IReadOnlyCollection<int>> removeObjects,
-            byte[]? overlay, IReadOnlyList<(int Page, int OverlayPage)> overlayPages)
+            byte[]? overlay, IReadOnlyList<(int Page, int OverlayPage)> overlayPages,
+            IReadOnlyList<HiddenTextItem>? hiddenText = null)
         {
             lock (Pdfium.Sync)
             {
@@ -246,7 +247,8 @@ namespace DockPDF.Engine
                         overlayDoc = Pdfium.FPDF_LoadMemDocument64((void*)overlayData, (nuint)overlay.Length, null);
                         if (overlayDoc == IntPtr.Zero) throw new System.IO.IOException("Aggiunte non leggibili");
                     }
-                    var pages = removeObjects.Keys.Concat(overlayPages.Select(o => o.Page)).Distinct();
+                    hiddenText ??= Array.Empty<HiddenTextItem>();
+                    var pages = removeObjects.Keys.Concat(overlayPages.Select(o => o.Page)).Concat(hiddenText.Select(h => h.Page)).Distinct();
                     foreach (var pageIndex in pages)
                     {
                         var page = LoadPage(pageIndex);
@@ -277,6 +279,8 @@ namespace DockPDF.Engine
                                     Pdfium.FPDF_CloseXObject(xobject);
                                 }
                             }
+                            foreach (var hidden in hiddenText.Where(h => h.Page == pageIndex))
+                                AddHiddenText(page, GeometryOf(page), hidden);
                             if (Pdfium.FPDFPage_GenerateContent(page) == 0) throw new System.IO.IOException($"Pagina {pageIndex + 1} non riscritta");
                         }
                         finally
@@ -295,6 +299,38 @@ namespace DockPDF.Engine
                     if (overlayData != IntPtr.Zero) System.Runtime.InteropServices.Marshal.FreeHGlobal(overlayData);
                 }
             }
+        }
+
+        /// <summary>
+        /// Testo invisibile (modalità 3 del PDF: né riempito né contornato) sopra la parola della scansione, in
+        /// Helvetica e allargato o stretto fino alla larghezza della parola. Si seleziona e si cerca, ma non si vede.
+        /// </summary>
+        private void AddHiddenText(IntPtr page, PageGeometry geometry, HiddenTextItem item)
+        {
+            if (string.IsNullOrWhiteSpace(item.Text) || item.Box.Width <= 0 || item.Box.Height <= 0) return;
+            float size = (float)Math.Max(1, item.Box.Height * 0.95);
+            var obj = Pdfium.FPDFPageObj_NewTextObj(_document, "Helvetica", size);
+            if (obj == IntPtr.Zero) return;
+            fixed (char* text = item.Text + " ")
+                Pdfium.FPDFText_SetText(obj, text);
+            Pdfium.FPDFTextObj_SetTextRenderMode(obj, Pdfium.FPDF_TEXTRENDERMODE_INVISIBLE);
+            float l, b, r, t;
+            double width = Pdfium.FPDFPageObj_GetBounds(obj, &l, &b, &r, &t) != 0 ? r - l : 0;
+            if (width <= 0)
+            {
+                Pdfium.FPDFPageObj_Destroy(obj);
+                return;
+            }
+            double sx = item.Box.Width / width;
+            // Linea di base vicino al fondo della parola (sotto restano le discendenti).
+            double baseline = item.Box.Bottom - size * 0.21;
+            var origin = geometry.FromView(item.Box.X, baseline);
+            var right = geometry.FromView(item.Box.X + 1, baseline);
+            var up = geometry.FromView(item.Box.X, baseline - 1);
+            double ex = right.X - origin.X, ey = right.Y - origin.Y;
+            double ux = up.X - origin.X, uy = up.Y - origin.Y;
+            Pdfium.FPDFPageObj_Transform(obj, ex * sx, ey * sx, ux, uy, origin.X, origin.Y);
+            Pdfium.FPDFPage_InsertObject(page, obj);
         }
     }
 }
