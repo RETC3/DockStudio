@@ -133,6 +133,20 @@ namespace DockPDF.Checks
                     radial.Close();
                 }
             Languages.Set("it");
+
+            // Copertina del sito (site/public/apps/dockpdf/copertina.png): DOCKPDF_COVER=<file png>.
+            // La home con tutti gli strumenti, in italiano e in chiaro.
+            if (Environment.GetEnvironmentVariable("DOCKPDF_COVER") is { Length: > 0 } cover)
+            {
+                DockTheme.SetAppearance(Application.Current!, Appearance.Light);
+                var home = new MainWindow(StartOptions.None with { Automatic = false }) { Width = 1200, Height = 760 };
+                home.Show();
+                Pump(20);
+                var frame = home.CaptureRenderedFrame();
+                frame?.Save(Path.GetFullPath(cover), Avalonia.Media.Imaging.PngBitmapEncoderOptions.Default);
+                Check(File.Exists(cover), "copertina " + cover);
+                home.Close();
+            }
         }
 
         private static void Pump(int rounds = 10)

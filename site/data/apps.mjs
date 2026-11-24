@@ -13,6 +13,7 @@
 
 import * as screenlove from '../../web/lib/novita.js';
 import * as dockspace from './novita/dockspace.mjs';
+import * as dockpdf from './novita/dockpdf.mjs';
 
 export const apps = [
   {
@@ -73,19 +74,29 @@ export const apps = [
     slug: 'dockpdf',
     nome: 'DockPDF',
     num: '03',
-    colore: '#E5484D',
+    colore: '#E0413A',
     icona: 'P',
+    logo: '/apps/dockpdf/logo.svg',
+    copertina: { src: '/apps/dockpdf/copertina.png', larghezza: 1200, altezza: 760,
+      alt: 'DockPDF: la schermata iniziale con le schede degli strumenti, da Modifica il PDF e Firma fino a Comprimi e Riconosci il testo.' },
     categoria: 'PDF',
-    breve: 'Unisci, dividi, comprimi, compila e firma i PDF. Con lo scanner per i documenti di carta.',
-    lead: 'Tutti gli strumenti per i PDF in un\'app sola, sul tuo computer: i documenti non passano da nessun sito.',
-    stato: 'arrivo',
-    piattaforme: ['Windows', 'Mac'],
+    breve: 'Modifica, firma, unisci, dividi e comprimi i PDF, e rendi cercabili le scansioni. Tutto sul tuo computer.',
+    lead: "Tutti gli strumenti per i PDF in un'app sola, sul tuo computer: i documenti non passano da nessun sito. Un clic sull'icona accanto all'orologio apre il cerchio degli strumenti.",
+    stato: 'sviluppo',
+    // Download dal sito (site/lib/downloads.js): la sezione "Scarica" legge /dockpdf/latest.json.
+    scaricabile: true,
+    piattaforme: ['Windows 10 e 11', 'Mac in arrivo'],
     funzioni: [
-      ['Unisci e dividi', 'Più PDF in uno, oppure pagine estratte, riordinate e ruotate trascinandole.'],
-      ['Comprimi', 'PDF più leggeri da mandare per email, scegliendo quanta qualità tenere.'],
-      ['Compila e firma', 'Moduli compilati a schermo e firma disegnata o da immagine.'],
-      ['Scanner', 'Documenti di carta acquisiti dallo scanner o dalla foto del telefono, raddrizzati e trasformati in PDF.'],
+      ['Modifica davvero', 'Scrivi dove vuoi, **correggi il testo che c\'è già**, evidenzia, copri, disegna frecce e forme, aggiungi immagini. Ogni modifica si annulla.'],
+      ['Firma', 'Firma **disegnata**, scritta o da immagine, salvata per la volta dopo. Oppure la **firma digitale** con il tuo certificato, anche da file .pfx.'],
+      ['Moduli', 'I PDF con campi da compilare si riempiono a schermo: caselle, elenchi e testo, salvati nel file.'],
+      ['Pagine in ordine', 'Unisci più PDF, riordina, gira ed elimina le pagine trascinando le miniature. Dividi per pagine, ogni N pagine o per intervalli.'],
+      ['Comprimi', 'PDF più leggeri da mandare per email: scegli quanta qualità tenere, testo e disegni restano identici.'],
+      ['Testo dalle scansioni', "L'OCR rende **cercabili e copiabili** i PDF scansionati, senza internet. La scansione resta com'è."],
+      ['Immagini e password', 'Foto e scansioni JPG o PNG in un PDF, e pagine salvate come immagini. Proteggi un PDF con una password o toglila (se la conosci).'],
+      ['Il cerchio degli strumenti', "Dall'icona nell'area di notifica si apre un cerchio con tutti gli strumenti. Installer per x64 e ARM64, \"Apri con\" per i PDF, aggiornamenti con l'impronta SHA-256."],
     ],
+    novita: { versioni: dockpdf.versioni, inArrivo: dockpdf.inArrivo },
   },
   {
     slug: 'dockplay',
