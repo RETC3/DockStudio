@@ -126,3 +126,29 @@ jobs:
           done
           echo "::error::Il sito non risponde come previsto dopo 2 minuti."
           exit 1
+
+      - name: Controllo dei download
+        if: steps.cf.outputs.ok == 'true'
+        run: |
+          # Ogni file di latest.json si scarica da screenlove.it/download/ come lo scaricano utenti e app
+          # (cache di Cloudflare compresa) e deve avere la dimensione e l'impronta dichiarate: se no
+          # l'aggiornamento dall'app fallisce ("Download incompleto"). Successo il 25/11/2026 con la 0.6.0:
+          # nel bucket R2 c'erano file di un'altra compilazione.
+          curl -fsSL -o /tmp/latest.json -H 'Cache-Control: no-cache' https://screenlove.it/latest.json
+          bad=0
+          while read -r asset; do
+            name=$(echo "$asset" | jq -r '.name')
+            size=$(echo "$asset" | jq -r '.size')
+            sha=$(echo "$asset" | jq -r '.sha256 // empty')
+            curl -fsSL -o "/tmp/$name" "https://screenlove.it/download/$name" || { echo "::error::$name: download non riuscito"; bad=1; continue; }
+            got=$(stat -c %s "/tmp/$name")
+            hash=$(sha256sum "/tmp/$name" | cut -d' ' -f1)
+            if [ "$got" != "$size" ] || { [ -n "$sha" ] && [ "$hash" != "$sha" ]; }; then
+              echo "::error::$name: il sito serve un file diverso da latest.json ($got byte invece di $size). Controlla il bucket R2 $BUCKET e svuota la cache Cloudflare di quell'indirizzo."
+              bad=1
+            else
+              echo "$name: dimensione e impronta giuste"
+            fi
+            rm -f "/tmp/$name"
+          done < <(jq -c '.assets[]' /tmp/latest.json)
+          exit $bad
