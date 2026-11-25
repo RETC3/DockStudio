@@ -1,0 +1,23 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!-- Controlli del launcher DockStudio: catalogo delle app, versioni e download (con un feed locale, senza
+       avviare installer) e finestra disegnata senza schermo (Avalonia headless) in italiano e inglese, chiara e scura.
+       Esecuzione: dotnet run con il progetto tests/DockStudio.Launcher.Checks e, facoltativa, la cartella delle immagini. -->
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net10.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>disable</ImplicitUsings>
+    <LangVersion>latest</LangVersion>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Avalonia.Headless" Version="12.1.5" />
+    <PackageReference Include="Avalonia.Skia" Version="12.1.5" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\src\DockStudio.Launcher\DockStudio.Launcher.csproj" />
+  </ItemGroup>
+
+</Project>

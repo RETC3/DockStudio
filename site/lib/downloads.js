@@ -12,6 +12,8 @@ import { apps } from '../data/apps.mjs';
 
 /** App della suite che si scaricano da qui (non ScreenLove, che usa screenlove.it). */
 const APPS = new Map(apps.filter(a => a.slug !== 'screenlove').map(a => [a.slug, a.nome]));
+// Il launcher della suite (src/DockStudio.Launcher) non è tra le app del sito ma si scarica allo stesso modo.
+APPS.set('dockstudio', 'DockStudio');
 
 /** Nome dell'app per lo slug dell'indirizzo ("dockspace" → "DockSpace"), o null. */
 export function appName(slug) {

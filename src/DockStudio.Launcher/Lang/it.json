@@ -1,0 +1,66 @@
+{
+  // Testi del launcher DockStudio (italiano, lingua base).
+  "app.tagline": "Tutte le tue app DockStudio in un posto solo.",
+
+  "home.title": "Le tue app",
+  "home.body": "Apri, installa e aggiorna le app DockStudio. Funzionano tutte sul tuo computer, senza account.",
+  "section.installed": "Installate",
+  "section.installedEmpty": "Nessuna app DockStudio installata: scegline una qui sotto.",
+  "section.available": "Da installare",
+  "section.soon": "In arrivo",
+
+  "card.version": "Versione {0}",
+  "card.updateAvailable": "Versione {0} · c'è la {1}",
+  "card.notInstalled": "Non installata",
+  "card.development": "In sviluppo",
+  "card.soon": "In arrivo",
+  "card.open": "Apri",
+  "card.update": "Aggiorna a {0}",
+  "card.install": "Installa",
+  "card.page": "Scopri",
+  "card.retry": "Riprova",
+  "card.dismiss": "Chiudi",
+
+  "job.checking": "Preparazione…",
+  "job.downloading": "Download in corso… {0:P0}",
+  "job.installing": "Installazione…",
+  "install.running": "{0} è aperta: chiudila e riprova.",
+  "install.notStarted": "L'installer non è partito.",
+  "install.failed": "Installazione non riuscita (codice {0}).",
+
+  "update.one": "Aggiorna",
+  "update.all": "Aggiorna tutte ({0})",
+  "update.checking": "Controllo degli aggiornamenti…",
+  "update.none": "Tutte le app sono aggiornate.",
+  "update.found": "Aggiornamenti trovati: {0}.",
+
+  "status.ready": "Pronto.",
+  "status.opening": "Apertura di {0}…",
+  "status.unexpected": "Si è verificato un problema: {0}",
+  "status.trayOn": "Chiudendo la finestra DockStudio resterà nell'area di notifica.",
+  "status.trayOff": "Chiudendo la finestra DockStudio si chiuderà.",
+
+  "menu.checkUpdates": "Controlla gli aggiornamenti",
+  "menu.startWithWindows": "Avvia con Windows",
+  "menu.keepInTray": "Resta nell'area di notifica",
+  "menu.appearance": "Aspetto",
+  "menu.privacy": "Statistiche ed errori…",
+  "menu.license": "Licenza…",
+  "menu.site": "Sito di DockStudio",
+  "menu.about": "Informazioni su {0}",
+  "menu.exit": "Esci",
+  "appearance.system": "Come il sistema",
+  "appearance.light": "Chiaro",
+  "appearance.dark": "Scuro",
+
+  "trayHint.title": "DockStudio resta a portata di mano",
+  "trayHint.body": "DockStudio continua a funzionare nell'area di notifica, vicino all'orologio: da lì apri le tue app e il cerchio degli strumenti di DockPDF. Le app non mettono più ciascuna la propria icona.",
+  "trayHint.stay": "Va bene",
+  "trayHint.exit": "Chiudi DockStudio",
+
+  "tray.open": "Apri DockStudio",
+  "tray.pdfRadial": "Strumenti PDF",
+  "tray.updateAll": "Aggiorna le app ({0})",
+  "tray.updates": "DockStudio: aggiornamenti disponibili ({0})",
+  "tray.exit": "Esci"
+}

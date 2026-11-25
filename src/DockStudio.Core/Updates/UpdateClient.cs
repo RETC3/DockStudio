@@ -81,14 +81,20 @@ namespace DockStudio.Core.Updates
         }
 
         /// <summary>Restituisce la release più recente se è più nuova di quella in uso, altrimenti null.</summary>
-        public async Task<UpdateInfo?> CheckAsync(CancellationToken ct = default)
+        public Task<UpdateInfo?> CheckAsync(CancellationToken ct = default) => CheckAsync(CurrentVersion, ct);
+
+        /// <summary>
+        /// Come <see cref="CheckAsync(CancellationToken)"/>, ma rispetto a una versione data: serve a chi gestisce
+        /// un'altra app (il launcher DockStudio). Con la versione 0.0.0 restituisce sempre l'ultima uscita.
+        /// </summary>
+        public async Task<UpdateInfo?> CheckAsync(Version current, CancellationToken ct = default)
         {
             Exception? last = null;
             foreach (var url in Feeds)
             {
                 try
                 {
-                    return Parse(await ReadFeedAsync(url, ct), CurrentVersion);
+                    return Parse(await ReadFeedAsync(url, ct), Normalize(current));
                 }
                 catch (OperationCanceledException) when (ct.IsCancellationRequested)
                 {

@@ -1,0 +1,56 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!-- DockStudio: il launcher facoltativo della suite. Mostra le app, le apre, le installa e le aggiorna,
+       e sta nell'area di notifica al posto delle icone delle singole app (Avalonia, Windows e in futuro macOS). -->
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>net10.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>disable</ImplicitUsings>
+    <LangVersion>latest</LangVersion>
+    <DebugType>embedded</DebugType>
+    <RootNamespace>DockStudio.Launcher</RootNamespace>
+    <AssemblyName>DockStudio</AssemblyName>
+    <Version>0.1.0</Version>
+    <Product>DockStudio</Product>
+    <Company>DockStudio</Company>
+    <ApplicationManifest>app.manifest</ApplicationManifest>
+    <!-- Icona dell'exe; si rigenera con scripts/make-dockstudio-icon.ps1 -->
+    <ApplicationIcon>Assets\app.ico</ApplicationIcon>
+    <AvaloniaUseCompiledBindingsByDefault>true</AvaloniaUseCompiledBindingsByDefault>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Avalonia" Version="12.1.5" />
+    <PackageReference Include="Avalonia.Desktop" Version="12.1.5" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\DockStudio.Core\DockStudio.Core.csproj" />
+    <!-- Solo Windows (avvio singolo, installer, registro): si usa dopo OperatingSystem.IsWindows() -->
+    <ProjectReference Include="..\DockStudio.Core.Windows\DockStudio.Core.Windows.csproj" />
+    <ProjectReference Include="..\DockStudio.UI\DockStudio.UI.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <InternalsVisibleTo Include="DockStudio.Launcher.Checks" />
+    <AvaloniaResource Include="Assets\app.ico" />
+    <!-- Le icone delle app già uscite, prese dai loro progetti: le altre hanno la lettera colorata del sito. -->
+    <AvaloniaResource Include="..\ScreenLove\app.ico" Link="Assets\Apps\screenlove.ico" />
+    <AvaloniaResource Include="..\DockSpace\Assets\app.ico" Link="Assets\Apps\dockspace.ico" />
+    <AvaloniaResource Include="..\DockPDF\Assets\app.ico" Link="Assets\Apps\dockpdf.ico" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- Testi dell'app, uno per lingua: risorse DockStudio.Launcher.Lang.<lingua>.json -->
+    <EmbeddedResource Include="Lang\*.json" LogicalName="DockStudio.Launcher.Lang.%(Filename).json" />
+    <!-- Elenco delle app di riserva, se il sito non risponde e non c'è una copia salvata (lo stesso formato di getdockstudio.it/apps.json). -->
+    <EmbeddedResource Include="Catalog\apps.json" LogicalName="DockStudio.Launcher.apps.json" />
+  </ItemGroup>
+
+  <Target Name="RemoveNativeSymbols" AfterTargets="Publish">
+    <Delete Files="$(PublishDir)libSkiaSharp.pdb" />
+    <Delete Files="$(PublishDir)libHarfBuzzSharp.pdb" />
+  </Target>
+
+</Project>

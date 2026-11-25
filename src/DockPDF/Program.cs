@@ -17,11 +17,12 @@ namespace DockPDF
     /// <summary>
     /// Opzioni da riga di comando: file da aprire, "--tool &lt;nome&gt;" per aprire subito uno strumento,
     /// "--radial" per mostrare solo il cerchio degli strumenti (per esempio da un collegamento o all'avvio di Windows,
-    /// con "--tray" per restare nell'area di notifica senza mostrare nulla).
+    /// con "--tray" per restare nell'area di notifica senza mostrare nulla). "--exit" chiude la copia già aperta: lo usa il
+    /// launcher DockStudio prima di aggiornare DockPDF.
     /// <paramref name="Automatic"/> false (solo nei controlli automatici) evita quello che l'app fa da sola
     /// all'apertura: la domanda sulla privacy, il controllo degli aggiornamenti e le statistiche.
     /// </summary>
-    public sealed record StartOptions(IReadOnlyList<string> Files, PdfTool? Tool, bool Radial, bool TrayOnly, bool Automatic = true)
+    public sealed record StartOptions(IReadOnlyList<string> Files, PdfTool? Tool, bool Radial, bool TrayOnly, bool Automatic = true, bool Exit = false)
     {
         public static readonly StartOptions None = new(Array.Empty<string>(), null, false, false);
 
@@ -29,15 +30,16 @@ namespace DockPDF
         {
             var files = new List<string>();
             PdfTool? tool = null;
-            bool radial = false, tray = false;
+            bool radial = false, tray = false, exit = false;
             for (int i = 0; i < args.Length; i++)
             {
                 if (args[i] == "--tool" && i + 1 < args.Length) tool = Tools.Parse(args[++i]);
                 else if (args[i] == "--radial") radial = true;
                 else if (args[i] == "--tray") tray = true;
+                else if (args[i] == "--exit") exit = true;
                 else if (!args[i].StartsWith("--", StringComparison.Ordinal) && File.Exists(args[i])) files.Add(Path.GetFullPath(args[i]));
             }
-            return new StartOptions(files, tool, radial, tray);
+            return new StartOptions(files, tool, radial, tray, Exit: exit);
         }
     }
 
@@ -109,7 +111,9 @@ namespace DockPDF
                 bool tray = Settings.KeepInTray || Start.TrayOnly || Start.Radial;
                 desktop.ShutdownMode = tray ? ShutdownMode.OnExplicitShutdown : ShutdownMode.OnMainWindowClose;
                 desktop.ShutdownRequested += (_, _) => SettingsStore.Save(Settings);
-                if (tray) CreateTray();
+                // Con il launcher DockStudio installato l'icona è la sua: DockPDF resta aperto senza icona e il
+                // cerchio degli strumenti si apre dal menu di DockStudio (che avvia "DockPDF --radial").
+                if (tray && !LauncherInstalled) CreateTray();
 
                 if (Start.Radial || Start.TrayOnly)
                 {
@@ -149,9 +153,17 @@ namespace DockPDF
             else if (files is { Count: > 0 }) main.OpenFiles(files);
         }
 
-        /// <summary>Una richiesta arrivata da un'altra copia di DockPDF: file da aprire, strumento o cerchio.</summary>
+        /// <summary>True se c'è il launcher DockStudio (iscritto al registro della suite): l'area di notifica è sua.</summary>
+        public static bool LauncherInstalled => new SuiteRegistry().Find("DockStudio") != null;
+
+        /// <summary>Una richiesta arrivata da un'altra copia di DockPDF: file da aprire, strumento, cerchio o chiusura.</summary>
         public void Show(StartOptions request)
         {
+            if (request.Exit)
+            {
+                Exit();
+                return;
+            }
             if (request.Radial && request.Files.Count == 0 && request.Tool == null)
             {
                 if (_radial == null) ShowRadial();
@@ -233,11 +245,13 @@ namespace DockPDF
                 single = DockStudio.Core.Windows.SingleInstance.TryAcquire(AppInfo.Identity);
                 if (single == null)
                 {
+                    // "--exit" con DockPDF aperto: lo si chiede alla copia aperta (vedi App.Show)
                     // I file (doppio clic su un PDF, "Apri con") passano alla copia già aperta, con il percorso completo.
                     var forward = args.Select(a => !a.StartsWith("--", StringComparison.Ordinal) && File.Exists(a) ? Path.GetFullPath(a) : a).ToArray();
                     DockStudio.Core.Windows.SingleInstance.RequestShow(AppInfo.Identity, forward);
                     return 0;
                 }
+                if (App.Start.Exit) return 0; // niente da chiudere
                 single.ListenForShowRequests(received => Dispatcher.UIThread.Post(() => App.Current?.Show(StartOptions.Parse(received))), AppInfo.Identity);
             }
             // Segnale "DockPDF è aperto" per l'installer, che così può chiedere di chiuderlo prima di aggiornare.

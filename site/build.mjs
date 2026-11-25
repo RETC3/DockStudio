@@ -451,10 +451,23 @@ const asset = { "/style.css": impronta("style.css"), "/site.js": impronta("site.
   }
 })(DIST);
 
+// Elenco delle app per il launcher DockStudio (src/DockStudio.Launcher): legge /apps.json per sapere quali app
+// esistono, quali si installano già e come presentarle. Una copia di riserva sta nel launcher
+// (src/DockStudio.Launcher/Catalog/apps.json): dopo aver cambiato nomi, colori o stati, ricopiarla da site/dist.
+writeFileSync(join(DIST, 'apps.json'), JSON.stringify({
+  versione: 1,
+  app: apps.map(a => ({
+    slug: a.slug, nome: a.nome, colore: a.colore, icona: a.icona, breve: a.breve, stato: a.stato,
+    pagina: `${SITE}/${a.slug}/`,
+  })),
+}, null, 2) + '\n');
+
 // Quali indirizzi passano dalle funzioni (site/functions): solo statistiche, API e versioni/download delle app.
 // Senza questo file Cloudflare manderebbe ogni richiesta alla funzione /[app]/..., anche le pagine statiche.
 const funzioni = ['/api/*', '/statistiche', '/statistiche/*'];
 for (const a of apps) if (a.slug !== 'screenlove') funzioni.push(`/${a.slug}/latest.json`, `/${a.slug}/download/*`);
+// il launcher DockStudio si aggiorna e si scarica come le app
+funzioni.push('/dockstudio/latest.json', '/dockstudio/download/*');
 writeFileSync(join(DIST, '_routes.json'), JSON.stringify({ version: 1, include: funzioni, exclude: [] }, null, 2) + '\n');
 
 console.log(`Sito generato in ${DIST}: ${pagine.length} pagine.`);

@@ -54,3 +54,19 @@ in questo repository. Servono solo i secret `CLOUDFLARE_API_TOKEN` e `CLOUDFLARE
 
 Prova in locale senza pubblicare: la variabile `DOCKSPACE_UPDATE_FEED` indica un `latest.json` sul disco
 (con il link `file:///` dell'installer) al posto di quello del sito.
+
+## Il launcher DockStudio
+
+Il launcher (`src/DockStudio.Launcher`, exe `DockStudio.exe`) si pubblica come le app, con il tag
+`dockstudio-vX.Y.Z` e il workflow `release-dockstudio.yml`: i file finiscono nella cartella `dockstudio/` del bucket
+e li serve `https://getdockstudio.it/dockstudio/...`.
+
+L'elenco delle app lo legge da `https://getdockstudio.it/apps.json`, generato da `site/build.mjs` con i dati di
+`site/data/apps.mjs`. Quando un'app passa a "disponibile", basta pubblicare il sito: il launcher la propone da
+installare senza una sua nuova versione. La copia di riserva inclusa nel launcher
+(`src/DockStudio.Launcher/Catalog/apps.json`) si ricopia da `site/dist/apps.json` prima di una sua release.
+
+Le app le installa e le aggiorna scaricando l'installer dal loro sito (impronta SHA-256 controllata) e avviandolo
+con `/VERYSILENT`. Un'app aperta non si aggiorna: DockPDF dalla 0.1.1 si chiude da sola con `--exit`, le altre
+vanno chiuse a mano. Prove in locale: `DOCKSTUDIO_CATALOG` (un apps.json sul disco) e le variabili
+`<APP>_UPDATE_FEED` delle singole app.

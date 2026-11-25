@@ -1,0 +1,104 @@
+{
+  "versione": 1,
+  "app": [
+    {
+      "slug": "screenlove",
+      "nome": "ScreenLove",
+      "colore": "#FF3D7F",
+      "icona": "S",
+      "breve": "Catture di finestre, zone e pagine intere, editor con frecce e passaggi, video con audio e webcam, testo dalle immagini e documenti PDF e Word.",
+      "stato": "disponibile",
+      "pagina": "https://getdockstudio.it/screenlove/"
+    },
+    {
+      "slug": "dockspace",
+      "nome": "DockSpace",
+      "colore": "#0F9D8A",
+      "icona": "Sp",
+      "breve": "Scopri cosa riempie il disco: una mappa a riquadri, le cartelle e i file più grandi e lo spazio che occupano davvero.",
+      "stato": "disponibile",
+      "pagina": "https://getdockstudio.it/dockspace/"
+    },
+    {
+      "slug": "dockpdf",
+      "nome": "DockPDF",
+      "colore": "#E0413A",
+      "icona": "P",
+      "breve": "Modifica, firma, unisci, dividi e comprimi i PDF, e rendi cercabili le scansioni. Tutto sul tuo computer.",
+      "stato": "disponibile",
+      "pagina": "https://getdockstudio.it/dockpdf/"
+    },
+    {
+      "slug": "dockplay",
+      "nome": "DockPlay",
+      "colore": "#8B5CF6",
+      "icona": "Pl",
+      "breve": "Video e musica in quasi ogni formato, con sottotitoli e playlist. Senza pubblicità.",
+      "stato": "arrivo",
+      "pagina": "https://getdockstudio.it/dockplay/"
+    },
+    {
+      "slug": "dockconvert",
+      "nome": "DockConvert",
+      "colore": "#F59E0B",
+      "icona": "C",
+      "breve": "Immagini, documenti, audio e video da un formato all'altro, anche tanti file insieme.",
+      "stato": "arrivo",
+      "pagina": "https://getdockstudio.it/dockconvert/"
+    },
+    {
+      "slug": "docknotes",
+      "nome": "DockNotes",
+      "colore": "#10B981",
+      "icona": "N",
+      "breve": "Quaderni, sezioni e pagine libere, con immagini, catture e liste di cose da fare.",
+      "stato": "arrivo",
+      "pagina": "https://getdockstudio.it/docknotes/"
+    },
+    {
+      "slug": "dockpost",
+      "nome": "DockPost",
+      "colore": "#2447F5",
+      "icona": "Po",
+      "breve": "Tutte le caselle di posta in un'unica app, con calendario e contatti.",
+      "stato": "arrivo",
+      "pagina": "https://getdockstudio.it/dockpost/"
+    },
+    {
+      "slug": "dockvoice",
+      "nome": "DockVoice",
+      "colore": "#EC4899",
+      "icona": "V",
+      "breve": "Registra riunioni e note vocali e trasformale in testo, senza mandarle su internet.",
+      "stato": "arrivo",
+      "pagina": "https://getdockstudio.it/dockvoice/"
+    },
+    {
+      "slug": "dockframe",
+      "nome": "DockFrame",
+      "colore": "#14B8A6",
+      "icona": "F",
+      "breve": "Sfoglia, ordina e ritocca le foto, con album e ricerca per data e luogo.",
+      "stato": "arrivo",
+      "pagina": "https://getdockstudio.it/dockframe/"
+    },
+    {
+      "slug": "docktask",
+      "nome": "DockTask",
+      "colore": "#64748B",
+      "icona": "T",
+      "breve": "Liste, scadenze e promemoria per organizzare il lavoro e i progetti.",
+      "stato": "arrivo",
+      "pagina": "https://getdockstudio.it/docktask/"
+    },
+    {
+      "slug": "docksafe",
+      "nome": "DockSafe",
+      "colore": "#0F766E",
+      "icona": "B",
+      "breve": "Copie di sicurezza e sincronizzazione delle cartelle, in automatico.",
+      "stato": "arrivo",
+      "pagina": "https://getdockstudio.it/docksafe/"
+    }
+  ]
+}

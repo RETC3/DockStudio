@@ -44,6 +44,7 @@
 
   "trayHint.title": "DockPDF resta a portata di mano",
   "trayHint.body": "Chiudendo la finestra DockPDF resta nell'area di notifica, accanto all'orologio: un clic sulla sua icona apre il cerchio degli strumenti. Puoi cambiare idea dal menu ⋯ (\"Resta nell'area di notifica\").",
+  "trayHint.bodyLauncher": "Chiudendo la finestra DockPDF resta pronto in background: lo riapri, con il cerchio degli strumenti, dall'icona di DockStudio accanto all'orologio. Puoi cambiare idea dal menu ⋯ (\"Resta nell'area di notifica\").",
   "trayHint.stay": "Va bene",
   "trayHint.exit": "Chiudi del tutto",
 

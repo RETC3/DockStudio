@@ -45,6 +45,7 @@ namespace DockPDF.Checks
             Check(o.Tool == PdfTool.Merge && o.Radial && o.Files.Count == 0, "--tool merge --radial");
             Check(StartOptions.Parse(new[] { "--tool", "pdfToImages" }).Tool == PdfTool.PdfToImages, "--tool pdfToImages");
             Check(StartOptions.Parse(new[] { "C:\\non-esiste.pdf" }).Files.Count == 0, "i file che non esistono si ignorano");
+            Check(StartOptions.Parse(new[] { "--exit" }) is { Exit: true, Radial: false, Tool: null }, "--exit (dal launcher DockStudio)");
         }
 
         private static void CheckWindows(string work)

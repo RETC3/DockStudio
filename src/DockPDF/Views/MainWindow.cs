@@ -308,7 +308,7 @@ namespace DockPDF.Views
             {
                 App.Settings.TrayHintShown = true;
                 App.SettingsStore.Save(App.Settings);
-                bool stay = await new ConfirmWindow(T("trayHint.title"), T("trayHint.body"), T("trayHint.stay"), T("trayHint.exit"))
+                bool stay = await new ConfirmWindow(T("trayHint.title"), T(App.LauncherInstalled ? "trayHint.bodyLauncher" : "trayHint.body"), T("trayHint.stay"), T("trayHint.exit"))
                     .ShowDialog<bool>(this);
                 if (!stay)
                 {

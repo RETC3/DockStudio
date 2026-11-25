@@ -44,6 +44,7 @@
 
   "trayHint.title": "DockPDF stays at hand",
   "trayHint.body": "When you close the window, DockPDF stays in the notification area next to the clock: click its icon to open the tool wheel. You can change this from the ⋯ menu (\"Stay in the notification area\").",
+  "trayHint.bodyLauncher": "When you close the window, DockPDF stays ready in the background: open it again, with the tool wheel, from the DockStudio icon next to the clock. You can change this from the ⋯ menu (\"Stay in the notification area\").",
   "trayHint.stay": "OK",
   "trayHint.exit": "Quit completely",
 
