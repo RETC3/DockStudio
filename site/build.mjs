@@ -6,7 +6,7 @@ import { createHash } from 'node:crypto';
 import { cpSync, mkdirSync, readdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { apps, suite } from './data/apps.mjs';
+import { apps, launcher, suite } from './data/apps.mjs';
 
 const ROOT = dirname(fileURLToPath(import.meta.url));
 const DIST = join(ROOT, 'dist');
@@ -79,7 +79,7 @@ function header(attiva) {
       <button class="icon-btn" id="theme" type="button" aria-label="Tema chiaro o scuro">
         <svg class="moon"><use href="#i-moon"/></svg><svg class="sun" hidden><use href="#i-sun"/></svg>
       </button>
-      <a class="btn btn-dark" href="https://screenlove.it/#scarica"><svg><use href="#i-download"/></svg><span>Scarica</span></a>
+      <a class="btn btn-dark" href="/dockstudio/#scarica"><svg><use href="#i-download"/></svg><span>Scarica</span></a>
     </div>
   </div>
 </header>`;
@@ -89,6 +89,7 @@ const FOOTER = `<footer>
   <div class="wrap">
     <a class="brand" href="/"><svg><use href="#logo"/></svg>DockStudio</a>
     <nav class="mono">
+      <a href="/dockstudio/">Scarica DockStudio</a>
       <a href="/screenlove/">ScreenLove</a>
       <a href="/novita/">Novità</a>
       <a href="/privacy">Privacy</a>
@@ -185,6 +186,87 @@ function home() {
   return tpl.replace('<!--APPS-->', apps.map(cardApp).join('\n'));
 }
 
+// Sezione "Scarica" di un'app o del launcher. Versione, dimensione e link li mette site.js leggendo
+// /<app>/latest.json: la pagina non va rigenerata a ogni uscita.
+function sezioneScarica(a, kicker, nota = 'Per Windows 10 e 11, computer x64 e ARM64. Si installa senza permessi di amministratore e si aggiorna da solo.') {
+  return `
+  <section class="block" id="scarica">
+    <div class="wrap">
+      ${kicker}
+      <h2>Scarica ${esc(a.nome)}.</h2>
+      <div class="download card-soft" data-latest="/${a.slug}/latest.json" data-app="${esc(a.nome)}">
+        <p class="download-wait">La prima versione di ${esc(a.nome)} è quasi pronta: questa sezione si riempie da sola quando esce.</p>
+        <div class="download-ready" hidden>
+          <span class="mono label download-version"></span>
+          <div class="cta left">
+            <a class="btn btn-primary download-setup" href="/${a.slug}/download/latest"><svg><use href="#i-download"/></svg>Installer per Windows</a>
+          </div>
+          <p class="download-note">${nota}</p>
+          <ul class="download-files mono"></ul>
+        </div>
+        <noscript><p><a href="/${a.slug}/download/latest">Scarica l'ultima versione dell'installer</a></p></noscript>
+      </div>
+    </div>
+  </section>`;
+}
+
+// ---------- /dockstudio/ (il launcher) ----------
+function paginaLauncher() {
+  const a = launcher;
+  let n = 1;
+  const kicker = (t) => `<div class="kicker mono"><b>${String(n++).padStart(2, '0')}</b> ${t}</div>`;
+  const disponibili = apps.filter((x) => x.stato === 'disponibile');
+  const cop = a.copertina;
+  const corpo = `
+  <section class="phero has-cover" style="--c:${a.colore}">
+    <div class="wrap">
+      ${briciole(['/', 'DockStudio'], [null, 'App DockStudio'])}
+      <div class="phero-grid"><div>
+      <div class="phero-id">${icona(a, 'app-icon xl')}<span class="mono">Facoltativa · Tutte le app</span></div>
+      <h1>${esc(a.nome)}</h1>
+      <p class="lead">${testo(a.lead)}</p>
+      <div class="app-foot"><span class="tag ok">Disponibile</span><span class="tag">Windows 10 e 11</span><span class="tag">Mac in arrivo</span></div>
+      <div class="cta left">
+        <a class="btn btn-primary" href="#scarica"><svg><use href="#i-download"/></svg>Scarica DockStudio</a>
+        <a class="btn btn-ghost" href="/#app"><svg><use href="#i-grid"/></svg>Tutte le app</a>
+      </div>
+      </div>
+      <figure class="cover"><img src="${cop.src}" alt="${esc(cop.alt)}" width="${cop.larghezza}" height="${cop.altezza}"></figure>
+      </div>
+    </div>
+  </section>
+
+  <section class="block">
+    <div class="wrap">
+      ${kicker('Cosa fa')}
+      <h2>Le tue app, in un posto solo.</h2>
+      <div class="features">${a.funzioni.map(([t, d], k) => `
+        <div class="feature"><span class="n mono">${String(k + 1).padStart(2, '0')}</span><h3>${testo(t)}</h3><p>${testo(d)}</p></div>`).join('')}
+      </div>
+    </div>
+  </section>
+${sezioneScarica(a, kicker('Scarica'), 'Per Windows 10 e 11, computer x64 e ARM64. Si installa senza permessi di amministratore e si aggiorna da solo. Poi, da DockStudio, installi le app che vuoi.')}
+
+  <section class="block">
+    <div class="wrap">
+      ${kicker('Una sola app')}
+      <h2>Ogni app si scarica anche da sola.</h2>
+      <p class="intro">DockStudio è facoltativa: se ti serve solo un'app, scaricala dalla sua pagina. Funziona allo stesso modo e si aggiorna da sola.</p>
+      <div class="apps">${disponibili.map(cardApp).join('\n')}
+      </div>
+    </div>
+  </section>`;
+
+  return pagina({
+    titolo: 'DockStudio — tutte le app in un posto solo',
+    descrizione: piano(a.lead),
+    percorso: '/dockstudio/',
+    attiva: 'scarica',
+    immagine: a.copertina,
+    corpo,
+  });
+}
+
 // ---------- /<app>/ ----------
 function paginaApp(a, i) {
   const prima = apps[(i - 1 + apps.length) % apps.length];
@@ -220,26 +302,7 @@ function paginaApp(a, i) {
     </div>
   </section>`;
 
-  // Versione, dimensione e link li mette site.js leggendo /<app>/latest.json: la pagina non va rigenerata a ogni uscita.
-  const sezScarica = a.scaricabile ? `
-  <section class="block" id="scarica">
-    <div class="wrap">
-      ${kicker('Scarica')}
-      <h2>Scarica ${esc(a.nome)}.</h2>
-      <div class="download card-soft" data-latest="/${a.slug}/latest.json" data-app="${esc(a.nome)}">
-        <p class="download-wait">La prima versione di ${esc(a.nome)} è quasi pronta: questa sezione si riempie da sola quando esce.</p>
-        <div class="download-ready" hidden>
-          <span class="mono label download-version"></span>
-          <div class="cta left">
-            <a class="btn btn-primary download-setup" href="/${a.slug}/download/latest"><svg><use href="#i-download"/></svg>Installer per Windows</a>
-          </div>
-          <p class="download-note">Per Windows 10 e 11, computer x64 e ARM64. Si installa senza permessi di amministratore e si aggiorna da solo.</p>
-          <ul class="download-files mono"></ul>
-        </div>
-        <noscript><p><a href="/${a.slug}/download/latest">Scarica l'ultima versione dell'installer</a></p></noscript>
-      </div>
-    </div>
-  </section>` : '';
+  const sezScarica = a.scaricabile ? sezioneScarica(a, kicker('Scarica')) : '';
 
   const sezNovita = nov ? `
   <section class="block">
@@ -418,6 +481,8 @@ for (const a of apps) {
 const pagine = ['/', '/novita/'];
 scrivi('index.html', home());
 scrivi('novita', paginaNovita());
+scrivi('dockstudio', paginaLauncher());
+pagine.push('/dockstudio/');
 apps.forEach((a, i) => {
   scrivi(a.slug, paginaApp(a, i));
   pagine.push(`/${a.slug}/`);

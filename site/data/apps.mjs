@@ -252,3 +252,23 @@ export const suite = {
     { stato: 'programma', titolo: 'Licenza Business', testo: 'Una licenza per tutta la suite e un installer unico da distribuire sui computer dell\'ufficio, senza domande.' },
   ],
 };
+
+// Il launcher DockStudio (src/DockStudio.Launcher): non è una delle undici app, ma ha la sua pagina /dockstudio/
+// e si scarica come le app da getdockstudio.it/dockstudio/.
+export const launcher = {
+  slug: 'dockstudio',
+  nome: 'DockStudio',
+  colore: '#2447F5',
+  logo: '/apps/dockstudio/logo.svg',
+  copertina: { src: '/apps/dockstudio/copertina.png', larghezza: 1200, altezza: 760,
+    alt: 'DockStudio: la finestra "Le tue app" con ScreenLove, DockSpace e DockPDF installate e le altre app in arrivo.' },
+  lead: "Tutte le app DockStudio in un posto solo: le apri, installi quelle che ti mancano con un clic e le aggiorni tutte insieme. È facoltativa: ogni app funziona anche da sola.",
+  funzioni: [
+    ['Le tue app', 'Le app installate in una finestra sola, con la versione di ognuna: un clic e si aprono.'],
+    ['Installa con un clic', "Le app che ti mancano si scaricano dal sito ufficiale, con il **controllo dell'impronta**, e si installano senza domande."],
+    ['Aggiorna tutto', 'Controlla le nuove versioni di tutte le app e le aggiorna una dopo l\'altra con **Aggiorna tutte**.'],
+    ['Una sola icona', "Accanto all'orologio c'è solo DockStudio: da lì apri le app e il **cerchio degli strumenti** di DockPDF."],
+    ['Le prossime app', "Le app in arrivo compaiono già nell'elenco: quando escono, le installi da qui senza aggiornare DockStudio."],
+    ['Licenza della suite', 'Una licenza vale per tutte le app. Avvio con Windows, aspetto chiaro o scuro, statistiche solo se le scegli.'],
+  ],
+};

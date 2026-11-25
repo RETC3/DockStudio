@@ -185,6 +185,15 @@ namespace DockStudio.Launcher.Checks
                         library.SetForChecks(all, new Dictionary<string, UpdateInfo>(), new Dictionary<string, Job>());
                         Pump();
                         Save(window, "launcher-tutte");
+                        // Copertina per il sito (site/public/apps/dockstudio/copertina.png): DOCKSTUDIO_COVER=<png>
+                        if (Environment.GetEnvironmentVariable("DOCKSTUDIO_COVER") is { Length: > 0 } cover)
+                        {
+                            window.Width = 1200;
+                            window.Height = 760;
+                            Pump();
+                            window.CaptureRenderedFrame()?.Save(cover, Avalonia.Media.Imaging.PngBitmapEncoderOptions.Default);
+                            Check(File.Exists(cover), $"copertina {cover}");
+                        }
                         window.Width = 460;
                         window.Height = 820;
                         Pump();
