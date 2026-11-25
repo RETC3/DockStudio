@@ -10,7 +10,7 @@
     <DebugType>embedded</DebugType>
     <RootNamespace>DockSpace</RootNamespace>
     <AssemblyName>DockSpace</AssemblyName>
-    <Version>0.1.0</Version>
+    <Version>0.1.1</Version>
     <Product>DockSpace</Product>
     <Company>DockStudio</Company>
     <ApplicationManifest>app.manifest</ApplicationManifest>

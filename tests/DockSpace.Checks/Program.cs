@@ -51,6 +51,7 @@ namespace DockSpace.Checks
                 // Copertina del sito (site/public/apps/dockspace/copertina.png): DOCKSPACE_COVER=<file png>.
                 if (Environment.GetEnvironmentVariable("DOCKSPACE_COVER") is { Length: > 0 } cover)
                     Section("Copertina del sito", () => MakeCover(cover));
+                Section("Tasti negli elenchi", CheckListKeys);
             }
             finally
             {
@@ -392,6 +393,63 @@ namespace DockSpace.Checks
             frame?.Save(Path.GetFullPath(file), Avalonia.Media.Imaging.PngBitmapEncoderOptions.Default);
             Check(File.Exists(file), $"copertina {file} ({root.FileCount:N0} file in {folder})");
             window.Close();
+        }
+
+        /// <summary>
+        /// Righe degli elenchi riciclate: scorrendo con le frecce Avalonia chiede per un attimo righe vuote
+        /// (errore segnalato il 2026-11-25: NullReferenceException in Swatch). Cartella con molti file, così le
+        /// righe si riciclano davvero.
+        /// </summary>
+        private static void CheckListKeys()
+        {
+            var dir = Path.Combine(Path.GetTempPath(), "dockspace-keys-" + Guid.NewGuid().ToString("N")[..8]);
+            Directory.CreateDirectory(dir);
+            try
+            {
+                for (int i = 0; i < 400; i++)
+                {
+                    using var fs = File.Create(Path.Combine(dir, $"file{i:000}.{(i % 3 == 0 ? "jpg" : i % 3 == 1 ? "pdf" : "zip")}"));
+                    fs.SetLength(1000 + i * 37);
+                }
+                Directory.CreateDirectory(Path.Combine(dir, "sotto"));
+                var root = FolderScanner.Scan(dir);
+                Languages.Set("it");
+                var window = new MainWindow(new StartOptions(null, false, Automatic: false)) { Width = 1180, Height = 760 };
+                window.Show();
+                window.ShowResult(root);
+                Pump();
+
+                foreach (var template in window.RowTemplatesForChecks)
+                {
+                    bool ok;
+                    try { ok = template.Build(null) != null; }
+                    catch (Exception ex) { ok = false; Console.WriteLine("    " + ex.GetType().Name + ": " + ex.Message); }
+                    Check(ok, $"riga vuota senza errori ({template.GetType().Name})");
+                }
+
+                window.FocusContentList();
+                Pump();
+                Exception? error = null;
+                try
+                {
+                    foreach (var key in new[] { (Avalonia.Input.Key.Down, 150), (Avalonia.Input.Key.PageDown, 5), (Avalonia.Input.Key.Up, 80),
+                                                (Avalonia.Input.Key.End, 1), (Avalonia.Input.Key.Home, 1), (Avalonia.Input.Key.PageUp, 3) })
+                        for (int i = 0; i < key.Item2; i++)
+                        {
+                            window.KeyPress(key.Item1, Avalonia.Input.RawInputModifiers.None, Avalonia.Input.PhysicalKey.None, null);
+                            window.KeyRelease(key.Item1, Avalonia.Input.RawInputModifiers.None, Avalonia.Input.PhysicalKey.None, null);
+                            Dispatcher.UIThread.RunJobs();
+                        }
+                                    }
+                catch (Exception ex) { error = ex; }
+                Check(error == null, "frecce, pagina su/giù, Home e Fine nell'elenco senza errori" + (error != null ? $": {error.GetType().Name}: {error.Message}" : ""));
+                Check(window.ContentSelectedIndex == 0, $"dopo Home/PagUp la selezione torna in cima (riga {window.ContentSelectedIndex})");
+                window.Close();
+            }
+            finally
+            {
+                try { Directory.Delete(dir, true); } catch { }
+            }
         }
 
         private static void CheckWindow(string sample)

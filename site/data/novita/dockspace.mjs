@@ -8,6 +8,14 @@
 
 export const versioni = [
   {
+    versione: '0.1.1',
+    data: '2026-11-25',
+    titolo: 'Correzione',
+    voci: [
+      ['corretto', "DockSpace non si chiude più per un errore quando si scorre un elenco con le **frecce** della tastiera."],
+    ],
+  },
+  {
     versione: '0.1.0',
     data: '2026-11-21',
     titolo: 'Prima versione',

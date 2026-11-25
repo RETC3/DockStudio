@@ -178,7 +178,7 @@ namespace DockSpace.Views
         private Grid BuildWorkspace()
         {
             // Albero delle cartelle
-            _tree.ItemTemplate = new FuncTreeDataTemplate<FolderItem>((item, _) => FolderRow(item), item => item.Children);
+            _tree.ItemTemplate = new FuncTreeDataTemplate<FolderItem>((item, _) => item == null ? Empty() : FolderRow(item), item => item?.Children ?? new System.Collections.ObjectModel.ObservableCollection<FolderItem>());
             _tree.SelectionChanged += (_, _) =>
             {
                 if (_syncing || _tree.SelectedItem is not FolderItem item) return;
@@ -198,7 +198,7 @@ namespace DockSpace.Views
             var treeCard = new Border { Classes = { "card" }, Padding = new Thickness(4), Child = _tree };
 
             // Contenuto della cartella
-            _content.ItemTemplate = new FuncDataTemplate<FsNode>((node, _) => ContentRow(node));
+            _content.ItemTemplate = new FuncDataTemplate<FsNode>((node, _) => node == null ? Empty() : ContentRow(node));
             _content.SelectionChanged += (_, _) => Select(_content.SelectedItem as FsNode, fromList: true);
             _content.DoubleTapped += (_, _) => Activate(_content.SelectedItem as FsNode);
             _content.KeyDown += OnListKeyDown;
@@ -210,7 +210,7 @@ namespace DockSpace.Views
             contentPanel.Children.Add(_content);
 
             // Tipi di file
-            _extensions.ItemTemplate = new FuncDataTemplate<ExtensionTotal>((e, _) => ExtensionRow(e));
+            _extensions.ItemTemplate = new FuncDataTemplate<ExtensionTotal>((e, _) => e == null ? Empty() : ExtensionRow(e));
             var typesPanel = new DockPanel();
             var typesTop = new StackPanel { Spacing = 8, Margin = new Thickness(8, 8, 8, 6) };
             typesTop.Children.Add(new Border { CornerRadius = new CornerRadius(4), ClipToBounds = true, Child = _categoryBar });
@@ -222,7 +222,7 @@ namespace DockSpace.Views
             typesPanel.Children.Add(_extensions);
 
             // File più grandi
-            _largest.ItemTemplate = new FuncDataTemplate<FsNode>((node, _) => LargestRow(node));
+            _largest.ItemTemplate = new FuncDataTemplate<FsNode>((node, _) => node == null ? Empty() : LargestRow(node));
             _largest.SelectionChanged += (_, _) => Select(_largest.SelectedItem as FsNode, fromList: true);
             _largest.KeyDown += OnListKeyDown;
             _largest.ContextMenu = BuildContextMenu(() => _largest.SelectedItem as FsNode);
@@ -492,6 +492,16 @@ namespace DockSpace.Views
             if (muted) t.Classes.Add("muted");
             return t;
         }
+
+        /// <summary>
+        /// Riga vuota. Mentre ricicla le righe di un elenco (per esempio scorrendo con le frecce) Avalonia può
+        /// chiedere per un attimo una riga senza elemento: senza questo controllo DockSpace andava in errore.
+        /// </summary>
+        private static Control Empty() => new Panel();
+
+        /// <summary>Per i controlli: i modelli delle righe dei quattro elenchi.</summary>
+        internal IEnumerable<IDataTemplate> RowTemplatesForChecks =>
+            new IDataTemplate?[] { _tree.ItemTemplate, _content.ItemTemplate, _extensions.ItemTemplate, _largest.ItemTemplate }.OfType<IDataTemplate>();
 
         private static Control Swatch(FsNode node) => new Border
         {
@@ -768,6 +778,17 @@ namespace DockSpace.Views
 
         /// <summary>Per i controlli: scheda da mostrare (0 contenuto, 1 tipi, 2 file più grandi).</summary>
         internal void ShowTab(int index) => _tabs.SelectedIndex = index;
+
+        /// <summary>Per i controlli: seleziona la prima riga del contenuto e le dà il fuoco (per provare i tasti).</summary>
+        internal void FocusContentList()
+        {
+            _tabs.SelectedIndex = 0;
+            _content.SelectedIndex = 0;
+            _content.Focus();
+        }
+
+        /// <summary>Per i controlli: la riga selezionata nel contenuto.</summary>
+        internal int ContentSelectedIndex => _content.SelectedIndex;
 
         internal void ShowResult(FsNode root)
         {
