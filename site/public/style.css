@@ -307,6 +307,8 @@ kbd { font-family: var(--mono); font-size: .86em; padding: 1px 6px; border: 1px 
 /* sezione "Scarica" delle app (riempita da site.js con /<app>/latest.json) */
 .download .download-wait { margin: 0; color: var(--muted); }
 .download .download-note { color: var(--muted); margin: 14px 0 0; }
+.download .download-sign { color: var(--muted); margin: 18px 0 0; font-size: 12px; }
+.download .download-sign a { color: inherit; text-decoration: underline; }
 .download-files { text-transform: none; letter-spacing: 0; list-style: none; padding: 0; margin: 18px 0 0; display: grid; gap: 10px; font-size: 12px; }
 .download-files li { display: grid; gap: 2px; }
 .download-files .sha { color: var(--muted); overflow-wrap: anywhere; font-size: 11px; }

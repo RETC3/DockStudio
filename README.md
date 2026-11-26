@@ -1,7 +1,10 @@
 # ScreenLove ♥
 
-Strumento di cattura dello schermo per Windows (C# · .NET 10 · WPF), ispirato alle funzionalità di Screenpresso
-ma scritto da zero. Analisi del prodotto di riferimento: [docs/ANALISI-SCREENPRESSO.md](docs/ANALISI-SCREENPRESSO.md).
+Questo repository contiene le app della suite **DockStudio** (https://getdockstudio.it) e il loro nucleo comune:
+ScreenLove (catture dello schermo e video), DockSpace (spazio su disco), DockPDF (PDF) e il launcher DockStudio.
+Software libero con licenza **GPL-3.0-or-later**: vedi [Licenza](#licenza).
+
+Questa pagina descrive soprattutto **ScreenLove**, strumento di cattura dello schermo per Windows (C# · .NET 10 · WPF).
 
 ## Funzioni (v0.1)
 
@@ -149,7 +152,7 @@ Il workflow `.github/workflows/release.yml` fa tutto da solo:
 Le copie installate la trovano al controllo successivo. Dalla scheda Actions si può anche solo compilare
 (senza pubblicare) con "Run workflow".
 
-Il codice è nel repository privato `RETC3/DockStudio`, ma le release escono nel repository pubblico
+Il codice è nel repository `RETC3/DockStudio`, ma le release di ScreenLove escono nel repository
 `RETC3/ScreenLove`: serve il secret `SCREENLOVE_RELEASES_TOKEN`, vedi [docs/RELEASE.md](docs/RELEASE.md).
 
 L'icona dell'eseguibile (`src/ScreenLove/app.ico`) si rigenera con `scripts\make-icon.ps1`.
@@ -224,3 +227,20 @@ ritaglio con le maniglie, annotazioni ridimensionabili, più spotlight insieme.
 4. OCR: filtrare il "rumore" (icone lette come lettere), OCR su una selezione dentro l'editor
 5. Condivisione (link, cloud, email), più lingue
 6. Firma del codice (niente avviso SmartScreen al primo avvio)
+
+## Licenza
+
+Copyright (C) 2026 RETC3
+
+Questo programma è software libero: puoi ridistribuirlo e/o modificarlo secondo i termini della GNU General Public
+License pubblicata dalla Free Software Foundation, versione 3 della licenza o (a tua scelta) qualunque versione
+successiva. È distribuito nella speranza che sia utile, ma SENZA ALCUNA GARANZIA. Il testo completo è in
+[LICENSE](LICENSE); i componenti di terze parti e le loro licenze sono in [THIRD-PARTY-NOTICES.md](THIRD-PARTY-NOTICES.md).
+
+This program is free software: you can redistribute it and/or modify it under the terms of the GNU General Public
+License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later
+version.
+
+## Firma del codice
+
+La politica di firma degli installer è in [CODE_SIGNING_POLICY.md](CODE_SIGNING_POLICY.md).

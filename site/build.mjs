@@ -205,6 +205,7 @@ function sezioneScarica(a, kicker, nota = 'Per Windows 10 e 11, computer x64 e A
           <ul class="download-files mono"></ul>
         </div>
         <noscript><p><a href="/${a.slug}/download/latest">Scarica l'ultima versione dell'installer</a></p></noscript>
+        <p class="download-sign">Free code signing provided by <a href="https://about.signpath.io">SignPath.io</a>, certificate by <a href="https://signpath.org">SignPath Foundation</a>. Codice sorgente con licenza GPL-3.0 su <a href="https://github.com/RETC3/DockStudio">GitHub</a> · <a href="https://github.com/RETC3/DockStudio/blob/main/CODE_SIGNING_POLICY.md">politica di firma</a>.</p>
       </div>
     </div>
   </section>`;
