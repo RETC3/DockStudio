@@ -1,0 +1,52 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!-- DockPost: programma di posta della suite DockStudio (Avalonia, Windows e in futuro macOS). -->
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>net10.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>disable</ImplicitUsings>
+    <LangVersion>latest</LangVersion>
+    <DebugType>embedded</DebugType>
+    <RootNamespace>DockPost</RootNamespace>
+    <AssemblyName>DockPost</AssemblyName>
+    <Version>0.1.0</Version>
+    <Product>DockPost</Product>
+    <Company>DockStudio</Company>
+    <ApplicationManifest>app.manifest</ApplicationManifest>
+    <!-- Icona dell'exe; si rigenera con scripts/make-dockpost-icon.ps1 -->
+    <ApplicationIcon>Assets\app.ico</ApplicationIcon>
+    <AvaloniaUseCompiledBindingsByDefault>true</AvaloniaUseCompiledBindingsByDefault>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Avalonia" Version="12.1.5" />
+    <PackageReference Include="Avalonia.Desktop" Version="12.1.5" />
+    <!-- Cache dei token Microsoft cifrata con l'account di Windows (DPAPI) -->
+    <PackageReference Include="System.Security.Cryptography.ProtectedData" Version="10.0.14" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\DockStudio.Core\DockStudio.Core.csproj" />
+    <!-- Solo Windows (avvio singolo, installer, scelta della privacy fatta nell'installer): si usa dopo OperatingSystem.IsWindows() -->
+    <ProjectReference Include="..\DockStudio.Core.Windows\DockStudio.Core.Windows.csproj" />
+    <ProjectReference Include="..\DockStudio.UI\DockStudio.UI.csproj" />
+    <ProjectReference Include="..\DockPost.Engine\DockPost.Engine.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <InternalsVisibleTo Include="DockPost.Checks" />
+    <AvaloniaResource Include="Assets\app.ico" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- Testi dell'app, uno per lingua: risorse DockPost.Lang.<lingua>.json -->
+    <EmbeddedResource Include="Lang\*.json" LogicalName="DockPost.Lang.%(Filename).json" />
+  </ItemGroup>
+
+  <Target Name="RemoveNativeSymbols" AfterTargets="Publish">
+    <Delete Files="$(PublishDir)libSkiaSharp.pdb" />
+    <Delete Files="$(PublishDir)libHarfBuzzSharp.pdb" />
+  </Target>
+
+</Project>

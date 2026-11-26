@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" role="img" aria-label="DockPost">
+  <!-- Una busta bianca su fondo arancio. Stesso disegno di scripts/make-dockpost-icon.ps1 e di Views/LogoMark.cs. -->
+  <rect x="1" y="1" width="30" height="30" rx="7" fill="#F07A1A"/>
+  <rect x="6" y="9" width="20" height="14" rx="2" fill="#fff"/>
+  <path d="M7.5 10.5 L16 17 L24.5 10.5" fill="none" stroke="#F07A1A" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+</svg>

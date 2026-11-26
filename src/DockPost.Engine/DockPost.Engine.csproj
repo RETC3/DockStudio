@@ -1,0 +1,26 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!-- Motore di DockPost, senza interfaccia: account e riconoscimento del provider, archivio locale della posta
+       (SQLite + contenuti per impronta SHA-256), sincronizzazione IMAP, invio SMTP, accesso Microsoft,
+       lettura sicura dell'HTML (blocchi da disegnare, niente che si esegua o si scarichi da solo), ricerca. -->
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>disable</ImplicitUsings>
+    <LangVersion>latest</LangVersion>
+    <DebugType>embedded</DebugType>
+    <RootNamespace>DockPost.Engine</RootNamespace>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <!-- IMAP, SMTP e MIME (MIT) -->
+    <PackageReference Include="MailKit" Version="4.18.2" />
+    <!-- Archivio locale con ricerca a parole (FTS5) -->
+    <PackageReference Include="Microsoft.Data.Sqlite" Version="10.0.15" />
+    <!-- Lettura dell'HTML delle email come testo ostile (MIT) -->
+    <PackageReference Include="AngleSharp" Version="1.10.5" />
+    <!-- Accesso con l'account Microsoft (OAuth 2.0) per Outlook.com e Microsoft 365 (MIT) -->
+    <PackageReference Include="Microsoft.Identity.Client" Version="4.91.1" />
+  </ItemGroup>
+
+</Project>
